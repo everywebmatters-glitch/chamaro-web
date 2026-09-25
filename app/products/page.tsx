@@ -20,7 +20,7 @@ export default function ProductsPage() {
 
       <main>
         {/* Prerendered unfiltered; the query string is applied in the browser */}
-        <Suspense fallback={<ProductsCatalogContent searchParams={new URLSearchParams()} />}>
+        <Suspense fallback={<ProductsCatalogContent />}>
           <ProductsCatalog />
         </Suspense>
 

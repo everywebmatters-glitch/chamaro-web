@@ -54,9 +54,9 @@ export default function ProductsCatalog() {
 
 /* Rendered with empty params as the prerendered fallback (unfiltered list) */
 export function ProductsCatalogContent({
-  searchParams,
+  searchParams = new URLSearchParams(),
 }: {
-  searchParams: Pick<URLSearchParams, "get">;
+  searchParams?: Pick<URLSearchParams, "get">;
 }) {
   /* Validate every param against known values */
   const categoryParam = searchParams.get("category") ?? undefined;
