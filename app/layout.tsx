@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
+import { AuthProvider } from "./components/auth/AuthProvider";
 import CartDrawer from "./components/cart/CartDrawer";
 import { StoreProvider } from "./components/store/StoreProvider";
 import "./globals.css";
@@ -28,10 +29,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <StoreProvider>
-          {children}
-          <CartDrawer />
-        </StoreProvider>
+        <AuthProvider>
+          <StoreProvider>
+            {children}
+            <CartDrawer />
+          </StoreProvider>
+        </AuthProvider>
       </body>
     </html>
   );
