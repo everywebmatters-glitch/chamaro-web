@@ -1,6 +1,8 @@
 /* =========================================================
    PRODUCT CATALOG
-   Static data until the Prisma product tables are live.
+   Shared Product shape and helpers. /products and /products/[slug]
+   load live data via catalog-api.ts; the static list below still
+   feeds the home page, search, cart and wishlist.
    TODO: replace names, prices and specs with real catalog data
 ========================================================= */
 
@@ -21,7 +23,10 @@ export type ProductOption = {
 export type Product = {
   slug: string;
   name: string;
-  category: ProductCategory;
+  /* Category slug */
+  category: string;
+  /* Display name from the API; static products use getCategoryName */
+  categoryName?: string;
   price: number;
   compareAtPrice?: number;
   rating: number;
@@ -306,11 +311,11 @@ export function getCategoryName(slug: string) {
   return categories.find((category) => category.slug === slug)?.name;
 }
 
-export function getRelatedProducts(product: Product, limit = 4) {
-  const sameCategory = products.filter(
+export function getRelatedProducts(product: Product, catalog = products, limit = 4) {
+  const sameCategory = catalog.filter(
     (item) => item.slug !== product.slug && item.category === product.category
   );
-  const others = products.filter(
+  const others = catalog.filter(
     (item) => item.slug !== product.slug && item.category !== product.category
   );
 
@@ -357,9 +362,9 @@ export const PRICE_RANGES = [
   { value: "over-10000", label: "Above ₹10,000", min: 10000, max: Infinity },
 ] as const;
 
-export function allColors() {
+export function allColors(catalog = products) {
   const seen = new Map<string, ProductColor>();
-  for (const product of products) {
+  for (const product of catalog) {
     for (const color of product.colors) {
       if (!seen.has(color.name)) seen.set(color.name, color);
     }

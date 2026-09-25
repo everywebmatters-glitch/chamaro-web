@@ -8,28 +8,33 @@ import ProductGallery from "../../components/ProductGallery";
 import ProductPurchase from "../../components/ProductPurchase";
 import ProductTabs from "../../components/ProductTabs";
 import SiteFooter from "../../components/SiteFooter";
+import { fetchAllProducts, fetchProduct, toProduct } from "../../lib/catalog-api";
 import {
   availabilityLabels,
   discountPercent,
   formatPrice,
-  getCategoryName,
-  getProduct,
   getRelatedProducts,
-  products,
 } from "../../lib/products";
 
 /* Only the slugs below are exported; anything else is the static 404 page */
 export const dynamicParams = false;
 
-export function generateStaticParams() {
+/* Runs at build time (static export); rebuild to pick up new products */
+export async function generateStaticParams() {
+  const products = await fetchAllProducts();
   return products.map((product) => ({ slug: product.slug }));
+}
+
+async function getProduct(slug: string) {
+  const product = await fetchProduct(slug);
+  return product ? toProduct(product) : undefined;
 }
 
 export async function generateMetadata(
   props: PageProps<"/products/[slug]">
 ): Promise<Metadata> {
   const { slug } = await props.params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
 
   if (!product) {
     return { title: "Product not found | Chamaro" };
@@ -43,15 +48,16 @@ export async function generateMetadata(
 
 export default async function ProductPage(props: PageProps<"/products/[slug]">) {
   const { slug } = await props.params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
 
   if (!product) {
     notFound();
   }
 
   const discount = discountPercent(product);
-  const categoryName = getCategoryName(product.category);
-  const related = getRelatedProducts(product);
+  const categoryName = product.categoryName;
+  const catalog = (await fetchAllProducts()).map(toProduct);
+  const related = getRelatedProducts(product, catalog);
 
   return (
     <div className="site-shell">

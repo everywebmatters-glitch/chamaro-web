@@ -1,20 +1,67 @@
 /* =========================================================
    FASTIFY API CLIENT
-   The static site calls the backend directly from the browser;
-   the backend must allow this site's origin via CORS.
+   Single fetch utility for the Chamaro backend. Every backend
+   response is { success, data, meta? } or { success: false, error }.
 ========================================================= */
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+export type ApiPageMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-  });
+type ApiSuccess<T> = { success: true; data: T; meta?: ApiPageMeta };
+type ApiFailure = { success: false; error: { code: string; message: string } };
 
-  if (!response.ok) {
-    throw new Error(`API ${response.status}: ${await response.text()}`);
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+    message: string,
+    readonly url: string,
+    options?: ErrorOptions
+  ) {
+    super(`${message} (${status} ${code}) — ${url}`, options);
+    this.name = "ApiError";
+  }
+}
+
+export function apiBaseUrl() {
+  const base = process.env.NEXT_PUBLIC_API_URL;
+  if (!base) {
+    throw new Error("NEXT_PUBLIC_API_URL is not set; add it to .env.local (see .env.example)");
+  }
+  return base.replace(/\/+$/, "");
+}
+
+export async function apiRequest<T>(
+  path: string,
+  init?: RequestInit
+): Promise<{ data: T; meta?: ApiPageMeta }> {
+  const url = `${apiBaseUrl()}${path}`;
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...init,
+      headers: { Accept: "application/json", ...init?.headers },
+    });
+  } catch (cause) {
+    throw new ApiError(0, "NETWORK_ERROR", "Could not reach the Chamaro API", url, { cause });
   }
 
-  return response.json() as Promise<T>;
+  const body = (await response.json().catch(() => null)) as ApiSuccess<T> | ApiFailure | null;
+
+  if (!response.ok || !body || body.success !== true) {
+    const error = body && body.success === false ? body.error : undefined;
+    throw new ApiError(
+      response.status,
+      error?.code ?? "HTTP_ERROR",
+      error?.message ?? response.statusText ?? "Request failed",
+      url
+    );
+  }
+
+  return { data: body.data, meta: body.meta };
 }
