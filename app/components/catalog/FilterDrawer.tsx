@@ -1,26 +1,25 @@
 "use client";
 
 import { ListFilter, X } from "lucide-react";
-import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-/* Slide-in filter panel; the filter links themselves are server-rendered */
+/* Slide-in filter panel; resetKey is the current listing URL */
 export default function FilterDrawer({
   activeCount,
+  resetKey,
   children,
 }: {
   activeCount: number;
+  resetKey: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   /* Close after a filter link changes the URL */
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- close on navigation
     setOpen(false);
-  }, [pathname, searchParams]);
+  }, [resetKey]);
 
   useEffect(() => {
     if (!open) return;

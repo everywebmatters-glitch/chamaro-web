@@ -1,26 +1,20 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { sortOptions, type SortOption } from "../lib/products";
 
-export default function SortSelect({ value }: { value: SortOption }) {
+export default function SortSelect({
+  value,
+  hrefFor,
+}: {
+  value: SortOption;
+  hrefFor: (sort: SortOption) => string;
+}) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (event.target.value === "featured") {
-      params.delete("sort");
-    } else {
-      params.set("sort", event.target.value);
-    }
-    params.delete("page");
-
-    const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    router.push(hrefFor(event.target.value as SortOption), { scroll: false });
   };
 
   return (
