@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuth } from "../auth/AuthProvider";
 import { useStore } from "../store/StoreProvider";
 import AuthField, { AUTH_NOT_CONNECTED, EMAIL_PATTERN, MIN_PASSWORD } from "./AuthField";
 
@@ -30,9 +32,11 @@ const sections = [
 type SectionId = (typeof sections)[number]["id"];
 
 function Dashboard({ go }: { go: (id: SectionId) => void }) {
+  const { status, user } = useAuth();
+
   return (
-    <div className="account-content">
-      <h2>Hello, guest</h2>
+    <div className="account-content" aria-busy={status === "loading" || undefined}>
+      <h2>Hello, {user?.name ?? (status === "loading" ? "" : "guest")}</h2>
       <p>
         From your account dashboard you can view your{" "}
         <button type="button" className="auth-inline-link" onClick={() => go("orders")}>
@@ -48,10 +52,12 @@ function Dashboard({ go }: { go: (id: SectionId) => void }) {
         </button>
         .
       </p>
-      <p className="checkout-notice account-guest-notice">
-        You&apos;re browsing as a guest. <Link href="/account/login">Log in</Link> or{" "}
-        <Link href="/account/register">create an account</Link> to keep your orders in one place.
-      </p>
+      {status === "unauthenticated" && (
+        <p className="checkout-notice account-guest-notice">
+          You&apos;re browsing as a guest. <Link href="/account/login">Log in</Link> or{" "}
+          <Link href="/account/register">create an account</Link> to keep your orders in one place.
+        </p>
+      )}
     </div>
   );
 }
@@ -173,7 +179,8 @@ function Details() {
   return (
     <div className="account-content">
       <h2>Account Details</h2>
-      <form className="auth-form" onSubmit={submit} noValidate>
+      {/* method="post": a submit before hydration must not put passwords in the URL */}
+      <form className="auth-form" method="post" onSubmit={submit} noValidate>
         <div className="field-row">
           <AuthField id="details-first" label="First name *" value={form.firstName} onChange={update("firstName")} error={errors.firstName} autoComplete="given-name" />
           <AuthField id="details-last" label="Last name *" value={form.lastName} onChange={update("lastName")} error={errors.lastName} autoComplete="family-name" />
@@ -201,6 +208,8 @@ function Details() {
 export default function AccountView() {
   const [active, setActive] = useState<SectionId>("dashboard");
   const { wishlist } = useStore();
+  const { status, logout } = useAuth();
+  const router = useRouter();
 
   return (
     <div className="account-layout">
@@ -221,9 +230,23 @@ export default function AccountView() {
           <li>
             <Link href="/wishlist">Wishlist ({wishlist.length})</Link>
           </li>
-          <li>
-            <Link href="/account/login">Log in</Link>
-          </li>
+          {status === "authenticated" ? (
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  router.push("/account/login");
+                }}
+              >
+                Log out
+              </button>
+            </li>
+          ) : (
+            <li>
+              <Link href="/account/login">Log in</Link>
+            </li>
+          )}
         </ul>
       </nav>
 

@@ -52,6 +52,8 @@ export default function AuthField({ id, label, type = "text", value, onChange, e
 }
 
 export { EMAIL_PATTERN } from "../../lib/site";
+/* Backend limits (utils/password.ts) */
 export const MIN_PASSWORD = 8;
+export const MAX_PASSWORD = 200;
 export const AUTH_NOT_CONNECTED =
   "Customer accounts aren't switched on yet, so nothing was sent. You can still shop and check out as a guest.";

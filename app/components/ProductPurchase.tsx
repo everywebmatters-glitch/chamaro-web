@@ -24,7 +24,8 @@ import { contact } from "../lib/site";
 export default function ProductPurchase({ product }: { product: Product }) {
   const { addToCart, toggleWishlist, isWishlisted, notify } = useStore();
 
-  const [color, setColor] = useState(product.colors[0]);
+  /* API products may have no colours yet */
+  const [color, setColor] = useState(product.colors.at(0));
   const [option, setOption] = useState(
     product.option?.values.find((value) => value.available)?.label
   );
@@ -50,7 +51,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
   }, []);
 
   const add = () =>
-    addToCart({ slug: product.slug, color: color.name, option, quantity }, product.name);
+    addToCart({ slug: product.slug, color: color?.name ?? "", option, quantity }, product.name);
 
   const share = async () => {
     const url = window.location.href;
@@ -66,30 +67,32 @@ export default function ProductPurchase({ product }: { product: Product }) {
     }
   };
 
-  const variantLabel = [color.name, option].filter(Boolean).join(" / ");
+  const variantLabel = [color?.name, option].filter(Boolean).join(" / ");
 
   return (
     <div className="product-purchase">
       {/* Colour */}
 
-      <div className="purchase-field">
-        <p className="option-label">
-          Colour: <strong>{color.name}</strong>
-        </p>
-        <div className="swatch-row">
-          {product.colors.map((item) => (
-            <button
-              key={item.name}
-              type="button"
-              className={`swatch${item.name === color.name ? " selected" : ""}`}
-              style={{ background: item.hex }}
-              onClick={() => setColor(item)}
-              aria-label={item.name}
-              aria-pressed={item.name === color.name}
-            />
-          ))}
+      {color && (
+        <div className="purchase-field">
+          <p className="option-label">
+            Colour: <strong>{color.name}</strong>
+          </p>
+          <div className="swatch-row">
+            {product.colors.map((item) => (
+              <button
+                key={item.name}
+                type="button"
+                className={`swatch${item.name === color.name ? " selected" : ""}`}
+                style={{ background: item.hex }}
+                onClick={() => setColor(item)}
+                aria-label={item.name}
+                aria-pressed={item.name === color.name}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Option (e.g. base finish) */}
 

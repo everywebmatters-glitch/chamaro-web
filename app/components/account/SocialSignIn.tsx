@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { startGoogleSignIn } from "../../lib/google-auth";
 
 /* Brand marks drawn inline — lucide-react no longer ships brand icons */
 const providers = [
@@ -51,12 +52,19 @@ export default function SocialSignIn({ action }: { action: "Log in" | "Sign up" 
             key={provider.id}
             type="button"
             className="social-button"
-            onClick={() =>
-              // TODO: start the OAuth flow for this provider once accounts exist
+            onClick={() => {
+              if (provider.id === "google") {
+                setNotice("");
+                startGoogleSignIn().catch(() =>
+                  setNotice("Google sign-in couldn't start in this browser. Please log in with your email.")
+                );
+                return;
+              }
+              // TODO: Apple/Facebook have no backend OAuth flow yet
               setNotice(
                 `${provider.name} sign-in isn't switched on yet. You can still shop and check out as a guest.`
-              )
-            }
+              );
+            }}
           >
             {provider.icon}
             <span>

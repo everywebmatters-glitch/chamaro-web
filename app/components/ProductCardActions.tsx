@@ -11,7 +11,8 @@ import { useStore } from "./store/StoreProvider";
 export default function ProductCardActions({ product }: { product: Product }) {
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
   const [quickViewOpen, setQuickViewOpen] = useState(false);
-  const [color, setColor] = useState(product.colors[0]);
+  /* API products may have no colours yet */
+  const [color, setColor] = useState(product.colors.at(0));
 
   const saved = isWishlisted(product.slug);
   const soldOut = product.availability === "out-of-stock";
@@ -19,7 +20,7 @@ export default function ProductCardActions({ product }: { product: Product }) {
 
   const quickAdd = () =>
     addToCart(
-      { slug: product.slug, color: color.name, option: firstOption, quantity: 1 },
+      { slug: product.slug, color: color?.name ?? "", option: firstOption, quantity: 1 },
       product.name
     );
 
@@ -69,7 +70,7 @@ export default function ProductCardActions({ product }: { product: Product }) {
           </div>
 
           <div className="quick-view-info">
-            <p className="product-category">{getCategoryName(product.category)}</p>
+            <p className="product-category">{product.categoryName ?? getCategoryName(product.category)}</p>
             <h2>{product.name}</h2>
 
             <div className="product-price-row">
@@ -81,22 +82,26 @@ export default function ProductCardActions({ product }: { product: Product }) {
 
             <p className="quick-view-description">{product.shortDescription}</p>
 
-            <p className="option-label">
-              Colour: <strong>{color.name}</strong>
-            </p>
-            <div className="swatch-row">
-              {product.colors.map((option) => (
-                <button
-                  key={option.name}
-                  type="button"
-                  className={`swatch${option.name === color.name ? " selected" : ""}`}
-                  style={{ background: option.hex }}
-                  onClick={() => setColor(option)}
-                  aria-label={option.name}
-                  aria-pressed={option.name === color.name}
-                />
-              ))}
-            </div>
+            {color && (
+              <>
+                <p className="option-label">
+                  Colour: <strong>{color.name}</strong>
+                </p>
+                <div className="swatch-row">
+                  {product.colors.map((option) => (
+                    <button
+                      key={option.name}
+                      type="button"
+                      className={`swatch${option.name === color.name ? " selected" : ""}`}
+                      style={{ background: option.hex }}
+                      onClick={() => setColor(option)}
+                      aria-label={option.name}
+                      aria-pressed={option.name === color.name}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
 
             <button
               type="button"

@@ -29,7 +29,7 @@ export default function ServiceHighlights() {
       <ul className="service-grid">
         {highlights.map(({ icon: Icon, title, description }) => (
           <li key={title} className="service-card">
-            <Icon size={40} strokeWidth={1.2} aria-hidden="true" />
+            <Icon size={30} strokeWidth={1.2} aria-hidden="true" />
             <h3>{title}</h3>
             <p>{description}</p>
           </li>

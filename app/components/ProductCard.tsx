@@ -1,12 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  availabilityLabels,
-  discountPercent,
-  formatPrice,
-  getCategoryName,
-  type Product,
-} from "../lib/products";
+import { formatPrice, getCategoryName, type Product } from "../lib/products";
 import ProductCardActions from "./ProductCardActions";
 
 export function StarRating({
@@ -50,7 +44,6 @@ export default function ProductCard({
   compact?: boolean;
   layout?: "grid" | "list";
 }) {
-  const discount = discountPercent(product);
   const href = `/products/${product.slug}`;
 
   return (
@@ -76,22 +69,15 @@ export default function ProductCard({
           )}
         </Link>
 
-        <div className="product-badges">
-          {discount > 0 && <span className="badge-sale">-{discount}%</span>}
-          {product.availability !== "in-stock" && (
-            <span className={`badge-${product.availability}`}>
-              {availabilityLabels[product.availability]}
-            </span>
-          )}
-        </div>
-
         {!compact && <ProductCardActions product={product} />}
       </div>
 
       <div className="product-meta">
         {layout === "list" && (
-          <p className="product-category">{getCategoryName(product.category)}</p>
+          <p className="product-category">{product.categoryName ?? getCategoryName(product.category)}</p>
         )}
+
+        <StarRating rating={product.rating} reviewCount={product.reviewCount} />
 
         <h3>
           <Link href={href}>{product.name}</Link>

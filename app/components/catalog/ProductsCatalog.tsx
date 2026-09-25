@@ -7,12 +7,10 @@ import SortSelect from "../SortSelect";
 import CatalogView from "./CatalogView";
 import FilterDrawer from "./FilterDrawer";
 import Pagination from "./Pagination";
+import type { ApiCategory } from "../../lib/catalog-api";
 import {
   allColors,
-  categories,
-  getCategoryName,
   PRICE_RANGES,
-  products,
   sortOptions,
   sortProducts,
   type Product,
@@ -21,11 +19,17 @@ import {
 
 /* =========================================================
    PRODUCT LISTING
-   Filters live in the query string and are applied in the
+   Products and categories come from the API at build time;
+   filters live in the query string and are applied in the
    browser, so /products can be exported as a static page.
 ========================================================= */
 
 const PAGE_SIZE = 12;
+
+type CatalogData = {
+  products: Product[];
+  categories: Pick<ApiCategory, "slug" | "name">[];
+};
 
 type Filters = {
   category?: string;
@@ -47,15 +51,17 @@ function applyFilters(items: Product[], filters: Omit<Filters, "sort" | "page">)
 }
 
 /* Reads the URL; must sit inside a <Suspense> boundary for static export */
-export default function ProductsCatalog() {
+export default function ProductsCatalog(props: CatalogData) {
   const searchParams = useSearchParams();
-  return <ProductsCatalogContent searchParams={searchParams} />;
+  return <ProductsCatalogContent {...props} searchParams={searchParams} />;
 }
 
 /* Rendered with empty params as the prerendered fallback (unfiltered list) */
 export function ProductsCatalogContent({
+  products,
+  categories,
   searchParams = new URLSearchParams(),
-}: {
+}: CatalogData & {
   searchParams?: Pick<URLSearchParams, "get">;
 }) {
   /* Validate every param against known values */
@@ -63,7 +69,9 @@ export function ProductsCatalogContent({
   const priceParam = searchParams.get("price") ?? undefined;
   const colorParam = searchParams.get("color") ?? undefined;
   const sortParam = searchParams.get("sort") ?? undefined;
-  const colors = allColors();
+  const colors = allColors(products);
+  const getCategoryName = (slug: string) =>
+    categories.find((category) => category.slug === slug)?.name;
 
   const filters: Filters = {
     category: categories.some((item) => item.slug === categoryParam) ? categoryParam : undefined,

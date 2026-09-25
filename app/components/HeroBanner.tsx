@@ -2,48 +2,41 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Zap } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /* =========================================================
    HERO SLIDES
    Each slide carries its own tint so the page top, the
-   circle and the accent triangles change together.
+   circle and the accent triangles change together. A
+   fullBleed slide skips the circle cutout entirely: its
+   artwork already carries its own negative space for the
+   copy, so `circle`/`accent`/`imageScale` are unused.
 ========================================================= */
 
-const slides = [
+type Slide = {
+  title: [string, string];
+  subtitle: string;
+  image: string;
+  alt: string;
+  href: string;
+  background: string;
+  circle?: string;
+  accent?: string;
+  imageScale?: number;
+  fullBleed?: boolean;
+};
+
+const slides: Slide[] = [
   {
-    title: ["Engineered", "to Lead"],
-    subtitle: "Boss chairs built for long, focused workdays",
-    image: "/hero/boss-green.webp",
-    alt: "Wing Way Boss Chair in forest green leatherette",
-    href: "/products?category=boss",
-    background: "#eef2ef",
-    circle: "#dfe9e2",
-    accent: "#cddfd3",
-    imageScale: 1,
-  },
-  {
-    title: ["Designed", "for Comfort"],
-    subtitle: "Executive seating with generous, all-day cushioning",
-    image: "/hero/executive-tan.webp",
-    alt: "Regent Executive Chair in tan leatherette with diamond stitching",
-    href: "/products?category=executive",
-    background: "#f8f2ec",
-    circle: "#f2e2d4",
-    accent: "#ecd9c4",
-    imageScale: 0.82,
-  },
-  {
-    title: ["Work with", "Confidence"],
-    subtitle: "Premium office furniture for every workspace",
-    image: "/hero/boss-green-back.webp",
-    alt: "Wing Way Boss Chair, rear view showing the chrome five-star base",
+    title: ["Every Style,", "One Collection"],
+    subtitle: "From boss chairs to cafe seating — find your perfect fit",
+    /* Full-bleed banner: no circle cutout, the artwork carries its own negative space */
+    image: "/hero/executive-trio.svg",
+    alt: "Three executive chairs in tan leatherette, front and side views",
     href: "/products",
-    background: "#eff1f6",
-    circle: "#dfe4f1",
-    accent: "#d3daf0",
-    imageScale: 0.92,
+    background: "#ffffff",
+    fullBleed: true,
   },
 ];
 
@@ -53,8 +46,9 @@ const slides = [
 
 const scrollingText = [
   "Premium office furniture",
-  "Ergonomic comfort, all day",
-  "1-year warranty on every chair",
+  "Ergonomic comfort",
+  "1 year warranty",
+  "Modern designs",
   "Bulk orders welcome",
   "Made for every workspace",
 ];
@@ -101,7 +95,7 @@ export default function HeroBanner() {
           return (
             <div
               key={slide.image}
-              className={`hero-slide${active ? " active" : ""}`}
+              className={`hero-slide${slide.fullBleed ? " hero-slide-banner" : ""}${active ? " active" : ""}`}
               role="group"
               aria-roledescription="slide"
               aria-label={`${index + 1} of ${slides.length}`}
@@ -125,28 +119,42 @@ export default function HeroBanner() {
 
                 <Link href={slide.href} className="hero-cta">
                   Shop collection
-                  <ChevronRight size={20} strokeWidth={2.4} aria-hidden="true" />
+                  <ChevronRight size={16} strokeWidth={2.4} aria-hidden="true" />
                 </Link>
               </div>
 
-              <div className="hero-visual" aria-hidden={!active}>
-                <span className="hero-circle" />
-                <span className="hero-triangle hero-triangle-a" />
-                <span className="hero-triangle hero-triangle-b" />
-
-                <div
-                  className="hero-image"
-                  style={{ "--image-scale": slide.imageScale } as React.CSSProperties}
-                >
+              {slide.fullBleed && (
+                <div className="hero-banner-image" aria-hidden={!active}>
                   <Image
                     src={slide.image}
                     alt={slide.alt}
                     fill
                     priority={index === 0}
-                    sizes="(max-width: 760px) 90vw, 45vw"
+                    sizes="100vw"
                   />
                 </div>
-              </div>
+              )}
+
+              {!slide.fullBleed && (
+                <div className="hero-visual" aria-hidden={!active}>
+                  <span className="hero-circle" />
+                  <span className="hero-triangle hero-triangle-a" />
+                  <span className="hero-triangle hero-triangle-b" />
+
+                  <div
+                    className="hero-image"
+                    style={{ "--image-scale": slide.imageScale } as React.CSSProperties}
+                  >
+                    <Image
+                      src={slide.image}
+                      alt={slide.alt}
+                      fill
+                      priority={index === 0}
+                      sizes="(max-width: 760px) 90vw, 45vw"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
@@ -176,7 +184,7 @@ export default function HeroBanner() {
             <div className="value-group" key={copy} aria-hidden={copy === 1 || undefined}>
               {scrollingText.map((text) => (
                 <span key={text}>
-                  <Zap size={26} strokeWidth={0} fill="currentColor" aria-hidden="true" />
+                  <span className="value-dot" aria-hidden="true">•</span>
                   {text}
                 </span>
               ))}
