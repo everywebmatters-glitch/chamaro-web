@@ -1506,7 +1506,7 @@ button {
   align-items: center;
   display: grid;
   gap: 16px;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto 1fr;
   margin: 0 auto 40px;
   max-width: var(--content-max);
 }
