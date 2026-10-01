@@ -34,7 +34,7 @@ export async function startGoogleSignIn() {
   // state cookie and redirects to Google, which fetch() or the Next router can't do.
   // eslint-disable-next-line @next/next/no-location-assign-relative-destination
   window.location.assign(
-    `${apiBaseUrl()}/api/v1/auth/google?code_challenge=${encodeURIComponent(challenge)}`
+    `${apiBaseUrl()}/auth/google?code_challenge=${encodeURIComponent(challenge)}`
   );
 }
 

@@ -1,31 +1,23 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ChevronRight } from "lucide-react";
 import Header from "../../components/Header";
-import ProductCard, { StarRating } from "../../components/ProductCard";
-import ProductGallery from "../../components/ProductGallery";
-import ProductPurchase from "../../components/ProductPurchase";
-import ProductTabs from "../../components/ProductTabs";
+import ProductDetail from "../../components/ProductDetail";
 import SiteFooter from "../../components/SiteFooter";
-import { fetchAllProducts, fetchProduct, toProduct } from "../../lib/catalog-api";
-import {
-  availabilityLabels,
-  discountPercent,
-  formatPrice,
-  getRelatedProducts,
-} from "../../lib/products";
+import { fetchAllProducts, fetchProduct, SHELL_SLUG, toProduct } from "../../lib/catalog-api";
+import { getRelatedProducts } from "../../lib/products";
 
 /* Only the slugs below are exported; anything else is the static 404 page */
 export const dynamicParams = false;
 
-/* Runs at build time (static export); rebuild to pick up new products */
+/* Runs at build time (static export). Every active product gets a prerendered page, plus
+   one shell page (/products/_/) that public/.htaccess serves for products created after the
+   build; ProductDetail then loads those from the API in the browser. */
 export async function generateStaticParams() {
   const products = await fetchAllProducts();
-  return products.map((product) => ({ slug: product.slug }));
+  return [...products.map((product) => ({ slug: product.slug })), { slug: SHELL_SLUG }];
 }
 
 async function getProduct(slug: string) {
+  if (slug === SHELL_SLUG) return undefined;
   const product = await fetchProduct(slug);
   return product ? toProduct(product) : undefined;
 }
@@ -37,7 +29,7 @@ export async function generateMetadata(
   const product = await getProduct(slug);
 
   if (!product) {
-    return { title: "Product not found | Chamaro" };
+    return { title: "Product | Chamaro" };
   }
 
   return {
@@ -49,83 +41,16 @@ export async function generateMetadata(
 export default async function ProductPage(props: PageProps<"/products/[slug]">) {
   const { slug } = await props.params;
   const product = await getProduct(slug);
-
-  if (!product) {
-    notFound();
-  }
-
-  const discount = discountPercent(product);
-  const categoryName = product.categoryName;
-  const catalog = (await fetchAllProducts()).map(toProduct);
-  const related = getRelatedProducts(product, catalog);
+  const initial = product
+    ? { product, related: getRelatedProducts(product, (await fetchAllProducts()).map(toProduct)) }
+    : null;
 
   return (
     <div className="site-shell">
       <Header />
 
       <main>
-        <div className="product-page">
-          <nav className="breadcrumbs breadcrumbs-chevron" aria-label="Breadcrumb">
-            <ol>
-              <li>
-                <Link href="/">Home</Link>
-                <ChevronRight size={14} aria-hidden="true" />
-              </li>
-              <li>
-                <Link href={`/products?category=${product.category}`}>{categoryName}</Link>
-                <ChevronRight size={14} aria-hidden="true" />
-              </li>
-              <li aria-current="page">{product.name}</li>
-            </ol>
-          </nav>
-
-          {/* Gallery + summary */}
-
-          <div className="product-layout">
-            <ProductGallery images={product.images} />
-
-            <div className="product-summary">
-              <h1>{product.name}</h1>
-
-              <div className="product-summary-meta">
-                <span className={`stock-badge stock-${product.availability}`}>
-                  {availabilityLabels[product.availability]}
-                </span>
-                <StarRating rating={product.rating} reviewCount={product.reviewCount} />
-              </div>
-
-              <div className="product-price-row product-price-large">
-                <span className="price-current">{formatPrice(product.price)}</span>
-
-                {product.compareAtPrice && (
-                  <s className="price-original">{formatPrice(product.compareAtPrice)}</s>
-                )}
-
-                {discount > 0 && <span className="price-save">{discount}% OFF</span>}
-              </div>
-
-              <p className="product-lede">{product.shortDescription}</p>
-
-              <ProductPurchase product={product} />
-            </div>
-          </div>
-
-          <ProductTabs product={product} />
-        </div>
-
-        {/* Related */}
-
-        {related.length > 0 && (
-          <section className="related-products" aria-labelledby="related-title">
-            <h2 id="related-title">You May Also Like</h2>
-
-            <div className="catalog-grid" data-cols="4">
-              {related.map((item) => (
-                <ProductCard key={item.slug} product={item} />
-              ))}
-            </div>
-          </section>
-        )}
+        <ProductDetail initial={initial} slug={slug} />
       </main>
 
       <SiteFooter />

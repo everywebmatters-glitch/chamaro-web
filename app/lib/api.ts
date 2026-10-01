@@ -27,6 +27,7 @@ export class ApiError extends Error {
   }
 }
 
+/* Versioned API base, e.g. https://api-dev.chamaro.com/api/v1; request paths are relative to it */
 export function apiBaseUrl() {
   const base = process.env.NEXT_PUBLIC_API_URL;
   if (!base) {

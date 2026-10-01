@@ -1,4 +1,4 @@
-import { getProduct, type Product } from "./products";
+import type { Product } from "./products";
 
 /* =========================================================
    CART PRICING RULES
@@ -70,10 +70,14 @@ export function variantLabel(line: Pick<CartLine, "color" | "option">) {
   return [line.color, line.option].filter(Boolean).join(" / ");
 }
 
-/* Attach product data; drops lines whose product no longer exists */
-export function resolveLines(cart: CartLine[]): ResolvedLine[] {
+/* Attach live product data (from the store's API catalog); drops lines whose product
+   no longer exists or is no longer on sale */
+export function resolveLines(
+  cart: CartLine[],
+  findProduct: (slug: string) => Product | undefined
+): ResolvedLine[] {
   return cart.flatMap((line) => {
-    const product = getProduct(line.slug);
+    const product = findProduct(line.slug);
     if (!product) return [];
     return [
       {

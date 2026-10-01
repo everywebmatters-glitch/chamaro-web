@@ -43,19 +43,19 @@ function postJson<T>(path: string, body: unknown) {
 
 /* POST /api/v1/auth/register — { name, email, password (8–200 chars) } */
 export async function registerCustomer(input: { name: string; email: string; password: string }) {
-  const { data } = await postJson<CustomerProfile>("/api/v1/auth/register", input);
+  const { data } = await postJson<CustomerProfile>("/auth/register", input);
   return data;
 }
 
 /* POST /api/v1/auth/login — { email, password } */
 export async function loginCustomer(input: { email: string; password: string }) {
-  const { data } = await postJson<LoginResult>("/api/v1/auth/login", input);
+  const { data } = await postJson<LoginResult>("/auth/login", input);
   return data;
 }
 
 /* GET /api/v1/auth/me — 401 bad/expired token, 403 not an active customer */
 export async function fetchCurrentCustomer(token: string) {
-  const { data } = await apiRequest<CustomerProfile>("/api/v1/auth/me", {
+  const { data } = await apiRequest<CustomerProfile>("/auth/me", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
@@ -63,7 +63,7 @@ export async function fetchCurrentCustomer(token: string) {
 
 /* POST /api/v1/auth/google/exchange — one-time code from the callback + PKCE verifier */
 export async function exchangeGoogleCode(input: { code: string; codeVerifier: string }) {
-  const { data } = await postJson<GoogleExchangeResult>("/api/v1/auth/google/exchange", input);
+  const { data } = await postJson<GoogleExchangeResult>("/auth/google/exchange", input);
   return data;
 }
 

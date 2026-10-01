@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Header from "../components/Header";
-import ServiceHighlights from "../components/ServiceHighlights";
 import SiteFooter from "../components/SiteFooter";
 import ProductsCatalog, {
   ProductsCatalogContent,
@@ -31,8 +30,6 @@ export default async function ProductsPage() {
         <Suspense fallback={<ProductsCatalogContent {...catalog} />}>
           <ProductsCatalog {...catalog} />
         </Suspense>
-
-        <ServiceHighlights />
       </main>
 
       <SiteFooter />

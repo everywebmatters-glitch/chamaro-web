@@ -40,6 +40,9 @@ export type Product = {
   features: string[];
   materials: string[];
   specs: { label: string; value: string }[];
+  /* Per-product text from Admin; storePolicies is shown when absent */
+  returnPolicy?: string;
+  warranty?: string;
   featured?: boolean;
   /* Lower number = sells more; drives the "Best selling" sort */
   salesRank: number;
