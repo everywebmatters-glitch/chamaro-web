@@ -13,10 +13,6 @@ export default function RegisterPage() {
     <div className="site-shell">
       <Header />
 
-      <div className="page-title-band">
-        <h1>Register</h1>
-      </div>
-
       <main className="account-page">
         <RegisterView />
       </main>

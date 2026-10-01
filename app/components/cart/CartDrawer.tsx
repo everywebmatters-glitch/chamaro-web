@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, NotebookPen, TicketPercent, Truck, X } from "lucide-react";
+import { Eye, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   cartSubtotal,
@@ -15,17 +15,7 @@ import {
 import { formatPrice } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
 import { useStore } from "../store/StoreProvider";
-import DiscountForm from "./DiscountForm";
 import FreeShippingProgress from "./FreeShippingProgress";
-import ShippingEstimator from "./ShippingEstimator";
-
-type Tool = "note" | "shipping" | "discount";
-
-const tools: { id: Tool; label: string; icon: typeof Truck }[] = [
-  { id: "note", label: "Add order note", icon: NotebookPen },
-  { id: "shipping", label: "Estimate shipping", icon: Truck },
-  { id: "discount", label: "Discount code", icon: TicketPercent },
-];
 
 export default function CartDrawer() {
   const router = useRouter();
@@ -38,11 +28,8 @@ export default function CartDrawer() {
     closeCart,
     setQuantity,
     removeLine,
-    orderNote,
-    setOrderNote,
     discountCode,
   } = useStore();
-  const [tool, setTool] = useState<Tool | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [slide, setSlide] = useState(0);
 
@@ -215,52 +202,6 @@ export default function CartDrawer() {
                 </section>
               )}
             </div>
-
-            {/* Tools: note / shipping / discount */}
-
-            <div className="cart-tools">
-              {tools.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={tool === id ? "selected" : ""}
-                  onClick={() => setTool(tool === id ? null : id)}
-                  aria-label={label}
-                  aria-expanded={tool === id}
-                  title={label}
-                >
-                  <Icon size={20} strokeWidth={1.6} />
-                </button>
-              ))}
-            </div>
-
-            {tool && (
-              <div className="cart-tool-panel">
-                <div className="cart-tool-panel-header">
-                  <h3>{tools.find((item) => item.id === tool)?.label}</h3>
-                  <button type="button" onClick={() => setTool(null)} aria-label="Close panel">
-                    <X size={18} />
-                  </button>
-                </div>
-
-                {tool === "note" && (
-                  <>
-                    <label className="sr-only" htmlFor="drawer-note">
-                      Order note
-                    </label>
-                    <textarea
-                      id="drawer-note"
-                      value={orderNote}
-                      onChange={(event) => setOrderNote(event.target.value)}
-                      placeholder="Delivery instructions, floor number, GST details…"
-                      rows={4}
-                    />
-                  </>
-                )}
-                {tool === "shipping" && <ShippingEstimator subtotal={subtotal} idPrefix="drawer" />}
-                {tool === "discount" && <DiscountForm idPrefix="drawer-discount" />}
-              </div>
-            )}
 
             {/* Footer */}
 

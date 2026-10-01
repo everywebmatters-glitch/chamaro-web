@@ -56,8 +56,21 @@ export default function LoginView() {
   };
 
   return (
-    <div className="auth-columns">
-      <section className="auth-panel" aria-labelledby="auth-form-title">
+    <div className="auth-split">
+      <aside className="auth-split-panel" aria-hidden="true">
+        <p className="auth-split-eyebrow">You can easily</p>
+        <h2 className="auth-split-headline">
+          Sign in to track your
+          <br />
+          orders and saved chairs
+        </h2>
+        <p className="auth-split-copy">
+          Pick up right where you left off — orders, saved addresses and your
+          wishlist, all in one place.
+        </p>
+      </aside>
+
+      <section className="auth-split-form" aria-labelledby="auth-form-title">
         {mode === "login" ? (
           <>
             <h2 id="auth-form-title">Log in</h2>
@@ -69,8 +82,6 @@ export default function LoginView() {
             <p className="auth-lead">We&apos;ll email you a link to reset your password.</p>
           </>
         )}
-
-        {mode === "login" && <SocialSignIn action="Log in" />}
 
         {/* method="post": a submit before hydration must not put credentials in the URL */}
         <form className="auth-form" method="post" onSubmit={submit} noValidate>
@@ -118,18 +129,20 @@ export default function LoginView() {
               {notice}
             </p>
           )}
-        </form>
-      </section>
 
-      <section className="auth-panel auth-panel-aside" aria-labelledby="auth-new-title">
-        <h2 id="auth-new-title">I&apos;m new here</h2>
-        <p className="auth-lead">
-          Create an account to track orders, save delivery addresses for faster checkout and keep
-          your wishlist across devices.
-        </p>
-        <Link href="/account/register" className="wishlist-return auth-secondary">
-          Register
-        </Link>
+          <p className="auth-switch">
+            Don&apos;t have an account? <Link href="/account/register">Sign up</Link>
+          </p>
+
+          {mode === "login" && (
+            <SocialSignIn
+              action="Log in"
+              include={["google", "apple"]}
+              compact
+              dividerLabel="or continue with"
+            />
+          )}
+        </form>
       </section>
     </div>
   );

@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { ArrowUpRight, ChevronUp } from "lucide-react";
 import PaymentBadges from "./PaymentBadges";
@@ -180,7 +182,15 @@ export default function SiteFooter() {
         </div>
       </div>
 
-      <a className="back-to-top" href="#top" aria-label="Back to top">
+      <a
+        className="back-to-top"
+        href="#top"
+        aria-label="Back to top"
+        onClick={(event) => {
+          event.preventDefault();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      >
         <ChevronUp size={20} strokeWidth={1.8} />
       </a>
     </footer>

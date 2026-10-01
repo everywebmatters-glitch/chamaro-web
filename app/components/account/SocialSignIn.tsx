@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { startGoogleSignIn } from "../../lib/google-auth";
 
+type ProviderId = "google" | "apple" | "facebook";
+
 /* Brand marks drawn inline — lucide-react no longer ships brand icons */
-const providers = [
+const providers: { id: ProviderId; name: string; icon: React.ReactNode }[] = [
   {
     id: "google",
     name: "Google",
@@ -41,17 +43,41 @@ const providers = [
   },
 ];
 
-export default function SocialSignIn({ action }: { action: "Log in" | "Sign up" }) {
+export default function SocialSignIn({
+  action,
+  include,
+  showDivider = true,
+  dividerLabel,
+  compact = false,
+}: {
+  action: "Log in" | "Sign up";
+  /** Which providers to show — defaults to all three. */
+  include?: ProviderId[];
+  /** The "or sign up with email" divider only makes sense when the buttons sit above the form. */
+  showDivider?: boolean;
+  /** Overrides the default "or log in/sign up with email" divider text. */
+  dividerLabel?: string;
+  /** Icon-only circular buttons in a row, instead of full-width labeled buttons. */
+  compact?: boolean;
+}) {
   const [notice, setNotice] = useState("");
+  const shownProviders = include ? providers.filter((provider) => include.includes(provider.id)) : providers;
 
   return (
     <div className="social-sign-in">
-      <div className="social-buttons">
-        {providers.map((provider) => (
+      {showDivider && (
+        <p className="social-divider">
+          <span>{dividerLabel ?? `or ${action === "Log in" ? "log in" : "sign up"} with email`}</span>
+        </p>
+      )}
+
+      <div className={compact ? "social-buttons social-buttons-compact" : "social-buttons"}>
+        {shownProviders.map((provider) => (
           <button
             key={provider.id}
             type="button"
-            className="social-button"
+            className={compact ? "social-button social-button-compact" : "social-button"}
+            aria-label={compact ? `${action === "Log in" ? "Continue" : "Sign up"} with ${provider.name}` : undefined}
             onClick={() => {
               if (provider.id === "google") {
                 setNotice("");
@@ -67,9 +93,11 @@ export default function SocialSignIn({ action }: { action: "Log in" | "Sign up" 
             }}
           >
             {provider.icon}
-            <span>
-              {action === "Log in" ? "Continue" : "Sign up"} with {provider.name}
-            </span>
+            {!compact && (
+              <span>
+                {action === "Log in" ? "Continue" : "Sign up"} with {provider.name}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -79,10 +107,6 @@ export default function SocialSignIn({ action }: { action: "Log in" | "Sign up" 
           {notice}
         </p>
       )}
-
-      <p className="social-divider">
-        <span>or {action === "Log in" ? "log in" : "sign up"} with email</span>
-      </p>
     </div>
   );
 }
