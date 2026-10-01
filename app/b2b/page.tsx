@@ -19,7 +19,7 @@ import Header from "../components/Header";
 import SiteFooter from "../components/SiteFooter";
 import QuoteForm from "../components/b2b/QuoteForm";
 import { categories, products, type ProductCategory } from "../lib/products";
-import { contact } from "../lib/site";
+import { contact, primaryPhoneHref } from "../lib/site";
 
 export const metadata: Metadata = {
   title: "B2B & Bulk Orders | Chamaro",
@@ -154,7 +154,7 @@ export default function B2BPage() {
             <ul className="b2b-direct">
               <li>
                 <Phone size={18} aria-hidden="true" />
-                <a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a>
+                <a href={primaryPhoneHref}>{contact.phone}</a>
               </li>
               <li>
                 <Mail size={18} aria-hidden="true" />

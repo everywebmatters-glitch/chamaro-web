@@ -4,7 +4,7 @@ import { ArrowUpRight, Clock, Mail, MapPin, Phone } from "lucide-react";
 import Header from "../components/Header";
 import SiteFooter from "../components/SiteFooter";
 import ContactForm from "../components/contact/ContactForm";
-import { contact } from "../lib/site";
+import { contact, primaryPhoneHref } from "../lib/site";
 
 export const metadata: Metadata = {
   title: "Contact Us | Chamaro",
@@ -35,9 +35,12 @@ export default function ContactPage() {
                 <div>
                   <h3>Address</h3>
                   <p>
-                    {contact.address[0]}
-                    <br />
-                    {contact.address[1]}
+                    {contact.address.map((line, index) => (
+                      <span key={line}>
+                        {index > 0 && <br />}
+                        {line}
+                      </span>
+                    ))}
                   </p>
                   <a href={contact.mapUrl} target="_blank" rel="noreferrer" className="contact-direction">
                     Get directions
@@ -50,7 +53,7 @@ export default function ContactPage() {
                 <div>
                   <h3>Phone</h3>
                   <p>
-                    <a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a>
+                    <a href={primaryPhoneHref}>{contact.phone}</a>
                   </p>
                 </div>
               </li>

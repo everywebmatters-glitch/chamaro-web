@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Poppins } from "next/font/google";
+import { Geist_Mono, Montserrat, Poppins } from "next/font/google";
 import localFont from "next/font/local";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import CartDrawer from "./components/cart/CartDrawer";
@@ -16,6 +16,13 @@ const poppins = Poppins({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+/* Montserrat — used for policy page sub-headings (Shipping, Returns, etc.) */
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 /* PP Telegraf (commercial license), self-hosted; used for all headings (see globals.css) */
@@ -40,7 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${poppins.variable} ${geistMono.variable} ${telegraf.variable} h-full antialiased`}
+      className={`${poppins.variable} ${geistMono.variable} ${telegraf.variable} ${montserrat.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>

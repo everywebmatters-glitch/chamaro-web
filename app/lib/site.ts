@@ -1,15 +1,22 @@
 /* =========================================================
    STORE CONTACT DETAILS
-   TODO: replace placeholders with the real showroom details
 ========================================================= */
 
 export const contact = {
-  address: ["Chamaro Showroom, Street Address,", "City, State PIN"],
-  email: "hello@chamaro.com",
-  phone: "+91 00000 00000",
+  address: [
+    "No.8/390 & 8/391, Kaviyarasu",
+    " Kannadhasan Nagar Kodungaiyur,", 
+    "Chennai - 600118, Tamil Nadu.",
+  ],
+  email: "chamarochairs@gmail.com",
+  phone: "+91 97414 18807 / +91 86670 53897",
   hours: "Mon – Sat, 10:00 am – 7:00 pm",
   mapUrl: "https://maps.google.com",
 };
+
+/* First number in `contact.phone`, digits only, for `tel:` links — the
+   display string can list more than one number separated by " / ". */
+export const primaryPhoneHref = `tel:${contact.phone.split("/")[0].trim().replace(/\s/g, "")}`;
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PHONE_PATTERN = /^(\+91[\s-]?)?[6-9]\d{9}$/;

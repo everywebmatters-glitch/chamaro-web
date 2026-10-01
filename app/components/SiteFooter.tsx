@@ -1,85 +1,78 @@
 import Image from "next/image";
 import { ArrowUpRight, ChevronUp } from "lucide-react";
-import NewsletterForm from "./NewsletterForm";
 import PaymentBadges from "./PaymentBadges";
-import { contact } from "../lib/site";
+import { contact, primaryPhoneHref } from "../lib/site";
 
 /* =========================================================
    FOOTER CONTENT
    TODO: replace placeholder link targets
 ========================================================= */
 
-const helpLinks = [
-  "Privacy Policy",
-  "Returns + Exchanges",
-  "Shipping",
-  "Terms & Conditions",
-  "FAQs",
-  "Compare",
-  "My Wishlist",
-];
+const usefulLinks = ["Home", "Products", "B2B Solutions", "About Us", "Contact Us"];
 
-const usefulLinks = [
-  "Our Story",
-  "Visit Our Store",
-  "Contact Us",
-  "About Us",
-  "Account",
+const helpLinks = [
+  "Shipping Policy",
+  "Returns & Refunds",
+  "Warranty Information",
+  "Terms & Conditions",
+  "Privacy Policy",
+  "FAQs",
 ];
 
 /* Pages that exist so far; the rest are TODO */
 const footerHrefs: Record<string, string> = {
-  "My Wishlist": "/wishlist",
+  Home: "/",
+  Products: "/products",
+  "B2B Solutions": "/b2b",
   "Contact Us": "/contact",
-  "Visit Our Store": "/contact",
-  Account: "/account",
+  "Shipping Policy": "/shipping-policy",
 };
 
 /* =========================================================
    SOCIAL ICONS (lucide-react no longer ships brand icons)
 ========================================================= */
 
+/* Official brand marks (simple-icons), 24x24 viewBox, single fill path each
+   for crisp, pixel-accurate rendering at any size. */
 const socialLinks = [
   {
-    label: "Facebook",
-    href: "https://facebook.com",
-    icon: <path d="M14 8h2V5h-2.5C11 5 10 6.6 10 8.8V11H8v3h2v6h3v-6h2.4l.6-3h-3V9c0-.6.4-1 1-1z" fill="currentColor" />,
-  },
-  {
-    label: "X",
-    href: "https://x.com",
-    icon: <path d="M6 5l12 14M18 5L6 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />,
-  },
-  {
     label: "Instagram",
-    href: "https://instagram.com",
+    href: "https://www.instagram.com/chamarochair?igsi=bWJiY3Axb2R3Z3Bq&utm_source=qr",
     icon: (
-      <g fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="5" y="5" width="14" height="14" rx="4" />
-        <circle cx="12" cy="12" r="3.2" />
-        <circle cx="16.3" cy="7.7" r="0.6" fill="currentColor" />
-      </g>
+      <path
+        fill="currentColor"
+        d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0m0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06M12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324M12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8m7.846-10.405a1.44 1.44 0 1 1-2.881.001 1.44 1.44 0 0 1 2.881-.001"
+      />
     ),
   },
   {
-    label: "LinkedIn",
-    href: "https://linkedin.com",
+    label: "WhatsApp",
+    href: "https://wa.me/919741418807",
     icon: (
-      <g fill="currentColor">
-        <rect x="5" y="10" width="3" height="9" />
-        <circle cx="6.5" cy="6.5" r="1.7" />
-        <path d="M10 10h3v1.4c.6-1 1.7-1.6 3-1.6 2.2 0 3 1.4 3 3.8V19h-3v-5c0-1.2-.4-1.9-1.5-1.9S13 12.9 13 14v5h-3z" />
-      </g>
+      <path
+        fill="currentColor"
+        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884M20.463 3.488A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413"
+      />
+    ),
+  },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/share/1cf9KjWwgm/?mibextid=wwXIfr",
+    icon: (
+      <path
+        fill="currentColor"
+        d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 1.945-.287 1.722h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 6.082 4.51 11.084 10.101 11.868"
+      />
     ),
   },
   {
     label: "YouTube",
-    href: "https://youtube.com",
+    href: "https://youtube.com/@chamarochairs?si=bZpbN87R2_RvJTxY",
     icon: (
-      <g>
-        <rect x="4" y="7" width="16" height="10" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
-        <path d="M10.5 9.8v4.4l3.8-2.2z" fill="currentColor" />
-      </g>
+      <path
+        fill="currentColor"
+        d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814M9.545 15.568V8.432L15.818 12z"
+      />
     ),
   },
 ];
@@ -99,24 +92,26 @@ export default function SiteFooter() {
             <Image
               src="/Carmaro Logo 1.svg"
               alt="Chamaro"
-              width={160}
-              height={36}
+              width={260}
+              height={58}
             />
 
             <address>
               <p>
-                Address: {contact.address[0]}
-                <br />
-                {contact.address[1]}
+                Address:{" "}
+                {contact.address.map((line, index) => (
+                  <span key={line}>
+                    {index > 0 && <br />}
+                    {line}
+                  </span>
+                ))}
               </p>
               <p>
                 Email: <a href={`mailto:${contact.email}`}>{contact.email}</a>
               </p>
               <p>
                 Phone:{" "}
-                <a href={`tel:${contact.phone.replace(/\s/g, "")}`}>
-                  {contact.phone}
-                </a>
+                <a href={primaryPhoneHref}>{contact.phone}</a>
               </p>
             </address>
 
@@ -148,19 +143,6 @@ export default function SiteFooter() {
             </ul>
           </div>
 
-          {/* Help */}
-
-          <nav className="footer-links" aria-labelledby="footer-help">
-            <h2 id="footer-help">Help</h2>
-            <ul>
-              {helpLinks.map((link) => (
-                <li key={link}>
-                  <a href={footerHrefs[link] ?? "#"}>{link}</a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
           {/* Useful links */}
 
           <nav className="footer-links" aria-labelledby="footer-useful">
@@ -174,33 +156,19 @@ export default function SiteFooter() {
             </ul>
           </nav>
 
-          {/* Newsletter */}
+          {/* Help */}
 
-          <div className="footer-newsletter">
-            <h2>Sign Up for Email</h2>
-            <p>
-              Sign up to get first dibs on new arrivals, sales, exclusive
-              content, events and more!
-            </p>
+          <nav className="footer-links" aria-labelledby="footer-help">
+            <h2 id="footer-help">Help</h2>
+            <ul>
+              {helpLinks.map((link) => (
+                <li key={link}>
+                  <a href={footerHrefs[link] ?? "#"}>{link}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-            <NewsletterForm />
-
-            <div className="footer-locale">
-              <label>
-                <span className="sr-only">Currency</span>
-                <select defaultValue="INR">
-                  <option value="INR">₹ INR</option>
-                </select>
-              </label>
-
-              <label>
-                <span className="sr-only">Language</span>
-                <select defaultValue="en">
-                  <option value="en">English</option>
-                </select>
-              </label>
-            </div>
-          </div>
         </div>
 
         {/* Bottom bar */}
