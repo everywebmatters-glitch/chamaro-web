@@ -855,11 +855,11 @@ button {
 }
 
 .category-scroll-arrow-left {
-  left: 8px;
+  left: max(8px, calc(var(--gutter) - 48px));
 }
 
 .category-scroll-arrow-right {
-  right: 8px;
+  right: max(8px, calc(var(--gutter) - 48px));
 }
 
 .category-scroll-arrow:hover,
@@ -1078,8 +1078,8 @@ button {
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
-  min-width: 180px;
-  padding: 13px 36px;
+  min-width: 140px;
+  padding: 9px 26px;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
