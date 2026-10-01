@@ -16,7 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type Slide = {
   title: [string, string];
-  subtitle: string;
+  subtitle: [string, string];
   image: string;
   alt: string;
   href: string;
@@ -29,8 +29,11 @@ type Slide = {
 
 const slides: Slide[] = [
   {
-    title: ["Every Style,", "One Collection"],
-    subtitle: "From boss chairs to cafe seating — find your perfect fit",
+    title: ["Engineered", "to Lead"],
+    subtitle: [
+      "Premium seating designed for professionals",
+      "who value comfort, refined style, and lasting quality.",
+    ],
     /* Full-bleed banner: no circle cutout, the artwork carries its own negative space */
     image: "/hero/executive-trio.svg",
     alt: "Three executive chairs in tan leatherette, front and side views",
@@ -115,7 +118,11 @@ export default function HeroBanner() {
                   {slide.title[1]}
                 </Title>
 
-                <p className="hero-subtitle">{slide.subtitle}</p>
+                <p className="hero-subtitle">
+                  {slide.subtitle[0]}
+                  <br />
+                  {slide.subtitle[1]}
+                </p>
 
                 <Link href={slide.href} className="hero-cta">
                   Shop collection

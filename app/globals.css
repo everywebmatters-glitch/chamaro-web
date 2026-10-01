@@ -527,13 +527,13 @@ button {
   font-size: var(--heading-size);
   font-weight: 400;
   letter-spacing: var(--heading-tracking);
-  line-height: 1.05;
+  line-height: calc(1.05em + 10px);
   margin: 0 0 20px;
 }
 
 .hero-subtitle {
   color: var(--foreground);
-  font-size: clamp(0.95rem, 1vw, 1.05rem);
+  font-size: clamp(calc(0.95rem + 3px), calc(1vw + 3px), calc(1.05rem + 3px));
   line-height: 1.5;
   margin: 0 0 32px;
 }
