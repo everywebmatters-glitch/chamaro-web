@@ -20,6 +20,7 @@
   /* Section headings */
   --heading-size: clamp(2rem, 3.4vw, 3.25rem);
   --heading-tracking: -0.02em;
+  --font-heading: var(--font-telegraf), var(--font-poppins), sans-serif;
 }
 
 @theme inline {
@@ -52,7 +53,11 @@ body {
 
 h1,
 h2,
-h3 {
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
   text-wrap: balance;
 }
 
