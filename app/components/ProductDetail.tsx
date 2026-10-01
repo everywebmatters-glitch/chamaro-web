@@ -1,94 +1,25 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import ProductCard, { StarRating } from "./ProductCard";
 import ProductGallery from "./ProductGallery";
 import ProductPurchase from "./ProductPurchase";
+import ReloadButton from "./ReloadButton";
 import ProductTabs from "./ProductTabs";
-import { fetchProduct, fetchProducts, SHELL_SLUG, toProduct } from "../lib/catalog-api";
-import {
-  availabilityLabels,
-  discountPercent,
-  formatPrice,
-  getRelatedProducts,
-  type Product,
-} from "../lib/products";
+import { availabilityLabels, discountPercent, formatPrice, type Product } from "../lib/products";
 
 /* =========================================================
    PRODUCT DETAIL
-   Prerendered with build-time data where available, then
-   re-read from GET /api/v1/products/{slug} in the browser, so
-   price/stock edits, unpublishing and deletes in Admin show up
-   without a rebuild. The API only returns ACTIVE products.
+   Rendered server-side on every request (app/products/[slug]/page.tsx fetches live
+   from the Fastify API with no caching), so this just renders whatever that fetch found.
 ========================================================= */
 
-type State =
-  | { status: "loading" }
+export type ProductResult =
   | { status: "ready"; product: Product; related: Product[] }
   | { status: "not-found" }
   | { status: "error" };
 
-/* /products/{slug}/ → slug (the shell page is served under the requested URL) */
-function slugFromLocation() {
-  const match = window.location.pathname.match(/^\/products\/([^/]+)\/?$/);
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-export default function ProductDetail({
-  initial,
-  slug,
-}: {
-  /* Build-time product; null on the shell page */
-  initial: { product: Product; related: Product[] } | null;
-  /* Build-time slug; SHELL_SLUG means "read it from the URL" */
-  slug: string;
-}) {
-  const [state, setState] = useState<State>(
-    initial ? { status: "ready", ...initial } : { status: "loading" }
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    const target = slug === SHELL_SLUG ? slugFromLocation() : slug;
-
-    async function load() {
-      if (!target || target === SHELL_SLUG) return { status: "not-found" } as const;
-      const api = await fetchProduct(target);
-      if (!api) return { status: "not-found" } as const;
-      const product = toProduct(api);
-      /* Same category first, then the rest (getRelatedProducts drops this product) */
-      const { data } = await fetchProducts({ limit: 12 });
-      const catalog = data.map(toProduct);
-      return { status: "ready", product, related: getRelatedProducts(product, catalog) } as const;
-    }
-
-    load()
-      .then((next) => {
-        if (cancelled) return;
-        setState(next);
-        if (next.status === "ready") document.title = `${next.product.name} | Chamaro`;
-      })
-      .catch(() => {
-        if (!cancelled) setState({ status: "error" });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [slug]);
-
-  if (state.status === "loading") {
-    return (
-      <div className="product-page">
-        <div className="catalog-empty" role="status">
-          <p>Loading product…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (state.status === "not-found") {
+export default function ProductDetail({ result }: { result: ProductResult }) {
+  if (result.status === "not-found") {
     return (
       <div className="product-page">
         <div className="catalog-empty">
@@ -102,21 +33,19 @@ export default function ProductDetail({
     );
   }
 
-  if (state.status === "error") {
+  if (result.status === "error") {
     return (
       <div className="product-page">
         <div className="catalog-empty" role="alert">
           <h2>We couldn&apos;t load this product</h2>
           <p>Please check your connection and try again in a moment.</p>
-          <button type="button" className="see-more-button" onClick={() => window.location.reload()}>
-            Try again
-          </button>
+          <ReloadButton />
         </div>
       </div>
     );
   }
 
-  const { product, related } = state;
+  const { product, related } = result;
   const discount = discountPercent(product);
 
   return (

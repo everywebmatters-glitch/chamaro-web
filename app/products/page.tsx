@@ -13,8 +13,12 @@ export const metadata: Metadata = {
     "Shop boss, executive, visitor and cafe chairs designed for comfort, style and everyday performance.",
 };
 
+/* Skip build-time prerendering entirely: a no-store fetch can't be statically generated,
+   and the build machine may not even have network access to the API. */
+export const dynamic = "force-dynamic";
+
 export default async function ProductsPage() {
-  /* Runs at build time (static export); rebuild to pick up catalog changes */
+  /* fetchAllProducts/fetchCategories fetch with no-store, so this renders fresh per request */
   const [apiProducts, apiCategories] = await Promise.all([fetchAllProducts(), fetchCategories()]);
   const catalog = {
     products: apiProducts.map(toProduct),

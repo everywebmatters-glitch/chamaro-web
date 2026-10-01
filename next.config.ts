@@ -1,11 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Static HTML export to out/ for Hostinger; the API is the Fastify backend
-  output: "export",
-  // Emit products/index.html instead of products.html so Apache serves /products/
+  // Runs as a Node.js server on Hostinger (next start), so /products/[slug] renders
+  // any slug on request straight from the Fastify API — a static export can't do that.
   trailingSlash: true,
-  // The default image loader needs a Node server
   images: { unoptimized: true },
 };
 

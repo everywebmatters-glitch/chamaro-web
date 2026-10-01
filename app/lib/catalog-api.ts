@@ -77,16 +77,11 @@ export type ProductListQuery = {
 /* Shown when a product has no images yet */
 export const PRODUCT_IMAGE_PLACEHOLDER = "/products/placeholder.svg";
 
-/* Slug of the prerendered /products/_/ shell page, which public/.htaccess serves for
-   products created after the last build (ProductDetail reads the real slug from the URL) */
-export const SHELL_SLUG = "_";
-
 /* ---------- Endpoints ---------- */
 
-/* In the browser, always ask the API: Admin edits must show up on the next page view.
-   Not applied during the static build, where a no-store fetch would stop the export. */
-const fresh: RequestInit | undefined =
-  typeof window === "undefined" ? undefined : { cache: "no-store" };
+/* Always ask the API, server or browser: this app runs as a Node.js server (next start),
+   not a static export, so every request should see the live catalog. */
+const fresh: RequestInit = { cache: "no-store" };
 
 /* GET /api/v1/products — one page of active products */
 export async function fetchProducts(query: ProductListQuery = {}) {
