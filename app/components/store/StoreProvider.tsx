@@ -10,16 +10,23 @@ import {
   useState,
 } from "react";
 import { findDiscount, lineKey, type CartLine } from "../../lib/cart";
+import { fetchAllProducts, toProduct } from "../../lib/catalog-api";
+import type { Product } from "../../lib/products";
 
 export type { CartLine } from "../../lib/cart";
 
 /* =========================================================
    CART + WISHLIST STORE
-   Client-only, persisted to localStorage.
+   Client-only, persisted to localStorage. Only slugs are saved;
+   names, prices and images come from the live API catalog.
    TODO: sync with a server cart once checkout exists
 ========================================================= */
 
 type StoreContextValue = {
+  /* Products currently on sale (GET /api/v1/products); null until loaded */
+  catalog: Product[] | null;
+  catalogFailed: boolean;
+  findProduct: (slug: string) => Product | undefined;
   cart: CartLine[];
   wishlist: string[];
   cartCount: number;
@@ -78,6 +85,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [catalog, setCatalog] = useState<Product[] | null>(null);
+  const [catalogFailed, setCatalogFailed] = useState(false);
+
+  /* Fresh product data for the cart, checkout and wishlist */
+  const loadCatalog = useCallback(() => {
+    fetchAllProducts()
+      .then((rows) => {
+        setCatalog(rows.map(toProduct));
+        setCatalogFailed(false);
+      })
+      .catch(() => setCatalogFailed(true));
+  }, []);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   /* Load saved state after mount so server and client HTML match */
@@ -89,7 +108,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setOrderNote(saved.orderNote);
     setDiscountCode(saved.discountCode);
     setHydrated(true);
-  }, []);
+    loadCatalog();
+  }, [loadCatalog]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -126,7 +146,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     /* Show the drawer so the shopper sees what was added */
     setCartOpen(true);
-  }, []);
+    loadCatalog();
+  }, [loadCatalog]);
 
   const setQuantity = useCallback((key: string, quantity: number) => {
     setCart((current) =>
@@ -168,11 +189,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, []);
 
+  const findProduct = useCallback(
+    (slug: string) => catalog?.find((product) => product.slug === slug),
+    [catalog]
+  );
+
   const value = useMemo<StoreContextValue>(
     () => ({
+      catalog,
+      catalogFailed,
+      findProduct,
       cart,
       wishlist,
-      cartCount: cart.reduce((total, line) => total + line.quantity, 0),
+      /* Once live data is in, don't count lines for products that are no longer on sale */
+      cartCount: cart
+        .filter((line) => !catalog || findProduct(line.slug))
+        .reduce((total, line) => total + line.quantity, 0),
       hydrated,
       addToCart,
       setQuantity,
@@ -186,12 +218,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       applyDiscount,
       removeDiscount: () => setDiscountCode(""),
       cartOpen,
-      openCart: () => setCartOpen(true),
+      openCart: () => {
+        setCartOpen(true);
+        loadCatalog();
+      },
       closeCart: () => setCartOpen(false),
       notify: showToast,
       toast,
     }),
     [
+      catalog,
+      catalogFailed,
+      findProduct,
+      loadCatalog,
       cart,
       wishlist,
       hydrated,

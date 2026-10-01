@@ -119,7 +119,8 @@ function Field({
 }
 
 export default function CheckoutView() {
-  const { cart, hydrated, discountCode, orderNote } = useStore();
+  const { catalog, catalogFailed, findProduct, cart, hydrated, discountCode, orderNote } =
+    useStore();
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
   const [shipping, setShipping] = useState<ShippingMethodId>("standard");
@@ -137,7 +138,7 @@ export default function CheckoutView() {
     }
   }, []);
 
-  const lines = resolveLines(cart);
+  const lines = resolveLines(cart, findProduct);
   const subtotal = cartSubtotal(lines);
   const discount = discountAmount(subtotal, findDiscount(discountCode));
   const errors = validate(form);
@@ -197,8 +198,20 @@ export default function CheckoutView() {
     );
   };
 
-  if (!hydrated) {
+  if (!hydrated || (cart.length > 0 && !catalog && !catalogFailed)) {
     return <div className="cart-page-loading" aria-busy="true" />;
+  }
+
+  if (cart.length > 0 && !catalog) {
+    return (
+      <div className="cart-empty cart-empty-page" role="alert">
+        <h1>We couldn&apos;t load your cart</h1>
+        <p>Please check your connection and try again in a moment.</p>
+        <button type="button" className="add-to-cart" onClick={() => window.location.reload()}>
+          Try again
+        </button>
+      </div>
+    );
   }
 
   if (lines.length === 0) {

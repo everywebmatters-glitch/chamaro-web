@@ -2,20 +2,20 @@
 
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { getProduct, type Product } from "../lib/products";
+import type { Product } from "../lib/products";
 import ProductCard from "./ProductCard";
 import { useStore } from "./store/StoreProvider";
 
 export default function WishlistView() {
-  const { wishlist, hydrated } = useStore();
+  const { wishlist, hydrated, catalog, findProduct } = useStore();
 
-  /* Avoid flashing the empty state before saved items load */
-  if (!hydrated) {
+  /* Avoid flashing the empty state before saved items and live product data load */
+  if (!hydrated || (wishlist.length > 0 && !catalog)) {
     return <div className="cart-page-loading" aria-busy="true" />;
   }
 
   const items = wishlist
-    .map((slug) => getProduct(slug))
+    .map((slug) => findProduct(slug))
     .filter((product): product is Product => Boolean(product));
 
   if (items.length === 0) {

@@ -33,17 +33,39 @@ function Accordion({ title, children }: { title: string; children: React.ReactNo
 
 export default function CartPageView() {
   const router = useRouter();
-  const { cart, hydrated, setQuantity, removeLine, orderNote, setOrderNote, discountCode } =
-    useStore();
+  const {
+    catalog,
+    catalogFailed,
+    findProduct,
+    cart,
+    hydrated,
+    setQuantity,
+    removeLine,
+    orderNote,
+    setOrderNote,
+    discountCode,
+  } = useStore();
   const [agreed, setAgreed] = useState(false);
 
-  const lines = resolveLines(cart);
+  const lines = resolveLines(cart, findProduct);
   const subtotal = cartSubtotal(lines);
   const discount = discountAmount(subtotal, findDiscount(discountCode));
 
   /* Avoid flashing "empty" before the saved cart loads */
-  if (!hydrated) {
+  if (!hydrated || (cart.length > 0 && !catalog && !catalogFailed)) {
     return <div className="cart-page-loading" aria-busy="true" />;
+  }
+
+  if (cart.length > 0 && !catalog) {
+    return (
+      <div className="cart-empty cart-empty-page" role="alert">
+        <h2>We couldn&apos;t load your cart</h2>
+        <p>Please check your connection and try again in a moment.</p>
+        <button type="button" className="add-to-cart" onClick={() => window.location.reload()}>
+          Try again
+        </button>
+      </div>
+    );
   }
 
   if (lines.length === 0) {

@@ -21,6 +21,19 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]["id"];
 
+/* Plain text from Admin: each non-empty line becomes a paragraph */
+function Paragraphs({ text }: { text: string }) {
+  return text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => (
+      <p key={index} className="tab-lede">
+        {line}
+      </p>
+    ));
+}
+
 export default function ProductTabs({ product }: { product: Product }) {
   const [active, setActive] = useState<TabId>("description");
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -72,19 +85,27 @@ export default function ProductTabs({ product }: { product: Product }) {
 
             <div className="tab-columns">
               <div>
-                <h3>Features</h3>
-                <ul className="tab-bullets">
-                  {product.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
+                {product.features.length > 0 && (
+                  <>
+                    <h3>Features</h3>
+                    <ul className="tab-bullets">
+                      {product.features.map((feature, index) => (
+                        <li key={`${index}-${feature}`}>{feature}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
 
-                <h3>Materials</h3>
-                <ul className="tab-bullets">
-                  {product.materials.map((material) => (
-                    <li key={material}>{material}</li>
-                  ))}
-                </ul>
+                {product.materials.length > 0 && (
+                  <>
+                    <h3>Materials</h3>
+                    <ul className="tab-bullets">
+                      {product.materials.map((material, index) => (
+                        <li key={`${index}-${material}`}>{material}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
 
               <div>
@@ -107,25 +128,37 @@ export default function ProductTabs({ product }: { product: Product }) {
           </>
         )}
 
-        {active === "additional" && (
-          <dl className="spec-list spec-list-wide">
-            {product.specs.map((spec) => (
-              <div key={spec.label}>
-                <dt>{spec.label}</dt>
-                <dd>{spec.value}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
+        {active === "additional" &&
+          (product.specs.length > 0 ? (
+            <dl className="spec-list spec-list-wide">
+              {product.specs.map((spec, index) => (
+                <div key={`${index}-${spec.label}`}>
+                  <dt>{spec.label}</dt>
+                  <dd>{spec.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="tab-lede">No additional information for this product yet.</p>
+          ))}
 
-        {active === "returns" && (
-          <>
-            <p className="tab-lede">{storePolicies.returns}</p>
-            <p className="tab-lede">{storePolicies.delivery}</p>
-          </>
-        )}
+        {/* Admin text for this product when set, otherwise the store-wide policy */}
+        {active === "returns" &&
+          (product.returnPolicy ? (
+            <Paragraphs text={product.returnPolicy} />
+          ) : (
+            <>
+              <p className="tab-lede">{storePolicies.returns}</p>
+              <p className="tab-lede">{storePolicies.delivery}</p>
+            </>
+          ))}
 
-        {active === "warranty" && <p className="tab-lede">{storePolicies.warranty}</p>}
+        {active === "warranty" &&
+          (product.warranty ? (
+            <Paragraphs text={product.warranty} />
+          ) : (
+            <p className="tab-lede">{storePolicies.warranty}</p>
+          ))}
       </div>
     </section>
   );

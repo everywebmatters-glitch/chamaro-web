@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 import SortSelect from "../SortSelect";
 import CatalogView from "./CatalogView";
 import FilterDrawer from "./FilterDrawer";
 import Pagination from "./Pagination";
-import type { ApiCategory } from "../../lib/catalog-api";
+import {
+  fetchAllProducts,
+  fetchCategories,
+  toProduct,
+  type ApiCategory,
+} from "../../lib/catalog-api";
 import {
   allColors,
   PRICE_RANGES,
@@ -19,9 +25,10 @@ import {
 
 /* =========================================================
    PRODUCT LISTING
-   Products and categories come from the API at build time;
-   filters live in the query string and are applied in the
-   browser, so /products can be exported as a static page.
+   Products and categories are prerendered from the API at build
+   time and refreshed from the API in the browser; filters live in
+   the query string and are applied in the browser, so /products
+   can be exported as a static page.
 ========================================================= */
 
 const PAGE_SIZE = 12;
@@ -50,10 +57,39 @@ function applyFilters(items: Product[], filters: Omit<Filters, "sort" | "page">)
   );
 }
 
-/* Reads the URL; must sit inside a <Suspense> boundary for static export */
+/* Reads the URL; must sit inside a <Suspense> boundary for static export.
+   The build-time catalog is replaced with a fresh API read as soon as the page loads,
+   so Admin changes (new, edited, unpublished or deleted products) show without a rebuild. */
 export default function ProductsCatalog(props: CatalogData) {
   const searchParams = useSearchParams();
-  return <ProductsCatalogContent {...props} searchParams={searchParams} />;
+  const [live, setLive] = useState<CatalogData | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([fetchAllProducts(), fetchCategories()])
+      .then(([apiProducts, apiCategories]) => {
+        if (cancelled) return;
+        setLive({
+          products: apiProducts.map(toProduct),
+          categories: apiCategories.map(({ slug, name }) => ({ slug, name })),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <ProductsCatalogContent
+      {...(live ?? props)}
+      searchParams={searchParams}
+      unavailable={failed && !live}
+    />
+  );
 }
 
 /* Rendered with empty params as the prerendered fallback (unfiltered list) */
@@ -61,8 +97,11 @@ export function ProductsCatalogContent({
   products,
   categories,
   searchParams = new URLSearchParams(),
+  unavailable = false,
 }: CatalogData & {
   searchParams?: Pick<URLSearchParams, "get">;
+  /* The API couldn't be reached; don't show the possibly outdated build-time list */
+  unavailable?: boolean;
 }) {
   /* Validate every param against known values */
   const categoryParam = searchParams.get("category") ?? undefined;
@@ -229,6 +268,16 @@ export function ProductsCatalogContent({
       {/* Toolbar + grid */}
 
       <section className="catalog" aria-label="Product list">
+        {unavailable ? (
+          <div className="catalog-empty" role="alert">
+            <h2>We couldn&apos;t load our products</h2>
+            <p>Please check your connection and try again in a moment.</p>
+            <button type="button" className="see-more-button" onClick={() => window.location.reload()}>
+              Try again
+            </button>
+          </div>
+        ) : (
+        <>
         <CatalogView
           products={pageItems}
           toolbarStart={
@@ -263,6 +312,8 @@ export function ProductsCatalogContent({
           total={totalPages}
           hrefFor={(target) => hrefWith({ page: target })}
         />
+        </>
+        )}
       </section>
     </>
   );

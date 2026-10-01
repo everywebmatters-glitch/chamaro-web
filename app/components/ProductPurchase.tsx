@@ -69,6 +69,9 @@ export default function ProductPurchase({ product }: { product: Product }) {
 
   const variantLabel = [color?.name, option].filter(Boolean).join(" / ");
 
+  /* The product's own return policy from Admin (first line as the summary), else the store-wide one */
+  const returnsText = product.returnPolicy?.split("\n").find((line) => line.trim())?.trim() ?? storePolicies.returns;
+
   return (
     <div className="product-purchase">
       {/* Colour */}
@@ -182,7 +185,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
         </div>
         <div>
           <RotateCcw size={30} strokeWidth={1.4} aria-hidden="true" />
-          <p>{storePolicies.returns}</p>
+          <p>{returnsText}</p>
         </div>
       </div>
 
@@ -248,7 +251,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
         <h2>Delivery</h2>
         <p>{storePolicies.delivery}</p>
         <h2>Returns</h2>
-        <p>{storePolicies.returns}</p>
+        <p>{returnsText}</p>
       </Modal>
 
       <Modal

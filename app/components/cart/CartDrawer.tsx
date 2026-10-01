@@ -12,7 +12,7 @@ import {
   resolveLines,
   variantLabel,
 } from "../../lib/cart";
-import { formatPrice, products } from "../../lib/products";
+import { formatPrice } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
 import { useStore } from "../store/StoreProvider";
 import DiscountForm from "./DiscountForm";
@@ -30,6 +30,9 @@ const tools: { id: Tool; label: string; icon: typeof Truck }[] = [
 export default function CartDrawer() {
   const router = useRouter();
   const {
+    catalog,
+    catalogFailed,
+    findProduct,
     cart,
     cartOpen,
     closeCart,
@@ -43,10 +46,12 @@ export default function CartDrawer() {
   const [agreed, setAgreed] = useState(false);
   const [slide, setSlide] = useState(0);
 
-  const lines = resolveLines(cart);
+  const lines = resolveLines(cart, findProduct);
+  /* Saved lines exist but live product data hasn't arrived (or couldn't) yet */
+  const pending = cart.length > 0 && !catalog;
   const subtotal = cartSubtotal(lines);
   const discount = discountAmount(subtotal, findDiscount(discountCode));
-  const suggestions = products.filter(
+  const suggestions = (catalog ?? []).filter(
     (product) => !cart.some((line) => line.slug === product.slug)
   );
   const current = suggestions[Math.min(slide, suggestions.length - 1)];
@@ -93,7 +98,15 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        {lines.length === 0 ? (
+        {pending ? (
+          <div className="cart-empty" role={catalogFailed ? "alert" : "status"}>
+            <p>
+              {catalogFailed
+                ? "We couldn't load your cart right now. Please try again in a moment."
+                : "Loading your cart…"}
+            </p>
+          </div>
+        ) : lines.length === 0 ? (
           <div className="cart-empty">
             <p>Your cart is empty.</p>
             <button type="button" className="add-to-cart" onClick={() => goTo("/products")}>
