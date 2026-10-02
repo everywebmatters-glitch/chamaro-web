@@ -5363,6 +5363,20 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   padding: clamp(24px, 3.5vw, 40px);
 }
 
+.quote-form-title {
+  color: var(--foreground);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.quote-form-hint {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: -4px 0 0;
+  text-align: center;
+}
+
 .quote-chairs {
   border: 0;
   margin: 4px 0 0;

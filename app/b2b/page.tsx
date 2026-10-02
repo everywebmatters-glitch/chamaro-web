@@ -146,8 +146,13 @@ export default function B2BPage() {
         <section className="b2b-section" aria-labelledby="b2b-quote-title">
           <div className="b2b-quote" id="quote">
             <div className="b2b-quote-intro">
-              <h2 id="b2b-quote-title">Let&apos;s build your order.</h2>
-              <p>Tell us what you need and we&apos;ll turn it into a bulk quote.</p>
+              <p className="b2b-eyebrow">B2B Solutions</p>
+              <h2 id="b2b-quote-title">Business Seating, Built for Every Space</h2>
+              <p>
+                At Chamaro, we provide reliable and stylish seating solutions for businesses, institutions, and
+                commercial spaces. From individual requirements to large-scale projects, our B2B solutions are
+                designed to meet your specific needs.
+              </p>
 
               <Armchair className="b2b-quote-illustration" size={120} strokeWidth={1} aria-hidden="true" />
 
