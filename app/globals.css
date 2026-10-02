@@ -4842,6 +4842,11 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   width: 48px;
 }
 
+.contact-icon-circle svg {
+  color: #ffffff;
+  margin-top: 0;
+}
+
 .contact-map {
   aspect-ratio: 4 / 3;
   background: #f0f0ef;
