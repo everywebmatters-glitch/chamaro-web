@@ -2280,6 +2280,23 @@ a.see-more-button {
   margin-bottom: 18px;
 }
 
+.auth-gate-modal {
+  max-width: min(92vw, 440px);
+  text-align: center;
+}
+
+.auth-gate-actions {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.auth-gate-actions .add-to-cart,
+.auth-gate-actions .outline-button {
+  text-align: center;
+  width: 100%;
+}
+
 /* Quick view */
 
 .quick-view {
@@ -3690,6 +3707,15 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   color: var(--muted);
   font-size: 0.9rem;
   margin: 0 0 16px;
+}
+
+.checkout-coupon {
+  margin: 24px 0;
+  max-width: none;
+}
+
+.checkout-coupon h3 {
+  font-size: 1rem;
 }
 
 .order-note {

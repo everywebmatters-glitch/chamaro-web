@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApiError } from "../../lib/api";
@@ -12,6 +12,11 @@ import SocialSignIn from "./SocialSignIn";
 
 type Form = { name: string; email: string; password: string; agree: boolean };
 const EMPTY: Form = { name: "", email: "", password: "", agree: false };
+
+/* Only a same-site path is safe to bounce back to */
+function safeRedirect(value: string | null) {
+  return value && value.startsWith("/") && !value.startsWith("//") ? value : "/account";
+}
 
 function validate(form: Form) {
   const errors: Partial<Record<keyof Form, string>> = {};
@@ -27,6 +32,7 @@ function validate(form: Form) {
 
 export default function RegisterView() {
   const router = useRouter();
+  const redirect = safeRedirect(useSearchParams().get("redirect"));
   const { status, login } = useAuth();
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
@@ -34,10 +40,10 @@ export default function RegisterView() {
   const [emailTaken, setEmailTaken] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  /* Signed in (after registering, or already): go to the account page */
+  /* Signed in (after registering, or already): go to the account page, or back where checkout sent us */
   useEffect(() => {
-    if (status === "authenticated") router.replace("/account");
-  }, [status, router]);
+    if (status === "authenticated") router.replace(redirect);
+  }, [status, router, redirect]);
 
   const errors = touched ? validate(form) : {};
   if (emailTaken) errors.email = "An account with this email already exists.";
@@ -163,7 +169,7 @@ export default function RegisterView() {
 
           <p className="auth-switch">
             Already have an account?{" "}
-            <Link href="/account/login">
+            <Link href={`/account/login?redirect=${encodeURIComponent(redirect)}`}>
               Log in here
               <ArrowUpRight size={14} aria-hidden="true" />
             </Link>

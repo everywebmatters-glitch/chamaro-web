@@ -1,15 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authErrorMessage } from "../../lib/auth-api";
 import { useAuth } from "../auth/AuthProvider";
 import AuthField, { AUTH_NOT_CONNECTED, EMAIL_PATTERN } from "./AuthField";
 import SocialSignIn from "./SocialSignIn";
 
+/* Only a same-site path is safe to bounce back to */
+function safeRedirect(value: string | null) {
+  return value && value.startsWith("/") && !value.startsWith("//") ? value : "/account";
+}
+
 export default function LoginView() {
   const router = useRouter();
+  const redirect = safeRedirect(useSearchParams().get("redirect"));
   const { status, login } = useAuth();
   const [mode, setMode] = useState<"login" | "reset">("login");
   const [email, setEmail] = useState("");
@@ -18,10 +24,10 @@ export default function LoginView() {
   const [notice, setNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  /* Already signed in (or just signed in): go to the account page */
+  /* Already signed in (or just signed in): go to the account page, or back where checkout sent us */
   useEffect(() => {
-    if (status === "authenticated") router.replace("/account");
-  }, [status, router]);
+    if (status === "authenticated") router.replace(redirect);
+  }, [status, router, redirect]);
 
   const emailError = touched && !EMAIL_PATTERN.test(email.trim()) ? "Enter a valid email address." : undefined;
   const passwordError = touched && mode === "login" && !password ? "Enter your password." : undefined;
@@ -131,7 +137,8 @@ export default function LoginView() {
           )}
 
           <p className="auth-switch">
-            Don&apos;t have an account? <Link href="/account/register">Sign up</Link>
+            Don&apos;t have an account?{" "}
+            <Link href={`/account/register?redirect=${encodeURIComponent(redirect)}`}>Sign up</Link>
           </p>
 
           {mode === "login" && (

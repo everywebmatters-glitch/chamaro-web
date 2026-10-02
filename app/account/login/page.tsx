@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Header from "../../components/Header";
 import SiteFooter from "../../components/SiteFooter";
 import LoginView from "../../components/account/LoginView";
@@ -14,7 +15,9 @@ export default function LoginPage() {
       <Header />
 
       <main className="account-page">
-        <LoginView />
+        <Suspense fallback={null}>
+          <LoginView />
+        </Suspense>
       </main>
 
       <SiteFooter />

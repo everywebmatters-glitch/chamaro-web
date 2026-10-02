@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Header from "../../components/Header";
 import SiteFooter from "../../components/SiteFooter";
 import RegisterView from "../../components/account/RegisterView";
@@ -14,7 +15,9 @@ export default function RegisterPage() {
       <Header />
 
       <main className="account-page">
-        <RegisterView />
+        <Suspense fallback={null}>
+          <RegisterView />
+        </Suspense>
       </main>
 
       <SiteFooter />

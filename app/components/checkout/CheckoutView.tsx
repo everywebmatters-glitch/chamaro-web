@@ -17,7 +17,9 @@ import {
   type ShippingMethodId,
 } from "../../lib/cart";
 import { formatPrice } from "../../lib/products";
+import { useAuth } from "../auth/AuthProvider";
 import DiscountForm from "../cart/DiscountForm";
+import Modal from "../Modal";
 import { useStore } from "../store/StoreProvider";
 import { EMAIL_PATTERN, GSTIN_PATTERN, PHONE_PATTERN } from "../../lib/site";
 
@@ -121,11 +123,13 @@ function Field({
 export default function CheckoutView() {
   const { catalog, catalogFailed, findProduct, cart, hydrated, discountCode, orderNote } =
     useStore();
+  const { status: authStatus } = useAuth();
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
   const [shipping, setShipping] = useState<ShippingMethodId>("standard");
   const [payment, setPayment] = useState<PaymentMethod>("upi");
   const [notice, setNotice] = useState("");
+  const [authGateDismissed, setAuthGateDismissed] = useState(false);
 
   /* Restore saved delivery details */
   useEffect(() => {
@@ -147,6 +151,7 @@ export default function CheckoutView() {
   const shippingPrice = addressReady ? shippingCost(shipping, subtotal) : undefined;
   const total = subtotal - discount + (shippingPrice ?? 0);
   const itemCount = lines.reduce((count, line) => count + line.quantity, 0);
+  const showAuthGate = authStatus === "unauthenticated" && !authGateDismissed;
 
   const update = <K extends keyof Form>(key: K, value: Form[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -227,7 +232,31 @@ export default function CheckoutView() {
   }
 
   return (
-    <div className="checkout-layout">
+    <>
+      <Modal
+        open={showAuthGate}
+        onClose={() => setAuthGateDismissed(true)}
+        title="Sign in to check out"
+        className="auth-gate-modal info-modal"
+      >
+        <h2>Sign in to check out</h2>
+        <p>Log in or create an account to track this order, save your details and check out faster next time.</p>
+
+        <div className="auth-gate-actions">
+          <Link href="/account/login?redirect=/checkout" className="add-to-cart">
+            Log in
+          </Link>
+          <Link href="/account/register?redirect=/checkout" className="outline-button">
+            Create account
+          </Link>
+        </div>
+
+        <button type="button" className="auth-link-button" onClick={() => setAuthGateDismissed(true)}>
+          Continue as guest
+        </button>
+      </Modal>
+
+      <div className="checkout-layout">
       {/* ================= FORM ================= */}
 
       <form className="checkout-form" onSubmit={submit} noValidate>
@@ -464,7 +493,11 @@ export default function CheckoutView() {
             ))}
           </ul>
 
-          <DiscountForm idPrefix="checkout-discount" />
+          <div className="cart-coupon checkout-coupon">
+            <h3>Have a coupon?</h3>
+            <p>Add your code for an instant discount</p>
+            <DiscountForm idPrefix="checkout-discount" />
+          </div>
 
           <dl className="checkout-totals">
             <div>
@@ -497,6 +530,7 @@ export default function CheckoutView() {
           <p className="cart-tax-note">Including GST.</p>
         </div>
       </aside>
-    </div>
+      </div>
+    </>
   );
 }
