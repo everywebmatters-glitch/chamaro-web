@@ -3660,6 +3660,38 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   font-weight: 600;
 }
 
+.cart-page-shipping-bar {
+  margin: 0 auto 48px;
+  max-width: 480px;
+}
+
+.cart-page-shipping-bar .free-shipping {
+  display: flex;
+  flex-direction: column-reverse;
+  text-align: center;
+}
+
+.cart-page-shipping-bar .free-shipping p {
+  margin-bottom: 4px;
+}
+
+.cart-coupon {
+  margin-top: 40px;
+  max-width: 420px;
+}
+
+.cart-coupon h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.cart-coupon p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 16px;
+}
+
 .order-note {
   margin-top: 40px;
   max-width: 560px;
@@ -3732,8 +3764,16 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   margin: 0 0 8px;
 }
 
+.cart-summary-panel h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 20px;
+}
+
 .cart-summary-panel .cart-subtotal {
+  border-top: 1px solid #dededc;
   margin-top: 24px;
+  padding-top: 16px;
 }
 
 .cart-summary-panel .add-to-cart {

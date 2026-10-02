@@ -3,33 +3,22 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
 import { useState } from "react";
 import {
   cartSubtotal,
   discountAmount,
   findDiscount,
   resolveLines,
+  SHIPPING_METHODS,
+  shippingCost,
   variantLabel,
+  type ShippingMethodId,
 } from "../../lib/cart";
 import { formatPrice } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
 import { useStore } from "../store/StoreProvider";
 import DiscountForm from "./DiscountForm";
 import FreeShippingProgress from "./FreeShippingProgress";
-import ShippingEstimator from "./ShippingEstimator";
-
-function Accordion({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <details className="cart-accordion">
-      <summary>
-        {title}
-        <Plus size={20} strokeWidth={1.8} aria-hidden="true" />
-      </summary>
-      <div className="cart-accordion-body">{children}</div>
-    </details>
-  );
-}
 
 export default function CartPageView() {
   const router = useRouter();
@@ -41,15 +30,15 @@ export default function CartPageView() {
     hydrated,
     setQuantity,
     removeLine,
-    orderNote,
-    setOrderNote,
     discountCode,
   } = useStore();
-  const [agreed, setAgreed] = useState(false);
+  const [shipping, setShipping] = useState<ShippingMethodId>("standard");
 
   const lines = resolveLines(cart, findProduct);
   const subtotal = cartSubtotal(lines);
   const discount = discountAmount(subtotal, findDiscount(discountCode));
+  const shippingTotal = shippingCost(shipping, subtotal);
+  const total = subtotal - discount + shippingTotal;
 
   /* Avoid flashing "empty" before the saved cart loads */
   if (!hydrated || (cart.length > 0 && !catalog && !catalogFailed)) {
@@ -81,134 +70,130 @@ export default function CartPageView() {
   }
 
   return (
-    <div className="cart-page-layout">
-      {/* Items */}
-
-      <div>
-        <table className="cart-table">
-          <thead>
-            <tr>
-              <th scope="col">Product</th>
-              <th scope="col">Price</th>
-              <th scope="col">Quantity</th>
-              <th scope="col">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lines.map((line) => (
-              <tr key={line.key}>
-                <td>
-                  <div className="cart-table-product">
-                    <Link href={`/products/${line.slug}`} className="cart-line-thumb">
-                      <Image src={line.product.images[0].src} alt="" fill sizes="100px" />
-                    </Link>
-                    <div>
-                      <Link href={`/products/${line.slug}`} className="cart-table-name">
-                        {line.product.name}
-                      </Link>
-                      <small>{variantLabel(line)}</small>
-                      <button
-                        type="button"
-                        className="remove-link"
-                        onClick={() => removeLine(line.key)}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                </td>
-                <td data-label="Price">
-                  <div className="product-price-row">
-                    {line.product.compareAtPrice && (
-                      <s className="price-original">{formatPrice(line.product.compareAtPrice)}</s>
-                    )}
-                    <span className="price-current">{formatPrice(line.product.price)}</span>
-                  </div>
-                </td>
-                <td data-label="Quantity">
-                  <QuantityStepper
-                    value={line.quantity}
-                    onChange={(value) => setQuantity(line.key, value)}
-                    label={`Quantity for ${line.product.name}`}
-                    size="small"
-                  />
-                </td>
-                <td data-label="Total" className="cart-table-total">
-                  {formatPrice(line.lineTotal)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="order-note">
-          <label htmlFor="order-note">Add Order Note</label>
-          <textarea
-            id="order-note"
-            value={orderNote}
-            onChange={(event) => setOrderNote(event.target.value)}
-            placeholder="How can we help you? Delivery instructions, floor number, GST details…"
-            rows={5}
-          />
-        </div>
+    <>
+      <div className="cart-page-shipping-bar">
+        <FreeShippingProgress subtotal={subtotal} />
       </div>
 
-      {/* Summary */}
+      <div className="cart-page-layout">
+        {/* Items */}
 
-      <aside className="cart-summary" aria-label="Order summary">
-        <div className="cart-summary-progress">
-          <FreeShippingProgress subtotal={subtotal} />
-        </div>
+        <div>
+          <table className="cart-table">
+            <thead>
+              <tr>
+                <th scope="col">Product</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Price</th>
+                <th scope="col">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lines.map((line) => (
+                <tr key={line.key}>
+                  <td>
+                    <div className="cart-table-product">
+                      <Link href={`/products/${line.slug}`} className="cart-line-thumb">
+                        <Image src={line.product.images[0].src} alt="" fill sizes="100px" />
+                      </Link>
+                      <div>
+                        <Link href={`/products/${line.slug}`} className="cart-table-name">
+                          {line.product.name}
+                        </Link>
+                        <small>{variantLabel(line)}</small>
+                        <button
+                          type="button"
+                          className="remove-link"
+                          onClick={() => removeLine(line.key)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                  <td data-label="Quantity">
+                    <QuantityStepper
+                      value={line.quantity}
+                      onChange={(value) => setQuantity(line.key, value)}
+                      label={`Quantity for ${line.product.name}`}
+                      size="small"
+                    />
+                  </td>
+                  <td data-label="Price">
+                    <div className="product-price-row">
+                      {line.product.compareAtPrice && (
+                        <s className="price-original">{formatPrice(line.product.compareAtPrice)}</s>
+                      )}
+                      <span className="price-current">{formatPrice(line.product.price)}</span>
+                    </div>
+                  </td>
+                  <td data-label="Subtotal" className="cart-table-total">
+                    {formatPrice(line.lineTotal)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        <div className="cart-summary-panel">
-          <Accordion title="Estimate Shipping">
-            <ShippingEstimator subtotal={subtotal} idPrefix="cart-estimate" />
-          </Accordion>
-
-          <Accordion title="Discount code">
+          <div className="cart-coupon">
+            <h3>Have a coupon?</h3>
+            <p>Add your code for an instant cart discount</p>
             <DiscountForm idPrefix="cart-discount" />
-          </Accordion>
-
-          {discount > 0 && (
-            <div className="cart-summary-row">
-              <span>Discount</span>
-              <span>−{formatPrice(discount)}</span>
-            </div>
-          )}
-
-          <div className="cart-subtotal">
-            <span>Subtotal</span>
-            <strong>{formatPrice(subtotal - discount)}</strong>
           </div>
-
-          <p className="cart-tax-note">
-            Prices include GST. Shipping calculated at checkout.
-          </p>
-
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(event) => setAgreed(event.target.checked)}
-            />
-            <span>
-              I agree with the <Link href="#">terms and conditions</Link>
-            </span>
-          </label>
-
-          <button
-            type="button"
-            className="add-to-cart"
-            onClick={() => router.push("/checkout")}
-            disabled={!agreed}
-          >
-            Check out
-          </button>
-          {!agreed && (
-            <p className="cart-terms-hint">Accept the terms and conditions to continue.</p>
-          )}
         </div>
-      </aside>
-    </div>
+
+        {/* Summary */}
+
+        <aside className="cart-summary" aria-label="Order summary">
+          <div className="cart-summary-panel">
+            <h3>Cart summary</h3>
+
+            <div className="option-list">
+              {SHIPPING_METHODS.map((method) => {
+                const cost = shippingCost(method.id, subtotal);
+                return (
+                  <label key={method.id} className={shipping === method.id ? "selected" : ""}>
+                    <input
+                      type="radio"
+                      name="cart-shipping"
+                      value={method.id}
+                      checked={shipping === method.id}
+                      onChange={() => setShipping(method.id)}
+                    />
+                    <span>{method.label}</span>
+                    <strong>{cost === 0 ? formatPrice(0) : `+${formatPrice(cost)}`}</strong>
+                  </label>
+                );
+              })}
+            </div>
+
+            {discount > 0 && (
+              <div className="cart-summary-row">
+                <span>Discount</span>
+                <span>−{formatPrice(discount)}</span>
+              </div>
+            )}
+
+            <div className="cart-summary-row">
+              <span>Subtotal</span>
+              <span>{formatPrice(subtotal - discount)}</span>
+            </div>
+
+            <div className="cart-subtotal">
+              <span>Total</span>
+              <strong>{formatPrice(total)}</strong>
+            </div>
+
+            <button
+              type="button"
+              className="add-to-cart"
+              onClick={() => router.push("/checkout")}
+            >
+              Checkout
+            </button>
+          </div>
+        </aside>
+      </div>
+    </>
   );
 }
