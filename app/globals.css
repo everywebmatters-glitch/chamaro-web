@@ -3637,10 +3637,9 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 }
 
 .cart-page-layout {
-  align-items: start;
   display: grid;
   gap: 40px;
-  grid-template-columns: minmax(0, 1fr) 420px;
+  grid-template-columns: 1fr;
 }
 
 .cart-table {
@@ -3769,9 +3768,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 .cart-summary {
   display: grid;
   gap: 24px;
-  position: sticky;
-  /* clear the sticky header when it slides back in */
-  top: 104px;
+  max-width: 460px;
 }
 
 .cart-summary-progress {
