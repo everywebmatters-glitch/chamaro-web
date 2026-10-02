@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Mail, MapPin, Phone } from "lucide-react";
 import Header from "../components/Header";
 import SiteFooter from "../components/SiteFooter";
@@ -16,27 +15,10 @@ export default function ContactPage() {
     <div className="site-shell">
       <Header />
 
-      <section className="contact-hero">
-        <div className="contact-hero-text">
-          <h1>Contact Us</h1>
-          <p>Questions about a chair, an order or a bulk purchase? We&apos;re happy to help.</p>
-        </div>
-
-        <div className="contact-hero-image">
-          <Image src="/Banner two.webp" alt="" fill sizes="100vw" priority />
-          <svg
-            className="contact-hero-wave"
-            viewBox="0 0 1200 60"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M0,0 C100,60 200,60 300,0 C400,60 500,60 600,0 C700,60 800,60 900,0 C1000,60 1100,60 1200,0 L1200,60 L0,60 Z"
-              fill="#ffffff"
-            />
-          </svg>
-        </div>
-      </section>
+      <div className="page-title-band">
+        <h1>Contact Us</h1>
+        <p>Questions about a chair, an order or a bulk purchase? We&apos;re happy to help.</p>
+      </div>
 
       <main className="account-page">
         <div className="contact-layout">
