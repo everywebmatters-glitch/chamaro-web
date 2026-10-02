@@ -2,16 +2,19 @@
    STORE CONTACT DETAILS
 ========================================================= */
 
+const MAP_QUERY = "No.8/390 & 8/391, Kaviyarasu Kannadhasan Nagar Kodungaiyur, Chennai - 600118, Tamil Nadu";
+
 export const contact = {
   address: [
     "No.8/390 & 8/391, Kaviyarasu",
-    " Kannadhasan Nagar Kodungaiyur,", 
+    " Kannadhasan Nagar Kodungaiyur,",
     "Chennai - 600118, Tamil Nadu.",
   ],
   email: "chamarochairs@gmail.com",
   phone: "+91 97414 18807 / +91 86670 53897",
   hours: "Mon – Sat, 10:00 am – 7:00 pm",
-  mapUrl: "https://maps.google.com",
+  mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(MAP_QUERY)}`,
+  mapEmbedUrl: `https://www.google.com/maps?q=${encodeURIComponent(MAP_QUERY)}&output=embed`,
 };
 
 /* First number in `contact.phone`, digits only, for `tel:` links — the

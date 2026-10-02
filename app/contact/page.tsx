@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowUpRight, Clock, Mail, MapPin, Phone } from "lucide-react";
+import Image from "next/image";
+import { Mail, MapPin, Phone } from "lucide-react";
 import Header from "../components/Header";
 import SiteFooter from "../components/SiteFooter";
 import ContactForm from "../components/contact/ContactForm";
@@ -16,22 +16,62 @@ export default function ContactPage() {
     <div className="site-shell">
       <Header />
 
-      <div className="page-title-band">
-        <h1>Contact Us</h1>
-        <p>Questions about a chair, an order or a bulk purchase? We&apos;re happy to help.</p>
-      </div>
+      <section className="contact-hero">
+        <div className="contact-hero-text">
+          <h1>Contact Us</h1>
+          <p>Questions about a chair, an order or a bulk purchase? We&apos;re happy to help.</p>
+        </div>
+
+        <div className="contact-hero-image">
+          <Image src="/Banner two.webp" alt="" fill sizes="100vw" priority />
+          <svg
+            className="contact-hero-wave"
+            viewBox="0 0 1200 60"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M0,0 C100,60 200,60 300,0 C400,60 500,60 600,0 C700,60 800,60 900,0 C1000,60 1100,60 1200,0 L1200,60 L0,60 Z"
+              fill="#ffffff"
+            />
+          </svg>
+        </div>
+      </section>
 
       <main className="account-page">
         <div className="contact-layout">
           <section aria-labelledby="visit-title">
-            <h2 id="visit-title" className="contact-heading">
-              Visit our showroom
+            <h2 id="visit-title" className="sr-only">
+              Get in touch
             </h2>
-            <p className="auth-lead">Come and try the chairs in person, or reach us by phone or email.</p>
 
-            <ul className="contact-details">
+            <ul className="contact-details contact-details-circle">
               <li>
-                <MapPin size={22} strokeWidth={1.5} aria-hidden="true" />
+                <span className="contact-icon-circle">
+                  <Phone size={20} strokeWidth={1.8} aria-hidden="true" />
+                </span>
+                <div>
+                  <h3>Phone Number</h3>
+                  <p>
+                    <a href={primaryPhoneHref}>{contact.phone}</a>
+                  </p>
+                </div>
+              </li>
+              <li>
+                <span className="contact-icon-circle">
+                  <Mail size={20} strokeWidth={1.8} aria-hidden="true" />
+                </span>
+                <div>
+                  <h3>Email</h3>
+                  <p>
+                    <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                  </p>
+                </div>
+              </li>
+              <li>
+                <span className="contact-icon-circle">
+                  <MapPin size={20} strokeWidth={1.8} aria-hidden="true" />
+                </span>
                 <div>
                   <h3>Address</h3>
                   <p>
@@ -42,53 +82,29 @@ export default function ContactPage() {
                       </span>
                     ))}
                   </p>
-                  <a href={contact.mapUrl} target="_blank" rel="noreferrer" className="contact-direction">
-                    Get directions
-                    <ArrowUpRight size={14} aria-hidden="true" />
-                  </a>
-                </div>
-              </li>
-              <li>
-                <Phone size={22} strokeWidth={1.5} aria-hidden="true" />
-                <div>
-                  <h3>Phone</h3>
-                  <p>
-                    <a href={primaryPhoneHref}>{contact.phone}</a>
-                  </p>
-                </div>
-              </li>
-              <li>
-                <Mail size={22} strokeWidth={1.5} aria-hidden="true" />
-                <div>
-                  <h3>Email</h3>
-                  <p>
-                    <a href={`mailto:${contact.email}`}>{contact.email}</a>
-                  </p>
-                </div>
-              </li>
-              <li>
-                <Clock size={22} strokeWidth={1.5} aria-hidden="true" />
-                <div>
-                  <h3>Open hours</h3>
-                  <p>{contact.hours}</p>
                 </div>
               </li>
             </ul>
 
-            <div className="contact-b2b">
-              <h3>Buying for an office?</h3>
-              <p>Get volume pricing and GST invoices for bulk orders.</p>
-              <Link href="/b2b" className="wishlist-return">
-                Explore B2B
-              </Link>
+            <div className="contact-map">
+              <iframe
+                src={contact.mapEmbedUrl}
+                title="Chamaro showroom location"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           </section>
 
-          <section className="contact-form-panel" aria-labelledby="message-title">
-            <h2 id="message-title" className="contact-heading">
-              Send us a message
+          <section className="contact-form-panel contact-form-panel-plain" aria-labelledby="message-title">
+            <h2 id="message-title" className="contact-form-title">
+              Let&apos;s Talk
             </h2>
-            <p className="auth-lead">Fill in the form and we&apos;ll get back to you by email.</p>
+            <p className="auth-lead">
+              Have a question or a requirement?
+              <br />
+              Fill out the form below and our team will get in touch with you.
+            </p>
             <ContactForm />
           </section>
         </div>

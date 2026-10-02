@@ -4785,6 +4785,146 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   border-color: #c0321b;
 }
 
+.contact-hero {
+  position: relative;
+}
+
+.contact-hero-text {
+  padding: clamp(48px, 6vw, 72px) var(--gutter) clamp(32px, 4vw, 48px);
+  text-align: center;
+}
+
+.contact-hero-text h1 {
+  color: var(--foreground);
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.contact-hero-text p {
+  color: var(--text-body);
+  margin: 0 auto;
+  max-width: 560px;
+}
+
+.contact-hero-image {
+  height: clamp(140px, 22vw, 220px);
+  overflow: hidden;
+  position: relative;
+}
+
+.contact-hero-image img {
+  object-fit: cover;
+}
+
+.contact-hero-wave {
+  bottom: -1px;
+  height: 36px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.contact-details-circle li {
+  align-items: center;
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+
+.contact-icon-circle {
+  align-items: center;
+  background: var(--foreground);
+  border-radius: 50%;
+  color: #ffffff;
+  display: flex;
+  flex-shrink: 0;
+  height: 48px;
+  justify-content: center;
+  width: 48px;
+}
+
+.contact-map {
+  aspect-ratio: 4 / 3;
+  background: #f0f0ef;
+  border-radius: 8px;
+  margin-top: 32px;
+  overflow: hidden;
+}
+
+.contact-map iframe {
+  border: 0;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.contact-form-title {
+  color: var(--foreground);
+  font-size: clamp(1.7rem, 2.4vw, 2.1rem);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.contact-form-panel-plain {
+  border: 0;
+  padding: 0;
+}
+
+.contact-plain-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.contact-plain-row {
+  display: flex;
+  gap: 18px;
+}
+
+.contact-plain-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.contact-plain-field input,
+.contact-plain-field select,
+.contact-plain-field textarea {
+  background: #ffffff;
+  border: 1px solid #d9d9d7;
+  border-radius: 6px;
+  color: var(--foreground);
+  font: inherit;
+  padding: 14px 16px;
+  resize: vertical;
+  width: 100%;
+}
+
+.contact-plain-field select[data-empty="true"] {
+  color: var(--muted);
+}
+
+.contact-plain-field input:focus,
+.contact-plain-field select:focus,
+.contact-plain-field textarea:focus {
+  border-color: var(--foreground);
+  outline: none;
+}
+
+.contact-send-btn {
+  background: var(--foreground);
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  justify-self: start;
+  padding: 14px 32px;
+}
+
+.contact-send-btn:hover {
+  opacity: 0.9;
+}
+
 .contact-layout {
   display: grid;
   gap: clamp(40px, 6vw, 96px);
@@ -5199,6 +5339,10 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   .b2b-quote,
   .b2b-hero {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .contact-plain-row {
+    flex-direction: column;
   }
 
   .b2b-hero {
