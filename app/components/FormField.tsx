@@ -6,6 +6,7 @@ type Common = {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  className?: string;
 };
 
 type Props = Common &
@@ -17,7 +18,7 @@ type Props = Common &
 
 /* Floating-label field matching the checkout form */
 export default function FormField(props: Props) {
-  const { id, label, value, onChange, error } = props;
+  const { id, label, value, onChange, error, className } = props;
   const shared = {
     id,
     name: id,
@@ -56,7 +57,9 @@ export default function FormField(props: Props) {
   }
 
   return (
-    <div className={`field${props.as === "select" ? " field-select" : ""}${props.as === "textarea" ? " field-textarea" : ""}${error ? " has-error" : ""}`}>
+    <div
+      className={`field${props.as === "select" ? " field-select" : ""}${props.as === "textarea" ? " field-textarea" : ""}${error ? " has-error" : ""}${className ? ` ${className}` : ""}`}
+    >
       {control}
       <label htmlFor={id}>{label}</label>
       {error && (

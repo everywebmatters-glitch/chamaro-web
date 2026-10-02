@@ -80,18 +80,81 @@ export default function QuoteForm() {
   };
 
   return (
-    <form className="auth-form" onSubmit={submit} noValidate>
+    <form className="auth-form quote-form-underline" onSubmit={submit} noValidate>
+      <FormField
+        id="quote-name"
+        label="Full name *"
+        value={form.name}
+        onChange={update("name")}
+        error={errors.name}
+        autoComplete="name"
+        className="field-underline"
+      />
+
       <div className="field-row">
-        <FormField id="quote-company" label="Company name *" value={form.company} onChange={update("company")} error={errors.company} autoComplete="organization" />
-        <FormField id="quote-name" label="Your name *" value={form.name} onChange={update("name")} error={errors.name} autoComplete="name" />
+        <FormField
+          id="quote-email"
+          label="Work email *"
+          type="email"
+          value={form.email}
+          onChange={update("email")}
+          error={errors.email}
+          autoComplete="email"
+          className="field-underline"
+        />
+        <FormField
+          id="quote-phone"
+          label="Mobile number *"
+          type="tel"
+          inputMode="tel"
+          value={form.phone}
+          onChange={update("phone")}
+          error={errors.phone}
+          autoComplete="tel"
+          className="field-underline"
+        />
       </div>
+
       <div className="field-row">
-        <FormField id="quote-email" label="Work email *" type="email" value={form.email} onChange={update("email")} error={errors.email} autoComplete="email" />
-        <FormField id="quote-phone" label="Mobile number *" type="tel" inputMode="tel" value={form.phone} onChange={update("phone")} error={errors.phone} autoComplete="tel" />
+        <FormField
+          id="quote-company"
+          label="Company name *"
+          value={form.company}
+          onChange={update("company")}
+          error={errors.company}
+          autoComplete="organization"
+          className="field-underline"
+        />
+        <FormField
+          id="quote-city"
+          label="Delivery city *"
+          value={form.city}
+          onChange={update("city")}
+          error={errors.city}
+          autoComplete="address-level2"
+          className="field-underline"
+        />
       </div>
+
       <div className="field-row">
-        <FormField id="quote-city" label="Delivery city *" value={form.city} onChange={update("city")} error={errors.city} autoComplete="address-level2" />
-        <FormField id="quote-gstin" label="GSTIN (optional)" value={form.gstin} onChange={update("gstin")} error={errors.gstin} />
+        <FormField
+          id="quote-gstin"
+          label="GSTIN (optional)"
+          value={form.gstin}
+          onChange={update("gstin")}
+          error={errors.gstin}
+          className="field-underline"
+        />
+        <FormField
+          id="quote-timeline"
+          as="select"
+          label="Needed by *"
+          options={TIMELINES}
+          value={form.timeline}
+          onChange={update("timeline")}
+          error={errors.timeline}
+          className="field-underline"
+        />
       </div>
 
       <fieldset className="quote-chairs" aria-describedby={errors.chairs ? "quote-chairs-error" : undefined}>
@@ -115,12 +178,36 @@ export default function QuoteForm() {
         )}
       </fieldset>
 
-      <div className="field-row">
-        <FormField id="quote-quantity" as="select" label="How many chairs? *" options={QUANTITIES} value={form.quantity} onChange={update("quantity")} error={errors.quantity} />
-        <FormField id="quote-timeline" as="select" label="Needed by *" options={TIMELINES} value={form.timeline} onChange={update("timeline")} error={errors.timeline} />
-      </div>
+      <fieldset className="quote-chairs" aria-describedby={errors.quantity ? "quote-quantity-error" : undefined}>
+        <legend>How many chairs? *</legend>
+        <div className="quote-chips">
+          {QUANTITIES.map((quantity) => (
+            <label key={quantity} className="quote-chip">
+              <input
+                type="radio"
+                name="quote-quantity"
+                checked={form.quantity === quantity}
+                onChange={() => update("quantity")(quantity)}
+              />
+              <span>{quantity}</span>
+            </label>
+          ))}
+        </div>
+        {errors.quantity && (
+          <p className="field-error" id="quote-quantity-error">
+            {errors.quantity}
+          </p>
+        )}
+      </fieldset>
 
-      <FormField id="quote-message" as="textarea" label="Anything else? (colours, delivery floor, deadlines…)" value={form.message} onChange={update("message")} />
+      <FormField
+        id="quote-message"
+        as="textarea"
+        label="Anything else? (colours, delivery floor, deadlines…)"
+        value={form.message}
+        onChange={update("message")}
+        className="field-underline"
+      />
 
       <button type="submit" className="add-to-cart auth-submit">
         Request a quote

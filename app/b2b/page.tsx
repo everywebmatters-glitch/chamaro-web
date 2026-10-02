@@ -87,10 +87,10 @@ export default function B2BPage() {
           <h2 id="b2b-why" className="b2b-heading">
             Why businesses choose Chamaro
           </h2>
-          <ul className="service-grid b2b-benefits">
+          <ul className="b2b-benefit-grid">
             {benefits.map(({ icon: Icon, title, text }) => (
-              <li key={title} className="service-card">
-                <Icon size={40} strokeWidth={1.2} aria-hidden="true" />
+              <li key={title} className="b2b-benefit-card">
+                <Icon size={32} strokeWidth={1.4} aria-hidden="true" />
                 <h3>{title}</h3>
                 <p>{text}</p>
               </li>
@@ -143,28 +143,29 @@ export default function B2BPage() {
         </section>
 
         {/* Quote form */}
-        <section className="b2b-section b2b-quote" id="quote" aria-labelledby="b2b-quote-title">
-          <div className="b2b-quote-intro">
-            <h2 id="b2b-quote-title" className="b2b-heading">
-              Request a bulk quote
-            </h2>
-            <p className="auth-lead">
-              The more you tell us, the more accurate your quote. Prefer to talk? Reach the team directly.
-            </p>
-            <ul className="b2b-direct">
-              <li>
-                <Phone size={18} aria-hidden="true" />
-                <a href={primaryPhoneHref}>{contact.phone}</a>
-              </li>
-              <li>
-                <Mail size={18} aria-hidden="true" />
-                <a href={`mailto:${contact.email}`}>{contact.email}</a>
-              </li>
-            </ul>
-          </div>
+        <section className="b2b-section" aria-labelledby="b2b-quote-title">
+          <div className="b2b-quote" id="quote">
+            <div className="b2b-quote-intro">
+              <h2 id="b2b-quote-title">Let&apos;s build your order.</h2>
+              <p>Tell us what you need and we&apos;ll turn it into a bulk quote.</p>
 
-          <div className="b2b-quote-form">
-            <QuoteForm />
+              <Armchair className="b2b-quote-illustration" size={120} strokeWidth={1} aria-hidden="true" />
+
+              <ul className="b2b-direct">
+                <li>
+                  <Phone size={18} aria-hidden="true" />
+                  <a href={primaryPhoneHref}>{contact.phone}</a>
+                </li>
+                <li>
+                  <Mail size={18} aria-hidden="true" />
+                  <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                </li>
+              </ul>
+            </div>
+
+            <div className="b2b-quote-form">
+              <QuoteForm />
+            </div>
           </div>
         </section>
       </main>
