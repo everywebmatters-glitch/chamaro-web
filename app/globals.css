@@ -4862,7 +4862,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   width: 100%;
 }
 
-.contact-details-circle li {
+.contact-details.contact-details-circle li {
   align-items: flex-start;
   grid-template-columns: 52px minmax(0, 1fr);
 }
@@ -4879,7 +4879,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   width: 48px;
 }
 
-.contact-details-circle .contact-icon-circle svg {
+.contact-details.contact-details-circle .contact-icon-circle svg {
   color: #ffffff;
   margin-top: 0;
 }
