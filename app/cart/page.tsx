@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Header from "../components/Header";
 import SiteFooter from "../components/SiteFooter";
 import CartPageView from "../components/cart/CartPageView";
@@ -15,19 +14,9 @@ export default function CartPage() {
       <Header />
 
       <main>
-        <section className="page-hero page-hero-compact" aria-labelledby="cart-title">
-          <div className="page-hero-inner">
-            <nav className="breadcrumbs" aria-label="Breadcrumb">
-              <ol>
-                <li>
-                  <Link href="/">Home</Link>
-                </li>
-                <li aria-current="page">Shopping Cart</li>
-              </ol>
-            </nav>
-            <h1 id="cart-title">Shopping Cart</h1>
-          </div>
-        </section>
+        <div className="page-title-band">
+          <h1>Cart</h1>
+        </div>
 
         <div className="cart-page">
           <CartPageView />
