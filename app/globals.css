@@ -3638,7 +3638,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .cart-page-layout {
   display: grid;
-  gap: 40px;
+  gap: 16px;
   grid-template-columns: 1fr;
 }
 
@@ -4960,6 +4960,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 }
 
 .contact-layout {
+  align-items: start;
   display: grid;
   gap: clamp(40px, 6vw, 96px);
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
