@@ -1,31 +1,11 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Montserrat, Poppins } from "next/font/google";
 import localFont from "next/font/local";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import CartDrawer from "./components/cart/CartDrawer";
 import { StoreProvider } from "./components/store/StoreProvider";
 import "./globals.css";
 
-/* Poppins matches the typography on the product banners */
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-/* Montserrat — used for policy page sub-headings (Shipping, Returns, etc.) */
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
-/* PP Telegraf (commercial license), self-hosted; used for all headings (see globals.css) */
+/* PP Telegraf (commercial license), self-hosted; the only font family used site-wide (see globals.css) */
 const telegraf = localFont({
   variable: "--font-telegraf",
   src: [
@@ -45,10 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${poppins.variable} ${geistMono.variable} ${telegraf.variable} ${montserrat.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${telegraf.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <AuthProvider>
           <StoreProvider>

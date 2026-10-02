@@ -20,14 +20,14 @@
   /* Section headings */
   --heading-size: clamp(2rem, 3.4vw, 3.25rem);
   --heading-tracking: -0.02em;
-  --font-heading: var(--font-telegraf), var(--font-poppins), sans-serif;
+  --font-heading: var(--font-telegraf), sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-poppins);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-telegraf);
+  --font-mono: var(--font-telegraf);
 }
 
 /* =========================================================
@@ -45,7 +45,7 @@ html {
 body {
   background: #ffffff;
   color: var(--foreground);
-  font-family: var(--font-poppins), sans-serif;
+  font-family: var(--font-heading);
   line-height: 1.5;
   margin: 0;
   text-rendering: optimizeLegibility;
@@ -3641,6 +3641,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   display: grid;
   gap: 40px;
   grid-template-columns: minmax(0, 1fr) 420px;
+  margin-top: 40px;
 }
 
 .cart-table {
@@ -3730,7 +3731,6 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 }
 
 .cart-coupon {
-  margin-top: 40px;
   max-width: 420px;
 }
 
@@ -4373,7 +4373,6 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .policy-page h2 {
   color: var(--foreground);
-  font-family: var(--font-montserrat), sans-serif;
   font-size: clamp(1.15rem, 1.6vw, 1.35rem);
   font-weight: 700;
   margin: 32px 0 14px;

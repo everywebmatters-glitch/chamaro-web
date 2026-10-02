@@ -75,71 +75,69 @@ export default function CartPageView() {
         <FreeShippingProgress subtotal={subtotal} />
       </div>
 
+      <table className="cart-table">
+        <thead>
+          <tr>
+            <th scope="col">Product</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Price</th>
+            <th scope="col">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {lines.map((line) => (
+            <tr key={line.key}>
+              <td>
+                <div className="cart-table-product">
+                  <Link href={`/products/${line.slug}`} className="cart-line-thumb">
+                    <Image src={line.product.images[0].src} alt="" fill sizes="100px" />
+                  </Link>
+                  <div>
+                    <Link href={`/products/${line.slug}`} className="cart-table-name">
+                      {line.product.name}
+                    </Link>
+                    <small>{variantLabel(line)}</small>
+                    <button
+                      type="button"
+                      className="remove-link"
+                      onClick={() => removeLine(line.key)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </td>
+              <td data-label="Quantity">
+                <QuantityStepper
+                  value={line.quantity}
+                  onChange={(value) => setQuantity(line.key, value)}
+                  label={`Quantity for ${line.product.name}`}
+                  size="small"
+                />
+              </td>
+              <td data-label="Price">
+                <div className="product-price-row">
+                  {line.product.compareAtPrice && (
+                    <s className="price-original">{formatPrice(line.product.compareAtPrice)}</s>
+                  )}
+                  <span className="price-current">{formatPrice(line.product.price)}</span>
+                </div>
+              </td>
+              <td data-label="Subtotal" className="cart-table-total">
+                {formatPrice(line.lineTotal)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
       <div className="cart-page-layout">
-        {/* Items */}
+        {/* Coupon */}
 
-        <div>
-          <table className="cart-table">
-            <thead>
-              <tr>
-                <th scope="col">Product</th>
-                <th scope="col">Quantity</th>
-                <th scope="col">Price</th>
-                <th scope="col">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lines.map((line) => (
-                <tr key={line.key}>
-                  <td>
-                    <div className="cart-table-product">
-                      <Link href={`/products/${line.slug}`} className="cart-line-thumb">
-                        <Image src={line.product.images[0].src} alt="" fill sizes="100px" />
-                      </Link>
-                      <div>
-                        <Link href={`/products/${line.slug}`} className="cart-table-name">
-                          {line.product.name}
-                        </Link>
-                        <small>{variantLabel(line)}</small>
-                        <button
-                          type="button"
-                          className="remove-link"
-                          onClick={() => removeLine(line.key)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                  <td data-label="Quantity">
-                    <QuantityStepper
-                      value={line.quantity}
-                      onChange={(value) => setQuantity(line.key, value)}
-                      label={`Quantity for ${line.product.name}`}
-                      size="small"
-                    />
-                  </td>
-                  <td data-label="Price">
-                    <div className="product-price-row">
-                      {line.product.compareAtPrice && (
-                        <s className="price-original">{formatPrice(line.product.compareAtPrice)}</s>
-                      )}
-                      <span className="price-current">{formatPrice(line.product.price)}</span>
-                    </div>
-                  </td>
-                  <td data-label="Subtotal" className="cart-table-total">
-                    {formatPrice(line.lineTotal)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="cart-coupon">
-            <h3>Have a coupon?</h3>
-            <p>Add your code for an instant cart discount</p>
-            <DiscountForm idPrefix="cart-discount" />
-          </div>
+        <div className="cart-coupon">
+          <h3>Have a coupon?</h3>
+          <p>Add your code for an instant cart discount</p>
+          <DiscountForm idPrefix="cart-discount" />
         </div>
 
         {/* Summary */}
