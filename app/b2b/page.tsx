@@ -5,20 +5,16 @@ import {
   Armchair,
   ArrowRight,
   BadgePercent,
-  Coffee,
   Headset,
   Mail,
   Phone,
   ReceiptText,
   ShieldCheck,
-  Sofa,
   Truck,
-  Users,
 } from "lucide-react";
 import Header from "../components/Header";
 import SiteFooter from "../components/SiteFooter";
 import QuoteForm from "../components/b2b/QuoteForm";
-import { categories, products, type ProductCategory } from "../lib/products";
 import { contact, primaryPhoneHref } from "../lib/site";
 
 export const metadata: Metadata = {
@@ -35,19 +31,6 @@ const benefits = [
   { icon: Truck, title: "Planned delivery", text: "One delivery schedule for the whole order, planned around your site." },
   { icon: ShieldCheck, title: "1-year warranty", text: "Every chair is covered, however many you buy." },
   { icon: Headset, title: "One point of contact", text: "A single person to talk to, from quote to delivery." },
-];
-
-const spaces: Record<ProductCategory, { icon: typeof Armchair; use: string }> = {
-  boss: { icon: Armchair, use: "Director cabins and leadership offices" },
-  executive: { icon: Sofa, use: "Managers' desks and executive workstations" },
-  visitor: { icon: Users, use: "Receptions, waiting areas and meeting rooms" },
-  cafe: { icon: Coffee, use: "Cafeterias, break-out zones and cafés" },
-};
-
-const steps = [
-  { title: "Tell us what you need", text: "Share the chairs, quantities and delivery city using the form below." },
-  { title: "Get your quote", text: "We reply by email with pricing, lead times and GST details." },
-  { title: "We deliver", text: "Confirm the order and we schedule delivery to your site." },
 ];
 
 export default function B2BPage() {
@@ -96,50 +79,6 @@ export default function B2BPage() {
               </li>
             ))}
           </ul>
-        </section>
-
-        {/* Spaces */}
-        <section className="b2b-section b2b-section-tinted" aria-labelledby="b2b-spaces">
-          <h2 id="b2b-spaces" className="b2b-heading">
-            Chairs for every space
-          </h2>
-          <ul className="b2b-spaces">
-            {categories.map((category) => {
-              const { icon: Icon, use } = spaces[category.slug];
-              const count = products.filter((product) => product.category === category.slug).length;
-              return (
-                <li key={category.slug}>
-                  <Link href={`/products?category=${category.slug}`} className="b2b-space">
-                    <span className="b2b-space-icon">
-                      <Icon size={30} strokeWidth={1.4} aria-hidden="true" />
-                    </span>
-                    <h3>{category.name} chairs</h3>
-                    <p>{use}</p>
-                    <span className="b2b-space-link">
-                      View {count} {count === 1 ? "chair" : "chairs"}
-                      <ArrowRight size={16} aria-hidden="true" />
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
-        {/* Process */}
-        <section className="b2b-section" aria-labelledby="b2b-how">
-          <h2 id="b2b-how" className="b2b-heading">
-            How it works
-          </h2>
-          <ol className="b2b-steps">
-            {steps.map((step, index) => (
-              <li key={step.title}>
-                <span className="b2b-step-number">{index + 1}</span>
-                <h3>{step.title}</h3>
-                <p>{step.text}</p>
-              </li>
-            ))}
-          </ol>
         </section>
 
         {/* Quote form */}
