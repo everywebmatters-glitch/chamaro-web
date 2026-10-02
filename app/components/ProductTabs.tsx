@@ -1,6 +1,6 @@
 "use client";
 
-import { Droplets, Sun, SprayCan, Weight, Wrench } from "lucide-react";
+import { Check, Copy, Droplets, Sun, SprayCan, Weight, Wrench } from "lucide-react";
 import { useRef, useState } from "react";
 import { chairCare, storePolicies, type Product } from "../lib/products";
 
@@ -36,7 +36,19 @@ function Paragraphs({ text }: { text: string }) {
 
 export default function ProductTabs({ product }: { product: Product }) {
   const [active, setActive] = useState<TabId>("description");
+  const [copied, setCopied] = useState(false);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const copySpecs = async () => {
+    const text = product.specs.map((spec) => `${spec.label}: ${spec.value}`).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
 
   /* Arrow-key navigation per the WAI-ARIA tabs pattern */
   const onKeyDown = (event: React.KeyboardEvent, index: number) => {
@@ -130,14 +142,33 @@ export default function ProductTabs({ product }: { product: Product }) {
 
         {active === "additional" &&
           (product.specs.length > 0 ? (
-            <dl className="spec-list spec-list-wide">
-              {product.specs.map((spec, index) => (
-                <div key={`${index}-${spec.label}`}>
-                  <dt>{spec.label}</dt>
-                  <dd>{spec.value}</dd>
-                </div>
-              ))}
-            </dl>
+            <div className="spec-table spec-list-wide">
+              <div className="spec-table-header">
+                <span>Specification</span>
+                <span>Details</span>
+                <button
+                  type="button"
+                  className="spec-copy-btn"
+                  onClick={copySpecs}
+                  aria-label="Copy specifications"
+                  title="Copy specifications"
+                >
+                  {copied ? (
+                    <Check size={18} strokeWidth={1.8} aria-hidden="true" />
+                  ) : (
+                    <Copy size={18} strokeWidth={1.6} aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+              <dl className="spec-list">
+                {product.specs.map((spec, index) => (
+                  <div key={`${index}-${spec.label}`}>
+                    <dt>{spec.label}</dt>
+                    <dd>{spec.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           ) : (
             <p className="tab-lede">No additional information for this product yet.</p>
           ))}

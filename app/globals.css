@@ -2193,8 +2193,8 @@ a.see-more-button {
   border-bottom: 1px solid #ececea;
   display: grid;
   gap: 16px;
-  grid-template-columns: 160px 1fr;
-  padding: 13px 0;
+  grid-template-columns: 220px 1fr;
+  padding: 18px 0;
 }
 
 .spec-list div:first-child {
@@ -2202,18 +2202,55 @@ a.see-more-button {
 }
 
 .spec-list dt {
-  color: var(--muted);
-  font-size: 0.92rem;
+  color: var(--foreground);
+  font-size: 1rem;
 }
 
 .spec-list dd {
-  font-size: 0.92rem;
-  font-weight: 500;
+  color: var(--text-body);
+  font-size: 1rem;
+  font-weight: 400;
   margin: 0;
 }
 
 .spec-list-wide {
   max-width: 760px;
+}
+
+.spec-table-header {
+  align-items: center;
+  border-bottom: 2px solid #ececea;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 220px 1fr;
+  padding-bottom: 16px;
+  position: relative;
+}
+
+.spec-table-header span {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.spec-table .spec-list div:first-child {
+  border-top: 0;
+}
+
+.spec-copy-btn {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  padding: 4px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.spec-copy-btn:hover {
+  color: var(--foreground);
 }
 
 /* =========================================================
@@ -5987,7 +6024,8 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
     padding: 24px 20px 28px;
   }
 
-  .spec-list div {
+  .spec-list div,
+  .spec-table-header {
     grid-template-columns: 120px 1fr;
   }
 
