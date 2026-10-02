@@ -3768,7 +3768,9 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 .cart-summary {
   display: grid;
   gap: 24px;
+  margin-left: auto;
   max-width: 460px;
+  width: 100%;
 }
 
 .cart-summary-progress {
