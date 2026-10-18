@@ -1,6 +1,7 @@
-# Substitutions: _IMAGE (required) and _API_URL (defaults to the production API; it is public, not a secret).
+# Substitutions: _IMAGE (required) and _API_URL (defaults to the production API on the custom domain; public, not a secret).
+# The API host must match the host of GOOGLE_REDIRECT_URI: the Google OAuth state cookie is host-bound.
 substitutions:
-  _API_URL: https://chamaro-api-477932129337.asia-south1.run.app/api/v1
+  _API_URL: https://api.chamaro.com/api/v1
 
 steps:
   - name: 'gcr.io/cloud-builders/docker'
