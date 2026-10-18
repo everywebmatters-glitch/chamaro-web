@@ -12,6 +12,7 @@ import {
 import { findDiscount, lineKey, type CartLine } from "../../lib/cart";
 import { fetchAllProducts, fetchCategories, toProduct } from "../../lib/catalog-api";
 import type { NavCategory } from "../../lib/catalog-nav";
+import { reconcileCart } from "../../lib/cart-reconcile";
 import type { Product } from "../../lib/products";
 
 export type { CartLine } from "../../lib/cart";
@@ -29,6 +30,9 @@ type StoreContextValue = {
   catalogFailed: boolean;
   /* Live categories (GET /api/v1/categories); empty until loaded */
   categories: NavCategory[];
+  /* Messages about cart lines the store changed because stock or availability changed */
+  cartNotices: string[];
+  dismissCartNotices: () => void;
   findProduct: (slug: string) => Product | undefined;
   cart: CartLine[];
   wishlist: string[];
@@ -91,6 +95,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [catalog, setCatalog] = useState<Product[] | null>(null);
   const [catalogFailed, setCatalogFailed] = useState(false);
   const [categories, setCategories] = useState<NavCategory[]>([]);
+  const [cartNotices, setCartNotices] = useState<string[]>([]);
 
   /* Fresh product data for the cart, checkout and wishlist */
   const loadCatalog = useCallback(() => {
@@ -133,6 +138,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       /* storage unavailable (private mode) — keep in memory only */
     }
   }, [cart, wishlist, orderNote, discountCode, hydrated]);
+
+  /* Once the live catalog is known, drop cart lines whose product is gone or out of stock and trim
+     quantities to the units left, telling the shopper instead of failing at checkout */
+  useEffect(() => {
+    if (!hydrated || !catalog) return;
+    const { cart: next, notices } = reconcileCart(cart, catalog);
+    if (!notices.length) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reconcile the saved cart with the live catalog
+    setCart(next);
+    setCartNotices((current) => [...current, ...notices]);
+  }, [catalog, cart, hydrated]);
+
+  const dismissCartNotices = useCallback(() => setCartNotices([]), []);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -210,6 +228,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       catalog,
       catalogFailed,
       categories,
+      cartNotices,
+      dismissCartNotices,
       findProduct,
       cart,
       wishlist,
@@ -242,6 +262,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       catalog,
       catalogFailed,
       categories,
+      cartNotices,
+      dismissCartNotices,
       findProduct,
       loadCatalog,
       cart,

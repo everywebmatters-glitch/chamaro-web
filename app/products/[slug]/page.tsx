@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Header from "../../components/Header";
 import ProductDetail, { type ProductResult } from "../../components/ProductDetail";
 import SiteFooter from "../../components/SiteFooter";
@@ -40,6 +41,8 @@ export async function generateMetadata(
 export default async function ProductPage(props: PageProps<"/products/[slug]">) {
   const { slug } = await props.params;
   const result = await getProductResult(slug);
+  /* A real 404 status (not a 200 page that says "not found") for unknown or inactive slugs */
+  if (result.status === "not-found") notFound();
 
   return (
     <div className="site-shell">

@@ -19,6 +19,9 @@ import PaymentBadges from "./PaymentBadges";
 import { useStore } from "./store/StoreProvider";
 import { contact } from "../lib/site";
 
+/* Show "Only N left" at or below this many units */
+const LOW_STOCK_NOTE = 5;
+
 /* TODO: replace with the real support address */
 
 export default function ProductPurchase({ product }: { product: Product }) {
@@ -36,6 +39,8 @@ export default function ProductPurchase({ product }: { product: Product }) {
 
   const saved = isWishlisted(product.slug);
   const soldOut = product.availability === "out-of-stock";
+  /* Only worth mentioning when stock is tracked and nearly gone */
+  const lowStock = !soldOut && product.stockLeft !== undefined && product.stockLeft <= LOW_STOCK_NOTE;
   const verb = product.availability === "pre-order" ? "Pre-order" : "Add to Bag";
   const total = formatPrice(product.price * quantity);
 
@@ -132,7 +137,8 @@ export default function ProductPurchase({ product }: { product: Product }) {
 
       <div className="purchase-field">
         <p className="option-label option-label-strong">Quantity</p>
-        <QuantityStepper value={quantity} onChange={setQuantity} />
+        <QuantityStepper value={quantity} onChange={setQuantity} max={product.stockLeft} />
+        {lowStock && <p className="stock-note">Only {product.stockLeft} left in stock</p>}
       </div>
 
       {/* Actions */}
@@ -216,7 +222,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
           <span className="sticky-buy-variant">
             {variantLabel} – {formatPrice(product.price)}
           </span>
-          <QuantityStepper value={quantity} onChange={setQuantity} label="Quantity (sticky bar)" />
+          <QuantityStepper value={quantity} onChange={setQuantity} label="Quantity (sticky bar)" max={product.stockLeft} />
           <button type="button" className="add-to-cart" onClick={add} disabled={soldOut}>
             {soldOut ? "Sold out" : verb}
           </button>

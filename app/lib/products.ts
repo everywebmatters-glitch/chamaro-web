@@ -28,6 +28,8 @@ export type Product = {
   rating: number;
   reviewCount: number;
   availability: Availability;
+  /* Units that can still be bought when the API tracks stock (on hand minus reserved); undefined = not tracked */
+  stockLeft?: number;
   shortDescription: string;
   description: string;
   images: { src: string; alt: string }[];

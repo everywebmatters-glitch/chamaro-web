@@ -16,6 +16,7 @@ import {
 } from "../../lib/cart";
 import { formatPrice } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
+import CartNotices from "./CartNotices";
 import { useStore } from "../store/StoreProvider";
 import DiscountForm from "./DiscountForm";
 import FreeShippingProgress from "./FreeShippingProgress";
@@ -60,6 +61,7 @@ export default function CartPageView() {
   if (lines.length === 0) {
     return (
       <div className="cart-empty cart-empty-page">
+        <CartNotices />
         <h2>Your cart is empty</h2>
         <p>Browse the collection and add a chair you love.</p>
         <Link href="/products" className="add-to-cart">
@@ -71,6 +73,8 @@ export default function CartPageView() {
 
   return (
     <>
+      <CartNotices />
+
       <div className="cart-page-shipping-bar">
         <FreeShippingProgress subtotal={subtotal} />
       </div>
@@ -113,6 +117,7 @@ export default function CartPageView() {
                   onChange={(value) => setQuantity(line.key, value)}
                   label={`Quantity for ${line.product.name}`}
                   size="small"
+                  max={line.product.stockLeft}
                 />
               </td>
               <td data-label="Price">

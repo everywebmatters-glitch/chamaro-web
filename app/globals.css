@@ -6350,3 +6350,21 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 
 }
+.cart-notices {
+  margin: 0 0 16px;
+}
+
+.cart-notices ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.cart-notices .auth-link-button {
+  margin-top: 6px;
+}
+
+.stock-note {
+  color: #b42318;
+  font-size: 0.88rem;
+  margin: 8px 0 0;
+}

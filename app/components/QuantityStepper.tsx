@@ -7,12 +7,16 @@ export default function QuantityStepper({
   onChange,
   label = "Quantity",
   size = "default",
+  max = 99,
 }: {
   value: number;
   onChange: (value: number) => void;
   label?: string;
   size?: "default" | "small";
+  /* Highest quantity the shopper may pick (e.g. units in stock); never above 99 */
+  max?: number;
 }) {
+  const limit = Math.max(1, Math.min(99, max));
   return (
     <div
       className={`quantity-stepper${size === "small" ? " quantity-stepper-small" : ""}`}
@@ -30,8 +34,8 @@ export default function QuantityStepper({
       <output aria-live="polite">{value}</output>
       <button
         type="button"
-        onClick={() => onChange(Math.min(99, value + 1))}
-        disabled={value === 99}
+        onClick={() => onChange(Math.min(limit, value + 1))}
+        disabled={value >= limit}
         aria-label="Increase quantity"
       >
         <Plus size={size === "small" ? 14 : 16} />

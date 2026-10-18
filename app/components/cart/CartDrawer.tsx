@@ -14,6 +14,7 @@ import {
 } from "../../lib/cart";
 import { formatPrice } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
+import CartNotices from "./CartNotices";
 import { useStore } from "../store/StoreProvider";
 import FreeShippingProgress from "./FreeShippingProgress";
 
@@ -95,6 +96,7 @@ export default function CartDrawer() {
           </div>
         ) : lines.length === 0 ? (
           <div className="cart-empty">
+            <CartNotices />
             <p>Your cart is empty.</p>
             <button type="button" className="add-to-cart" onClick={() => goTo("/products")}>
               Continue shopping
@@ -107,6 +109,8 @@ export default function CartDrawer() {
             </div>
 
             <div className="cart-drawer-scroll">
+              <CartNotices />
+
               {/* Line items */}
 
               <ul className="cart-drawer-lines">
@@ -139,6 +143,7 @@ export default function CartDrawer() {
                         <QuantityStepper
                           value={line.quantity}
                           onChange={(value) => setQuantity(line.key, value)}
+                          max={line.product.stockLeft}
                           label={`Quantity for ${line.product.name}`}
                           size="small"
                         />

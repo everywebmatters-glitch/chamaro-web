@@ -192,6 +192,7 @@ export function toProduct(api: ApiProduct, index = 0): Product {
     rating: 0,
     reviewCount: 0,
     availability: availabilityOf(api.inventory),
+    stockLeft: api.inventory ? Math.max(0, api.inventory.quantity - api.inventory.reservedQuantity) : undefined,
     shortDescription: firstSentence(description),
     description,
     images: images.length
