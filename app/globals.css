@@ -6368,3 +6368,41 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   font-size: 0.88rem;
   margin: 8px 0 0;
 }
+
+/* Slides driven by CMS banners: the admin's image fills the hero (cover), phones may get their own artwork */
+
+.hero-slide-api {
+  display: block;
+  padding-left: 0;
+  position: relative;
+}
+
+.hero-slide-api .hero-banner-image img {
+  object-fit: cover;
+}
+
+.hero-slide-api .hero-img-mobile {
+  display: none;
+}
+
+.hero-api-link {
+  inset: 0;
+  position: absolute;
+  z-index: 2;
+}
+
+@media (max-width: 760px) {
+  /* Two classes so this beats the phone rule for the other hero slides */
+  .hero-slide.hero-slide-api {
+    min-height: 300px;
+    padding: 0;
+  }
+
+  .hero-slide-api .hero-img-desktop {
+    display: none;
+  }
+
+  .hero-slide-api .hero-img-mobile {
+    display: block;
+  }
+}

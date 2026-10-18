@@ -1,5 +1,5 @@
 import Header from "./components/Header";
-import { getNavCategories } from "./lib/catalog-api";
+import { getHeroBanners, getNavCategories } from "./lib/catalog-api";
 import HeroBanner from "./components/HeroBanner";
 import ChairShowcase from "./components/ChairShowcase";
 import BestSellers from "./components/BestSellers";
@@ -8,14 +8,14 @@ import ServiceHighlights from "./components/ServiceHighlights";
 import SiteFooter from "./components/SiteFooter";
 
 export default async function Home() {
-  const categories = await getNavCategories();
+  const [categories, banners] = await Promise.all([getNavCategories(), getHeroBanners()]);
 
   return (
     <div className="site-shell">
       <Header overlay />
 
       <main>
-        <HeroBanner />
+        <HeroBanner banners={banners} />
 
         <ChairShowcase categories={categories} />
 

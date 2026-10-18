@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { HeroBannerSlide } from "../lib/hero-banners";
 
 /* =========================================================
    HERO SLIDES
@@ -27,7 +28,8 @@ type Slide = {
   fullBleed?: boolean;
 };
 
-const slides: Slide[] = [
+/* Shown when the API has no active banners (or can't be reached) */
+const FALLBACK_SLIDES: Slide[] = [
   {
     title: ["Engineered", "to Lead"],
     subtitle: [
@@ -58,26 +60,35 @@ const scrollingText = [
 
 const AUTOPLAY_MS = 6000;
 
-export default function HeroBanner() {
+/* Banners from the CMS are the whole design: the admin's image fills the hero, with the title kept for screen
+   readers and the whole slide linking to the banner's address when it has one. */
+type DisplaySlide =
+  | { kind: "static"; slide: Slide; key: string; label: string }
+  | { kind: "banner"; banner: HeroBannerSlide; key: string; label: string };
+
+export default function HeroBanner({ banners = [] }: { banners?: HeroBannerSlide[] }) {
+  const slides: DisplaySlide[] = banners.length
+    ? banners.map((banner) => ({ kind: "banner", banner, key: banner.id, label: banner.title }))
+    : FALLBACK_SLIDES.map((slide) => ({ kind: "static", slide, key: slide.image, label: slide.title.join(" ") }));
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const reducedMotion = useRef(false);
+  /* The slide list can change between renders (a refresh may bring different banners) */
+  const shown = Math.min(current, slides.length - 1);
 
   useEffect(() => {
     reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  /* Autoplay — paused on hover/focus and for reduced-motion users */
+  /* Autoplay — paused on hover/focus and for reduced-motion users; a single slide has nothing to advance to */
   useEffect(() => {
-    if (paused || reducedMotion.current) return;
-    const timer = setTimeout(
-      () => setCurrent((index) => (index + 1) % slides.length),
-      AUTOPLAY_MS
-    );
+    if (paused || reducedMotion.current || slides.length < 2) return;
+    const timer = setTimeout(() => setCurrent((index) => (index + 1) % slides.length), AUTOPLAY_MS);
     return () => clearTimeout(timer);
-  }, [current, paused]);
+  }, [current, paused, slides.length]);
 
   const goTo = useCallback((index: number) => setCurrent(index), []);
+  const first = slides[shown];
 
   return (
     <>
@@ -85,23 +96,56 @@ export default function HeroBanner() {
         className="hero"
         aria-roledescription="carousel"
         aria-label="Featured collections"
-        style={{ "--hero-bg": slides[current].background } as React.CSSProperties}
+        style={{ "--hero-bg": first.kind === "static" ? first.slide.background : "#ffffff" } as React.CSSProperties}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onFocus={() => setPaused(true)}
         onBlur={() => setPaused(false)}
       >
-        {slides.map((slide, index) => {
-          const active = index === current;
+        {slides.map((item, index) => {
+          const active = index === shown;
           const Title = index === 0 ? "h1" : "h2";
+          const label = `${index + 1} of ${slides.length}`;
 
+          if (item.kind === "banner") {
+            const { banner } = item;
+            return (
+              <div
+                key={item.key}
+                className={`hero-slide hero-slide-api${active ? " active" : ""}`}
+                role="group"
+                aria-roledescription="slide"
+                aria-label={label}
+                aria-hidden={!active}
+                inert={!active}
+              >
+                <div className="hero-banner-image">
+                  <Image
+                    src={banner.image}
+                    alt={banner.alt}
+                    fill
+                    priority={index === 0}
+                    sizes="100vw"
+                    className={banner.mobileImage ? "hero-img-desktop" : undefined}
+                  />
+                  {banner.mobileImage && (
+                    <Image src={banner.mobileImage} alt={banner.alt} fill sizes="100vw" className="hero-img-mobile" />
+                  )}
+                </div>
+                <Title className="sr-only">{banner.title}</Title>
+                {banner.href && <a href={banner.href} className="hero-api-link" aria-label={banner.title} tabIndex={active ? 0 : -1} />}
+              </div>
+            );
+          }
+
+          const slide = item.slide;
           return (
             <div
-              key={slide.image}
+              key={item.key}
               className={`hero-slide${slide.fullBleed ? " hero-slide-banner" : ""}${active ? " active" : ""}`}
               role="group"
               aria-roledescription="slide"
-              aria-label={`${index + 1} of ${slides.length}`}
+              aria-label={label}
               aria-hidden={!active}
               inert={!active}
               style={
@@ -166,18 +210,20 @@ export default function HeroBanner() {
           );
         })}
 
-        <div className="hero-dots" role="group" aria-label="Choose slide">
-          {slides.map((slide, index) => (
-            <button
-              key={slide.image}
-              type="button"
-              className={index === current ? "selected" : ""}
-              onClick={() => goTo(index)}
-              aria-label={`Show slide ${index + 1}: ${slide.title.join(" ")}`}
-              aria-current={index === current ? "true" : undefined}
-            />
-          ))}
-        </div>
+        {slides.length > 1 && (
+          <div className="hero-dots" role="group" aria-label="Choose slide">
+            {slides.map((item, index) => (
+              <button
+                key={item.key}
+                type="button"
+                className={index === shown ? "selected" : ""}
+                onClick={() => goTo(index)}
+                aria-label={`Show slide ${index + 1}: ${item.label}`}
+                aria-current={index === shown ? "true" : undefined}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* =====================================================

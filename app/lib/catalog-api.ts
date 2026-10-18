@@ -1,5 +1,6 @@
 import { ApiError, apiBaseUrl, apiRequest } from "./api";
 import type { Availability, Product, ProductOption } from "./products";
+import { toHeroSlides, type ApiBannerRow, type HeroBannerSlide } from "./hero-banners";
 
 /* =========================================================
    CATALOG API
@@ -132,6 +133,22 @@ export async function fetchCategories(init: RequestInit = fresh) {
 export async function getNavCategories(): Promise<Pick<ApiCategory, "slug" | "name">[]> {
   try {
     return (await fetchCategories(briefly)).map(({ slug, name }) => ({ slug, name }));
+  } catch {
+    return [];
+  }
+}
+
+/* GET /api/v1/cms/banners — active banners inside their schedule, ordered by position */
+export async function fetchBanners(init: RequestInit = fresh) {
+  const { data } = await apiRequest<ApiBannerRow[]>("/cms/banners", init);
+  return data;
+}
+
+/* Banners for the home page hero. Never throws: no banners (or an API error) means the hero keeps its
+   built-in slide. The page revalidates every minute, so a schedule change shows up within about a minute. */
+export async function getHeroBanners(): Promise<HeroBannerSlide[]> {
+  try {
+    return toHeroSlides(await fetchBanners(briefly), new URL(apiBaseUrl()).origin);
   } catch {
     return [];
   }
