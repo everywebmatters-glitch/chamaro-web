@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authErrorMessage } from "../../lib/auth-api";
 import { useAuth } from "../auth/AuthProvider";
-import AuthField, { AUTH_NOT_CONNECTED, EMAIL_PATTERN } from "./AuthField";
+import AuthField, { EMAIL_PATTERN, PASSWORD_RESET_UNAVAILABLE } from "./AuthField";
 import SocialSignIn from "./SocialSignIn";
 
 /* Only a same-site path is safe to bounce back to */
@@ -46,8 +46,8 @@ export default function LoginView() {
       return;
     }
     if (mode === "reset") {
-      // TODO: the backend has no password-reset endpoint yet
-      setNotice(AUTH_NOT_CONNECTED);
+      // TODO: the backend's forgot-password OTP routes need migration 0008 applied and Resend configured
+      setNotice(PASSWORD_RESET_UNAVAILABLE);
       return;
     }
 

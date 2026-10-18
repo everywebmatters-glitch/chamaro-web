@@ -55,5 +55,8 @@ export { EMAIL_PATTERN } from "../../lib/site";
 /* Backend limits (utils/password.ts) */
 export const MIN_PASSWORD = 8;
 export const MAX_PASSWORD = 200;
-export const AUTH_NOT_CONNECTED =
-  "Customer accounts aren't switched on yet, so nothing was sent. You can still shop and check out as a guest.";
+/* Accounts, login and Google sign-in work; these two actions have no backend endpoint yet */
+export const PASSWORD_RESET_UNAVAILABLE =
+  "Password reset by email isn't available yet, so nothing was sent. Please contact us and we'll help you get back in.";
+export const ACCOUNT_SAVE_UNAVAILABLE =
+  "Saving account changes isn't available yet, so nothing was changed. Please contact us if you need your details updated.";
