@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice, getCategoryName, type Product } from "../lib/products";
+import { formatPrice, type Product } from "../lib/products";
 import ProductCardActions from "./ProductCardActions";
 
 export function StarRating({
@@ -74,7 +74,7 @@ export default function ProductCard({
 
       <div className="product-meta">
         {layout === "list" && (
-          <p className="product-category">{product.categoryName ?? getCategoryName(product.category)}</p>
+          <p className="product-category">{product.categoryName ?? product.category}</p>
         )}
 
         <StarRating rating={product.rating} reviewCount={product.reviewCount} />

@@ -1,17 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { categories } from "../lib/products";
+import { getNavCategories } from "../lib/catalog-api";
+import { categoryHref } from "../lib/catalog-nav";
 import HeaderActions from "./HeaderActions";
 import MobileMenu from "./MobileMenu";
 import StickyHeader from "./StickyHeader";
 
 /* overlay: transparent header that sits on top of the homepage hero */
-export default function Header({ overlay = false }: { overlay?: boolean }) {
+export default async function Header({ overlay = false }: { overlay?: boolean }) {
+  /* Live categories from the API; an empty list just leaves "All Products" */
+  const categories = await getNavCategories();
+
   return (
     <StickyHeader overlay={overlay}>
       {/* Hamburger + slide-in menu (mobile only) */}
-      <MobileMenu />
+      <MobileMenu categories={categories} />
 
       {/* Logo */}
       <Link className="brand" href="/" aria-label="Chamaro home">
@@ -41,9 +45,7 @@ export default function Header({ overlay = false }: { overlay?: boolean }) {
             </li>
             {categories.map((category) => (
               <li key={category.slug}>
-                <Link href={`/products?category=${category.slug}`}>
-                  {category.name} Chairs
-                </Link>
+                <Link href={categoryHref(category.slug)}>{category.name}</Link>
               </li>
             ))}
           </ul>

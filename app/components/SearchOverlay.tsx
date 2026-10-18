@@ -4,38 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, LayoutGrid, Search } from "lucide-react";
 import { useState } from "react";
-import {
-  products,
-  searchProducts,
-  sortProducts,
-} from "../lib/products";
+import { categoryHref, categoryIcon, searchCatalog } from "../lib/catalog-nav";
 import Modal from "./Modal";
 import ProductCard from "./ProductCard";
+import { useStore } from "./store/StoreProvider";
 
-const inspiration = sortProducts(products, "best-selling").slice(0, 4);
-
-/* Mirrors the category nav strip on the homepage (ChairShowcase) */
-const quickLinks = [
-  { name: "All Products", href: "/products", icon: null },
-  { name: "Boss Chairs", href: "/products?category=boss", icon: "/icons/boss-chair.svg" },
-  { name: "Executive Chairs", href: "/products?category=executive", icon: "/icons/executive-chair.svg" },
-  { name: "Workstation Chairs", href: "/products?category=workstation", icon: "/icons/workstation.svg" },
-  { name: "Visitor Chairs", href: "/products?category=visitor", icon: "/icons/visitor-chair.svg" },
-  { name: "Cafe Chairs", href: "/products?category=cafe", icon: "/icons/cafe-chair.svg" },
-  { name: "Bar Stools", href: "/products?category=bar-stool", icon: "/icons/bar-stool.svg" },
-];
-
-/* `query` differs from `label` where the label isn't a contiguous
-   substring of any product name (e.g. "Metro Mesh Visitor Chair") */
-const popularSearches = [
-  { label: "Executive Chair", query: "Executive Chair" },
-  { label: "Boss Chair", query: "Boss Chair" },
-  { label: "Mesh Chair", query: "Mesh" },
-  { label: "Cafe Chair", query: "Cafe Chair" },
-  { label: "Visitor Chair", query: "Visitor Chair" },
-  { label: "Bar Stool", query: "Bar Stool" },
-  { label: "Workstation Chair", query: "Workstation Chair" },
-];
+/* Product shown while the search box is empty: the newest ones in the live catalog */
+const INSPIRATION_COUNT = 4;
 
 export default function SearchOverlay({
   open,
@@ -44,9 +19,12 @@ export default function SearchOverlay({
   open: boolean;
   onClose: () => void;
 }) {
+  const { catalog, catalogFailed, categories } = useStore();
   const [query, setQuery] = useState("");
-  const results = searchProducts(query);
+  const results = searchCatalog(catalog, query);
   const hasQuery = query.trim().length > 0;
+  const loading = !catalog && !catalogFailed;
+  const inspiration = catalog?.slice(0, INSPIRATION_COUNT) ?? [];
 
   const close = () => {
     setQuery("");
@@ -79,7 +57,7 @@ export default function SearchOverlay({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search chairs, e.g. executive, cafe…"
+              placeholder="Search products by name, category or SKU"
               autoComplete="off"
               autoFocus
             />
@@ -92,17 +70,22 @@ export default function SearchOverlay({
             >
               <h3 id="quick-link-title">Quick Links</h3>
               <ul>
-                {quickLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link href={link.href} onClick={close}>
+                <li>
+                  <Link href="/products" onClick={close}>
+                    <span className="search-quick-link-icon">
+                      <LayoutGrid size={18} strokeWidth={1.8} aria-hidden="true" />
+                    </span>
+                    <span className="search-quick-link-name">All Products</span>
+                    <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
+                  </Link>
+                </li>
+                {categories.map((category) => (
+                  <li key={category.slug}>
+                    <Link href={categoryHref(category.slug)} onClick={close}>
                       <span className="search-quick-link-icon">
-                        {link.icon ? (
-                          <Image src={link.icon} alt="" width={20} height={20} />
-                        ) : (
-                          <LayoutGrid size={18} strokeWidth={1.8} aria-hidden="true" />
-                        )}
+                        <Image src={categoryIcon(category.slug)} alt="" width={20} height={20} />
                       </span>
-                      <span className="search-quick-link-name">{link.name}</span>
+                      <span className="search-quick-link-name">{category.name}</span>
                       <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
                     </Link>
                   </li>
@@ -112,15 +95,24 @@ export default function SearchOverlay({
 
             <section className="search-results" aria-live="polite">
               <h3>
-                {hasQuery
+                {hasQuery && catalog
                   ? `${results.length} ${results.length === 1 ? "result" : "results"} for “${query.trim()}”`
                   : "Need some inspiration?"}
               </h3>
 
-              {hasQuery && results.length === 0 ? (
+              {catalogFailed ? (
                 <p className="search-empty">
-                  No chairs match that search. Try “boss”, “cafe” or
-                  “executive”.
+                  Search isn&apos;t available right now. Please check your connection and try
+                  again, or browse <Link href="/products" onClick={close}>all products</Link>.
+                </p>
+              ) : loading ? (
+                <p className="search-empty" aria-busy="true">
+                  Loading products…
+                </p>
+              ) : hasQuery && results.length === 0 ? (
+                <p className="search-empty">
+                  No products match that search. Try a different word, or browse{" "}
+                  <Link href="/products" onClick={close}>all products</Link>.
                 </p>
               ) : (
                 <div
@@ -138,18 +130,20 @@ export default function SearchOverlay({
             </section>
           </div>
 
-          <div className="search-popular">
-            <span className="search-popular-label">Popular searches:</span>
-            <ul>
-              {popularSearches.map((term) => (
-                <li key={term.label}>
-                  <button type="button" onClick={() => setQuery(term.query)}>
-                    {term.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {categories.length > 0 && (
+            <div className="search-popular">
+              <span className="search-popular-label">Search by category:</span>
+              <ul>
+                {categories.map((category) => (
+                  <li key={category.slug}>
+                    <button type="button" onClick={() => setQuery(category.name)}>
+                      {category.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </>
       )}
     </Modal>

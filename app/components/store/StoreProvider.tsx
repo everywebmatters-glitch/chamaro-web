@@ -10,7 +10,8 @@ import {
   useState,
 } from "react";
 import { findDiscount, lineKey, type CartLine } from "../../lib/cart";
-import { fetchAllProducts, toProduct } from "../../lib/catalog-api";
+import { fetchAllProducts, fetchCategories, toProduct } from "../../lib/catalog-api";
+import type { NavCategory } from "../../lib/catalog-nav";
 import type { Product } from "../../lib/products";
 
 export type { CartLine } from "../../lib/cart";
@@ -26,6 +27,8 @@ type StoreContextValue = {
   /* Products currently on sale (GET /api/v1/products); null until loaded */
   catalog: Product[] | null;
   catalogFailed: boolean;
+  /* Live categories (GET /api/v1/categories); empty until loaded */
+  categories: NavCategory[];
   findProduct: (slug: string) => Product | undefined;
   cart: CartLine[];
   wishlist: string[];
@@ -87,6 +90,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState("");
   const [catalog, setCatalog] = useState<Product[] | null>(null);
   const [catalogFailed, setCatalogFailed] = useState(false);
+  const [categories, setCategories] = useState<NavCategory[]>([]);
 
   /* Fresh product data for the cart, checkout and wishlist */
   const loadCatalog = useCallback(() => {
@@ -96,6 +100,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setCatalogFailed(false);
       })
       .catch(() => setCatalogFailed(true));
+  }, []);
+  /* Categories only feed menus and search shortcuts, so a failure just leaves them empty */
+  const loadCategories = useCallback(() => {
+    fetchCategories()
+      .then((rows) => setCategories(rows.map(({ slug, name }) => ({ slug, name }))))
+      .catch(() => setCategories([]));
   }, []);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -109,7 +119,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setDiscountCode(saved.discountCode);
     setHydrated(true);
     loadCatalog();
-  }, [loadCatalog]);
+    loadCategories();
+  }, [loadCatalog, loadCategories]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -198,6 +209,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     () => ({
       catalog,
       catalogFailed,
+      categories,
       findProduct,
       cart,
       wishlist,
@@ -229,6 +241,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [
       catalog,
       catalogFailed,
+      categories,
       findProduct,
       loadCatalog,
       cart,

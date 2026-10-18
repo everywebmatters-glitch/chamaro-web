@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, Heart, ShoppingBag } from "lucide-react";
 import { useState } from "react";
-import { formatPrice, getCategoryName, type Product } from "../lib/products";
+import { formatPrice, type Product } from "../lib/products";
 import Modal from "./Modal";
 import { useStore } from "./store/StoreProvider";
 
@@ -70,7 +70,7 @@ export default function ProductCardActions({ product }: { product: Product }) {
           </div>
 
           <div className="quick-view-info">
-            <p className="product-category">{product.categoryName ?? getCategoryName(product.category)}</p>
+            <p className="product-category">{product.categoryName ?? product.category}</p>
             <h2>{product.name}</h2>
 
             <div className="product-price-row">

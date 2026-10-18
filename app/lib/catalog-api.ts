@@ -83,14 +83,18 @@ export const PRODUCT_IMAGE_PLACEHOLDER = "/products/placeholder.svg";
    not a static export, so every request should see the live catalog. */
 const fresh: RequestInit = { cache: "no-store" };
 
+/* Server-rendered chrome (header menu, home page) may be up to a minute stale: that keeps the pages
+   cacheable instead of calling the API on every visit */
+const briefly: RequestInit = { next: { revalidate: 60 } };
+
 /* GET /api/v1/products — one page of active products */
-export async function fetchProducts(query: ProductListQuery = {}) {
+export async function fetchProducts(query: ProductListQuery = {}, init: RequestInit = fresh) {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined && value !== "") params.set(key, String(value));
   }
   const search = params.toString();
-  return apiRequest<ApiProduct[]>(`/products${search ? `?${search}` : ""}`, fresh);
+  return apiRequest<ApiProduct[]>(`/products${search ? `?${search}` : ""}`, init);
 }
 
 /* Every active product, walking the backend's pages (max 100 per page) */
@@ -118,9 +122,30 @@ export async function fetchProduct(slug: string) {
 }
 
 /* GET /api/v1/categories — active categories, sorted by name */
-export async function fetchCategories() {
-  const { data } = await apiRequest<ApiCategory[]>("/categories", fresh);
+export async function fetchCategories(init: RequestInit = fresh) {
+  const { data } = await apiRequest<ApiCategory[]>("/categories", init);
   return data;
+}
+
+/* Categories for the header, mobile menu and home page. Never throws: if the API is unreachable the
+   menu simply shows no category links rather than breaking every page. */
+export async function getNavCategories(): Promise<Pick<ApiCategory, "slug" | "name">[]> {
+  try {
+    return (await fetchCategories(briefly)).map(({ slug, name }) => ({ slug, name }));
+  } catch {
+    return [];
+  }
+}
+
+/* The newest active products (the API lists newest first), for the home page's Best Sellers until real
+   sales data exists. Never throws; an empty list hides the section. */
+export async function getNewestProducts(limit = 4): Promise<Product[]> {
+  try {
+    const { data } = await fetchProducts({ limit }, briefly);
+    return data.map(toProduct);
+  } catch {
+    return [];
+  }
 }
 
 /* ---------- Mapping ---------- */

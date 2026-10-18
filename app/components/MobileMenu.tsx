@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Heart, Menu, ShoppingBag, UserRound, X } from "lucide-react";
-import { categories } from "../lib/products";
+import { categoryHref, type NavCategory } from "../lib/catalog-nav";
 import { useStore } from "./store/StoreProvider";
 
-export default function MobileMenu() {
+export default function MobileMenu({ categories }: { categories: NavCategory[] }) {
   const [open, setOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -88,7 +88,7 @@ export default function MobileMenu() {
                 </li>
                 {categories.map((category) => (
                   <li key={category.slug}>
-                    <Link href={`/products?category=${category.slug}`}>{category.name} Chairs</Link>
+                    <Link href={categoryHref(category.slug)}>{category.name}</Link>
                   </li>
                 ))}
               </ul>
