@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { categoryHref, categoryIcon, type NavCategory } from "../lib/catalog-nav";
+import { categoryHref, categoryIcon, withIconCategories, type NavCategory } from "../lib/catalog-nav";
 
 /* =========================================================
    CATEGORY SHOWCASE
@@ -17,7 +17,8 @@ import { categoryHref, categoryIcon, type NavCategory } from "../lib/catalog-nav
    clipped until scrolled into view.
 ========================================================= */
 
-export default function ChairShowcase({ categories }: { categories: NavCategory[] }) {
+export default function ChairShowcase({ categories: apiCategories }: { categories: NavCategory[] }) {
+  const categories = withIconCategories(apiCategories);
   const trackRef = useRef<HTMLUListElement>(null);
   const [canScroll, setCanScroll] = useState({ left: false, right: false });
 

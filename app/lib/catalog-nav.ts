@@ -26,6 +26,26 @@ export function categoryIcon(slug: string): string {
   return CATEGORY_ICONS[slug] ?? FALLBACK_CATEGORY_ICON;
 }
 
+/* Display names for the icon-backed categories, in the order the home strip lists them */
+const ICON_CATEGORY_NAMES: [slug: string, name: string][] = [
+  ["boss", "Boss Chairs"],
+  ["cafe", "Cafe Chairs"],
+  ["executive", "Executive Chairs"],
+  ["premium", "Premium Chairs"],
+  ["bar-stool", "Bar Stools"],
+  ["visitor", "Visitor Chairs"],
+  ["waiting-chairs", "Waiting Chairs"],
+  ["workstation", "Workstation Chairs"],
+];
+
+/* The API's categories first, then every icon-backed category the API didn't return, so the
+   home strip always lists the full icon set. */
+export function withIconCategories(categories: NavCategory[]): NavCategory[] {
+  const known = new Set(categories.map((category) => category.slug));
+  const extra = ICON_CATEGORY_NAMES.filter(([slug]) => !known.has(slug)).map(([slug, name]) => ({ slug, name }));
+  return [...categories, ...extra];
+}
+
 export function categoryHref(slug: string): string {
   return `/products?category=${encodeURIComponent(slug)}`;
 }

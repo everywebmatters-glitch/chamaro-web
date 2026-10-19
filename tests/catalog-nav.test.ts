@@ -1,7 +1,7 @@
 // Pure navigation/search helpers (no framework, no network): run with `npm test`.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { categoryHref, categoryIcon, FALLBACK_CATEGORY_ICON, searchCatalog } from "../app/lib/catalog-nav.ts";
+import { categoryHref, categoryIcon, FALLBACK_CATEGORY_ICON, searchCatalog, withIconCategories } from "../app/lib/catalog-nav.ts";
 
 const product = (name: string, extra: Record<string, unknown> = {}) => ({ name, shortDescription: "", categoryName: "Chairs", ...extra });
 const catalog = [
@@ -47,4 +47,11 @@ test("search never returns a product that is not in the catalog it was given, an
   assert.equal(searchCatalog(many, "chair").length, 8);
   assert.equal(searchCatalog(many, "chair", 3).length, 3);
   assert.deepEqual(searchCatalog([], "chair"), []);
+});
+
+test("the home strip lists API categories first, then the remaining icon categories once each", () => {
+  const list = withIconCategories([{ slug: "chairs", name: "Chairs" }, { slug: "boss", name: "Boss" }]);
+  assert.deepEqual(list.slice(0, 2).map((c) => c.slug), ["chairs", "boss"]);
+  assert.equal(list.length, 9);
+  assert.equal(new Set(list.map((c) => c.slug)).size, 9);
 });
