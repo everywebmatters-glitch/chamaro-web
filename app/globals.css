@@ -874,6 +874,17 @@ button {
   scroll-snap-align: start;
 }
 
+/* Center the row when it has fewer than a full row of categories. Auto margins
+   (unlike justify-content: center) collapse to 0 on overflow, so the first
+   item never gets clipped out of reach. */
+.category-circles li:first-child {
+  margin-inline-start: auto;
+}
+
+.category-circles li:last-child {
+  margin-inline-end: auto;
+}
+
 .category-circle {
   align-items: center;
   display: flex;

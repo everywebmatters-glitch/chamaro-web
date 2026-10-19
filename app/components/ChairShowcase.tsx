@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { categoryHref, categoryIcon, type NavCategory } from "../lib/catalog-nav";
 
 /* =========================================================
@@ -19,6 +19,43 @@ import { categoryHref, categoryIcon, type NavCategory } from "../lib/catalog-nav
 
 export default function ChairShowcase({ categories }: { categories: NavCategory[] }) {
   const trackRef = useRef<HTMLUListElement>(null);
+  const [canScroll, setCanScroll] = useState({ left: false, right: false });
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    // Arrows only show when there is somewhere to scroll to
+    const update = () => {
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      setCanScroll({ left: track.scrollLeft > 1, right: track.scrollLeft < maxScroll - 1 });
+    };
+
+    // Redirect vertical wheel input to horizontal scroll. Registered natively
+    // because React's onWheel is passive and cannot preventDefault. Page scroll
+    // is left alone when the row can't move further in that direction.
+    const onWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      const atEdge =
+        (event.deltaY < 0 && track.scrollLeft <= 0) ||
+        (event.deltaY > 0 && track.scrollLeft >= maxScroll - 1);
+      if (maxScroll <= 0 || atEdge) return;
+      track.scrollLeft += event.deltaY;
+      event.preventDefault();
+    };
+
+    update();
+    track.addEventListener("scroll", update, { passive: true });
+    track.addEventListener("wheel", onWheel, { passive: false });
+    const observer = new ResizeObserver(update);
+    observer.observe(track);
+    return () => {
+      track.removeEventListener("scroll", update);
+      track.removeEventListener("wheel", onWheel);
+      observer.disconnect();
+    };
+  }, [categories.length]);
 
   const scrollByAmount = (direction: 1 | -1) => {
     const track = trackRef.current;
@@ -35,25 +72,18 @@ export default function ChairShowcase({ categories }: { categories: NavCategory[
       </div>
 
       <div className="category-circles-wrap">
-        <button
-          type="button"
-          className="category-scroll-arrow category-scroll-arrow-left"
-          onClick={() => scrollByAmount(-1)}
-          aria-label="Scroll categories left"
-        >
-          <ChevronLeft size={20} strokeWidth={2.2} aria-hidden="true" />
-        </button>
+        {canScroll.left && (
+          <button
+            type="button"
+            className="category-scroll-arrow category-scroll-arrow-left"
+            onClick={() => scrollByAmount(-1)}
+            aria-label="Scroll categories left"
+          >
+            <ChevronLeft size={20} strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        )}
 
-        <ul
-
-          className="category-circles"
-          ref={trackRef}
-          onWheel={(event) => {
-            if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-            event.currentTarget.scrollLeft += event.deltaY;
-            event.preventDefault();
-          }}
-        >
+        <ul className="category-circles" ref={trackRef}>
           {categories.map((category) => (
             <li key={category.slug}>
               <Link href={categoryHref(category.slug)} className="category-circle">
@@ -66,14 +96,16 @@ export default function ChairShowcase({ categories }: { categories: NavCategory[
           ))}
         </ul>
 
-        <button
-          type="button"
-          className="category-scroll-arrow category-scroll-arrow-right"
-          onClick={() => scrollByAmount(1)}
-          aria-label="Scroll categories right"
-        >
-          <ChevronRight size={20} strokeWidth={2.2} aria-hidden="true" />
-        </button>
+        {canScroll.right && (
+          <button
+            type="button"
+            className="category-scroll-arrow category-scroll-arrow-right"
+            onClick={() => scrollByAmount(1)}
+            aria-label="Scroll categories right"
+          >
+            <ChevronRight size={20} strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        )}
       </div>
     </section>
   );
