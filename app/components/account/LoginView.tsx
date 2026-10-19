@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { authErrorMessage } from "../../lib/auth-api";
+import { authErrorMessage, passwordResetErrorMessage, requestPasswordResetLink } from "../../lib/auth-api";
 import { useAuth } from "../auth/AuthProvider";
-import AuthField, { EMAIL_PATTERN, PASSWORD_RESET_UNAVAILABLE } from "./AuthField";
+import AuthField, { EMAIL_PATTERN } from "./AuthField";
 import SocialSignIn from "./SocialSignIn";
+
+/* Same answer whether or not the email has an account, so the page never reveals which */
+const RESET_LINK_SENT =
+  "If an account exists for this email, we've sent a link to reset your password. It works once and expires soon, so use it shortly. Check your spam folder if it doesn't arrive.";
 
 /* Only a same-site path is safe to bounce back to */
 function safeRedirect(value: string | null) {
@@ -15,9 +19,11 @@ function safeRedirect(value: string | null) {
 
 export default function LoginView() {
   const router = useRouter();
-  const redirect = safeRedirect(useSearchParams().get("redirect"));
+  const searchParams = useSearchParams();
+  const redirect = safeRedirect(searchParams.get("redirect"));
   const { status, login } = useAuth();
-  const [mode, setMode] = useState<"login" | "reset">("login");
+  /* ?reset=1 (from an expired reset link) opens the "send a reset link" form directly */
+  const [mode, setMode] = useState<"login" | "reset">(searchParams.get("reset") === "1" ? "reset" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
@@ -45,14 +51,22 @@ export default function LoginView() {
       setNotice("");
       return;
     }
+    setSubmitting(true);
+    setNotice("");
+
     if (mode === "reset") {
-      // TODO: the backend's forgot-password OTP routes need migration 0008 applied and Resend configured
-      setNotice(PASSWORD_RESET_UNAVAILABLE);
+      /* The success message only appears once the API has accepted the request */
+      try {
+        await requestPasswordResetLink(email.trim());
+        setNotice(RESET_LINK_SENT);
+      } catch (error) {
+        setNotice(passwordResetErrorMessage(error));
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
 
-    setSubmitting(true);
-    setNotice("");
     try {
       await login(email.trim(), password);
     } catch (error) {
@@ -127,7 +141,9 @@ export default function LoginView() {
             disabled={submitting}
             aria-busy={submitting || undefined}
           >
-            {mode === "login" ? (submitting ? "Logging in…" : "Log in") : "Reset password"}
+            {mode === "login"
+              ? submitting ? "Logging in…" : "Log in"
+              : submitting ? "Sending link…" : "Send reset link"}
           </button>
 
           {notice && (

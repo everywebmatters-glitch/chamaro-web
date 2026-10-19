@@ -67,6 +67,30 @@ export async function exchangeGoogleCode(input: { code: string; codeVerifier: st
   return data;
 }
 
+/* POST /api/v1/auth/forgot-password/request-link — { email }. Always the same generic answer,
+   whether or not an account exists; only an active customer account is actually emailed. */
+export async function requestPasswordResetLink(email: string) {
+  await postJson<{ message: string }>("/auth/forgot-password/request-link", { email });
+}
+
+/* POST /api/v1/auth/reset-password — { token (from the emailed link), newPassword (8–200 chars) }.
+   400 RESET_TOKEN_INVALID: unknown, expired, already used or superseded link */
+export async function resetPasswordWithToken(input: { token: string; newPassword: string }) {
+  await postJson<{ message: string }>("/auth/reset-password", input);
+}
+
+/* Shopper-facing message for a failed reset request (either step) */
+export function passwordResetErrorMessage(error: unknown) {
+  if (error instanceof ApiError) {
+    if (error.code === "RESET_TOKEN_INVALID")
+      return "This reset link is invalid or has expired. Request a new one from the log in page.";
+    /* The API in use doesn't offer reset by email yet */
+    if (error.status === 404)
+      return "Password reset by email isn't available right now. Please try again later or contact us.";
+  }
+  return authErrorMessage(error);
+}
+
 /* The token is no longer usable: drop the session */
 export function isRejectedToken(error: unknown) {
   return error instanceof ApiError && (error.status === 401 || error.status === 403);
