@@ -41,10 +41,35 @@ function postJson<T>(path: string, body: unknown) {
   });
 }
 
-/* POST /api/v1/auth/register — { name, email, password (8–200 chars) } */
-export async function registerCustomer(input: { name: string; email: string; password: string }) {
+/* POST /api/v1/auth/register/send-otp — { email }. Emails a 6-digit sign-up code. Same answer whether or
+   not the email is registered: a registered email is sent sign-in help instead of a code. */
+export async function requestSignupCode(email: string) {
+  await postJson<{ message: string }>("/auth/register/send-otp", { email });
+}
+
+/* POST /api/v1/auth/register — { name, email, password (8–200 chars), otp (the emailed code) } */
+export async function registerCustomer(input: { name: string; email: string; password: string; otp: string }) {
   const { data } = await postJson<CustomerProfile>("/auth/register", input);
   return data;
+}
+
+/* Shopper-facing message for a failed sign-up code request or check */
+export function signupCodeErrorMessage(error: unknown) {
+  if (error instanceof ApiError) {
+    switch (error.code) {
+      case "OTP_INVALID":
+        return "That code isn't right. Check the latest email from us and try again.";
+      case "OTP_EXPIRED":
+        return "That code has expired. Request a new one.";
+      case "OTP_MAX_ATTEMPTS":
+        return "Too many incorrect tries. Request a new code.";
+      case "OTP_RESEND_COOLDOWN":
+        return "We've just sent a code. Please wait a minute before asking for another.";
+      case "EMAIL_SEND_FAILED":
+        return "We couldn't send the email just now. Please try again in a few minutes.";
+    }
+  }
+  return authErrorMessage(error);
 }
 
 /* POST /api/v1/auth/login — { email, password } */

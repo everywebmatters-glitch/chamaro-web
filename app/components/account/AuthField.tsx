@@ -11,9 +11,11 @@ type Props = {
   onChange: (value: string) => void;
   error?: string;
   autoComplete?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  maxLength?: number;
 };
 
-export default function AuthField({ id, label, type = "text", value, onChange, error, autoComplete }: Props) {
+export default function AuthField({ id, label, type = "text", value, onChange, error, autoComplete, inputMode, maxLength }: Props) {
   const [visible, setVisible] = useState(false);
   const isPassword = type === "password";
 
@@ -26,6 +28,8 @@ export default function AuthField({ id, label, type = "text", value, onChange, e
         value={value}
         placeholder=" "
         autoComplete={autoComplete}
+        inputMode={inputMode}
+        maxLength={maxLength}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
