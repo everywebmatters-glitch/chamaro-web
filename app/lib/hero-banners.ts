@@ -10,6 +10,8 @@
 export type ApiBannerRow = {
   id: string;
   title: string;
+  /* Absent on rows saved before the field existed */
+  subtitle?: string | null;
   imageUrl: string;
   mobileImageUrl: string | null;
   linkUrl: string | null;
@@ -23,11 +25,13 @@ export type ApiBannerRow = {
 export type HeroBannerSlide = {
   id: string;
   title: string;
+  /* Sub heading under the title; undefined = none */
+  subtitle?: string;
   image: string;
   /* Narrower artwork for phones, when the banner has one */
   mobileImage?: string;
   alt: string;
-  /* Where a click leads; undefined = not clickable */
+  /* Where the Shop collection button leads; undefined = the product catalogue */
   href?: string;
 };
 
@@ -62,10 +66,12 @@ export function toHeroSlides(rows: ApiBannerRow[], apiOrigin: string, now: Date 
       if (!image) return [];
       const mobileImage = webUrl(row.mobileImageUrl, apiOrigin);
       const href = webUrl(row.linkUrl, apiOrigin);
+      const subtitle = row.subtitle?.trim();
       return [
         {
           id: row.id,
           title: row.title,
+          ...(subtitle ? { subtitle } : {}),
           image,
           ...(mobileImage ? { mobileImage } : {}),
           alt: row.altText?.trim() || row.title,

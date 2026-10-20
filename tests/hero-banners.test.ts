@@ -66,3 +66,9 @@ test("an empty or all-hidden list gives no slides, and the list is capped", () =
   const many = Array.from({ length: MAX_HERO_BANNERS + 5 }, (_, index) => row(`n${index}`, { position: index }));
   assert.equal(toHeroSlides(many, ORIGIN, NOW).length, MAX_HERO_BANNERS);
 });
+
+test("the sub heading is trimmed; blank or missing means none", () => {
+  const sub = (subtitle: string | null | undefined) => toHeroSlides([row("a", { subtitle })], ORIGIN, NOW)[0];
+  assert.equal(sub("  Premium seating  ")?.subtitle, "Premium seating");
+  for (const none of ["", "   ", null, undefined]) assert.equal("subtitle" in sub(none), false);
+});

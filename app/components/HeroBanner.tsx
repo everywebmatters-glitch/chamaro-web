@@ -60,8 +60,8 @@ const scrollingText = [
 
 const AUTOPLAY_MS = 6000;
 
-/* Banners from the CMS are the whole design: the admin's image fills the hero, with the title kept for screen
-   readers and the whole slide linking to the banner's address when it has one. */
+/* Banners from the CMS only change the content: the admin's image fills the hero, and the heading and sub heading
+   sit in the same fixed place as the built-in slide, above the fixed "Shop collection" button. */
 type DisplaySlide =
   | { kind: "static"; slide: Slide; key: string; label: string }
   | { kind: "banner"; banner: HeroBannerSlide; key: string; label: string };
@@ -132,8 +132,14 @@ export default function HeroBanner({ banners = [] }: { banners?: HeroBannerSlide
                     <Image src={banner.mobileImage} alt={banner.alt} fill sizes="100vw" className="hero-img-mobile" />
                   )}
                 </div>
-                <Title className="sr-only">{banner.title}</Title>
-                {banner.href && <a href={banner.href} className="hero-api-link" aria-label={banner.title} tabIndex={active ? 0 : -1} />}
+                <div className="hero-copy">
+                  <Title className="hero-title">{banner.title}</Title>
+                  {banner.subtitle && <p className="hero-subtitle">{banner.subtitle}</p>}
+                  <Link href={banner.href ?? "/products"} className="hero-cta">
+                    Shop collection
+                    <ChevronRight size={16} strokeWidth={2.4} aria-hidden="true" />
+                  </Link>
+                </div>
               </div>
             );
           }

@@ -6615,9 +6615,15 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 /* Slides driven by CMS banners: the admin's image fills the hero (cover), phones may get their own artwork */
 
 .hero-slide-api {
-  display: block;
-  padding-left: 0;
   position: relative;
+}
+
+/* Soft veil behind the copy (the heading is dark) so any photo stays readable */
+.hero-slide-api .hero-banner-image::after {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0) 70%);
+  content: "";
+  inset: 0;
+  position: absolute;
 }
 
 .hero-slide-api .hero-banner-image img {
@@ -6628,17 +6634,16 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   display: none;
 }
 
-.hero-api-link {
-  inset: 0;
-  position: absolute;
-  z-index: 2;
-}
-
 @media (max-width: 760px) {
   /* Two classes so this beats the phone rule for the other hero slides */
   .hero-slide.hero-slide-api {
-    min-height: 300px;
-    padding: 0;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 340px;
+    padding: 28px var(--gutter);
+  }
+
+  .hero-slide-api .hero-banner-image::after {
+    background: rgba(255, 255, 255, 0.6);
   }
 
   .hero-slide-api .hero-img-desktop {
