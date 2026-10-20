@@ -3113,6 +3113,13 @@ a.see-more-button {
   margin: 0;
 }
 
+/* Same as the links above: the icon is lifted to the middle of the text */
+.safe-checkout p svg {
+  display: block;
+  flex: none;
+  transform: translateY(-1.5px);
+}
+
 /* Tabs */
 
 .product-tabs {
