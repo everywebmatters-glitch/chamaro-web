@@ -9,6 +9,9 @@
      images           optional media ids of this variant's own photos;
                       those photos are also product images (so the API
                       keeps their files) but only show for this variant
+     compareAtPrice   optional struck-through price of this variant
+     stock            optional units of this variant (the API enforces
+                      only the product's total)
      anything else    the first other option (e.g. Size) becomes pills
    A colour value may also carry its shade inline: "Beige #C8A97E".
 ========================================================= */
@@ -30,6 +33,9 @@ export type ChoiceVariant = {
   name: string;
   /* undefined = sold at the product price */
   price?: number;
+  compareAtPrice?: number;
+  /* undefined = not counted per variant */
+  stock?: number;
   color?: string;
   option?: string;
   /* Media ids of this variant's own photos, in Admin's order */
@@ -84,6 +90,10 @@ const FALLBACK_SHADE = "#cccccc";
 const COLOUR_KEY = /^colou?r$/i;
 const HEX_KEY = /^colou?r ?hex$/i;
 const IMAGES_KEY = "images";
+const COMPARE_KEY = "compareAtPrice";
+const STOCK_KEY = "stock";
+/* Keys that hold data rather than a customer-facing option */
+const DATA_KEYS = new Set([IMAGES_KEY, COMPARE_KEY, STOCK_KEY]);
 const HEX = /#(?:[0-9a-f]{3}|[0-9a-f]{6})\b/i;
 
 function text(value: unknown) {
@@ -126,7 +136,7 @@ export function variantChoices(variants: VariantRow[]): VariantChoices {
 
   /* Option names in first-seen order; the shade and photo keys are data, not choices */
   const keys = [...new Set(active.flatMap((variant) => Object.keys(variant.options ?? {})))].filter(
-    (key) => key !== IMAGES_KEY && !HEX_KEY.test(key) && valuesOf(active, key).length > 0
+    (key) => !DATA_KEYS.has(key) && !HEX_KEY.test(key) && valuesOf(active, key).length > 0
   );
   const colourKey = keys.find((key) => COLOUR_KEY.test(key));
   const otherKey = keys.find((key) => key !== colourKey);
@@ -135,11 +145,15 @@ export function variantChoices(variants: VariantRow[]): VariantChoices {
   const list: ChoiceVariant[] = active.map((variant, index) => {
     const colourValue = colourKey ? text(variant.options[colourKey]) : "";
     const hexKey = hexKeyOf(variant);
+    const stock = priceOf(variant.options?.[STOCK_KEY] as VariantRow["price"]);
+    const compareAtPrice = priceOf(variant.options?.[COMPARE_KEY] as VariantRow["price"]);
     return {
       id: variant.id ?? `variant-${index}`,
       sku: variant.sku ?? "",
       name: variant.name,
       price: priceOf(variant.price),
+      ...(compareAtPrice !== undefined ? { compareAtPrice } : {}),
+      ...(stock !== undefined ? { stock: Math.floor(stock) } : {}),
       color: colourValue ? parseColour(colourValue, hexKey ? text(variant.options[hexKey]) : undefined).name : undefined,
       option: otherKey ? text(variant.options[otherKey]) || undefined : keys.length ? undefined : variant.name,
       imageIds: variantImageIds(variant.options),

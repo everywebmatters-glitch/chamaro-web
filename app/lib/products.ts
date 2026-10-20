@@ -23,6 +23,9 @@ export type ProductVariant = {
   name: string;
   /* undefined = sold at the product price */
   price?: number;
+  compareAtPrice?: number;
+  /* Units of this variant; undefined = only the product's stock applies */
+  stock?: number;
   color?: string;
   option?: string;
   /* This variant's own photos; empty = show the product's photos */
@@ -53,22 +56,31 @@ export type Product = {
   /* Active variants; empty when the product is sold as one item */
   variants: ProductVariant[];
   features: string[];
-  materials: string[];
   specs: { label: string; value: string }[];
   /* Per-product text from Admin; storePolicies is shown when absent */
-  returnPolicy?: string;
   warranty?: string;
+  disclaimer?: string;
   featured?: boolean;
   /* Lower number = sells more; drives the "Best selling" sort */
   salesRank: number;
 };
 
-/* What one unit costs: the variant's own price when it has one, else the product's. The
-   compare-at price is the product's and is only shown when it is above that price. */
-export function priceFor(product: Pick<Product, "price" | "compareAtPrice">, variant?: Pick<ProductVariant, "price">) {
+/* What one unit costs: the variant's own price when it has one, else the product's. A variant
+   with its own price has its own compare-at price (or none); one without keeps the product's.
+   A compare-at price is only shown when it is above the price. */
+export function priceFor(
+  product: Pick<Product, "price" | "compareAtPrice">,
+  variant?: Pick<ProductVariant, "price" | "compareAtPrice">
+) {
   const price = variant?.price ?? product.price;
-  const compareAtPrice = product.compareAtPrice && product.compareAtPrice > price ? product.compareAtPrice : undefined;
-  return { price, compareAtPrice };
+  const compare = variant?.price !== undefined ? variant.compareAtPrice : product.compareAtPrice;
+  return { price, compareAtPrice: compare && compare > price ? compare : undefined };
+}
+
+/* How many units of a variant can be bought: the lower of its own stock and the product's */
+export function unitsLeft(product: Pick<Product, "stockLeft">, variant?: Pick<ProductVariant, "stock">) {
+  const limits = [product.stockLeft, variant?.stock].filter((value): value is number => value !== undefined);
+  return limits.length ? Math.min(...limits) : undefined;
 }
 
 export const availabilityLabels: Record<Availability, string> = {
@@ -85,6 +97,9 @@ export const storePolicies = {
     "Return within 7 days of delivery in original packaging. Assembly and shipping charges are non-refundable.",
   warranty:
     "Every Chamaro chair carries a 1-year warranty against manufacturing defects in the frame, mechanism and gas lift. Wear and tear, misuse and upholstery damage from sharp objects are not covered.",
+  /* TODO: confirm the standard disclaimer wording with the business */
+  disclaimer:
+    "Product colours may look slightly different from the photos because of lighting and screen settings. Dimensions and weights are approximate. Please follow the assembly instructions and the rated weight capacity for safe use.",
 };
 
 export const chairCare = [

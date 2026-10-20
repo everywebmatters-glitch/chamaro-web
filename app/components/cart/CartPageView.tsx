@@ -14,7 +14,7 @@ import {
   variantLabel,
   type ShippingMethodId,
 } from "../../lib/cart";
-import { formatPrice } from "../../lib/products";
+import { formatPrice, unitsLeft } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
 import CartNotices from "./CartNotices";
 import { useStore } from "../store/StoreProvider";
@@ -117,7 +117,7 @@ export default function CartPageView() {
                   onChange={(value) => setQuantity(line.key, value)}
                   label={`Quantity for ${line.product.name}`}
                   size="small"
-                  max={line.product.stockLeft}
+                  max={unitsLeft(line.product, line.variant)}
                 />
               </td>
               <td data-label="Price">

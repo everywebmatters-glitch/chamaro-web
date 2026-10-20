@@ -12,12 +12,13 @@ import {
   Truck,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { formatPrice, storePolicies, type Product } from "../lib/products";
+import { formatPrice, storePolicies, unitsLeft, type Product } from "../lib/products";
 import Modal from "./Modal";
 import QuantityStepper from "./QuantityStepper";
 import PaymentBadges from "./PaymentBadges";
 import { useStore } from "./store/StoreProvider";
 import { useVariantSelection } from "./ProductVariantProvider";
+import { selectVariant } from "../lib/product-variants";
 import { contact } from "../lib/site";
 
 /* Show "Only N left" at or below this many units */
@@ -36,9 +37,11 @@ export default function ProductPurchase({ product }: { product: Product }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const saved = isWishlisted(product.slug);
-  const soldOut = product.availability === "out-of-stock";
+  /* The chosen colour's own stock counts as well as the product's */
+  const left = unitsLeft(product, variant);
+  const soldOut = product.availability === "out-of-stock" || left === 0;
   /* Only worth mentioning when stock is tracked and nearly gone */
-  const lowStock = !soldOut && product.stockLeft !== undefined && product.stockLeft <= LOW_STOCK_NOTE;
+  const lowStock = !soldOut && left !== undefined && left <= LOW_STOCK_NOTE;
   const verb = product.availability === "pre-order" ? "Pre-order" : "Add to Bag";
   const total = formatPrice(price * quantity);
 
@@ -76,7 +79,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
   const variantLabel = [color?.name, option].filter(Boolean).join(" / ");
 
   /* The product's own return policy from Admin (first line as the summary), else the store-wide one */
-  const returnsText = product.returnPolicy?.split("\n").find((line) => line.trim())?.trim() ?? storePolicies.returns;
+  const returnsText = storePolicies.returns;
 
   return (
     <div className="product-purchase">
@@ -88,17 +91,22 @@ export default function ProductPurchase({ product }: { product: Product }) {
             {product.colorLabel ?? "Colour"}: <strong>{color.name}</strong>
           </p>
           <div className="swatch-row" role="group" aria-label={product.colorLabel ?? "Colour"}>
-            {product.colors.map((item) => (
-              <button
-                key={item.name}
-                type="button"
-                className={`swatch${item.name === color.name ? " selected" : ""}`}
-                style={{ background: item.hex }}
-                onClick={() => setColor(item)}
-                aria-label={item.name}
-                aria-pressed={item.name === color.name}
-              />
-            ))}
+            {product.colors.map((item) => {
+              /* Still selectable (to see its photos), but marked when that colour has no units */
+              const itemSoldOut = selectVariant(product.variants, item.name, option)?.stock === 0;
+              return (
+                <button
+                  key={item.name}
+                  type="button"
+                  className={`swatch${item.name === color.name ? " selected" : ""}${itemSoldOut ? " sold-out" : ""}`}
+                  style={{ background: item.hex }}
+                  onClick={() => setColor(item)}
+                  aria-label={itemSoldOut ? `${item.name} (sold out)` : item.name}
+                  aria-pressed={item.name === color.name}
+                  title={itemSoldOut ? `${item.name} – sold out` : item.name}
+                />
+              );
+            })}
           </div>
         </div>
       )}
@@ -138,8 +146,8 @@ export default function ProductPurchase({ product }: { product: Product }) {
 
       <div className="purchase-field">
         <p className="option-label option-label-strong">Quantity</p>
-        <QuantityStepper value={quantity} onChange={setQuantity} max={product.stockLeft} />
-        {lowStock && <p className="stock-note">Only {product.stockLeft} left in stock</p>}
+        <QuantityStepper value={quantity} onChange={setQuantity} max={left} />
+        {lowStock && <p className="stock-note">Only {left} left in stock</p>}
       </div>
 
       {/* Actions */}
@@ -223,7 +231,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
           <span className="sticky-buy-variant">
             {variantLabel} – {formatPrice(price)}
           </span>
-          <QuantityStepper value={quantity} onChange={setQuantity} label="Quantity (sticky bar)" max={product.stockLeft} />
+          <QuantityStepper value={quantity} onChange={setQuantity} label="Quantity (sticky bar)" max={left} />
           <button type="button" className="add-to-cart" onClick={add} disabled={soldOut}>
             {soldOut ? "Sold out" : verb}
           </button>

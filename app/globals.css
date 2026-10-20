@@ -2134,6 +2134,24 @@ a.see-more-button {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 3px #ffffff, 0 0 0 4px #d6d6d3;
 }
 
+/* A colour with no units left: diagonal strike across the swatch */
+.swatch-row .swatch.sold-out {
+  opacity: 0.55;
+}
+
+.swatch-row .swatch.sold-out::after {
+  background: #ffffff;
+  border-radius: 1px;
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.25);
+  content: "";
+  height: 2px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  width: 130%;
+}
+
 /* White gap, thin dark ring and a soft shadow around the chosen colour */
 .swatch-row .swatch.selected {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 3px #ffffff, 0 0 0 4.5px var(--foreground),
@@ -6289,13 +6307,20 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
     gap: 14px 24px;
   }
 
+  /* Five tabs stay in one row; it swipes sideways on narrow screens */
   .product-tabs-list {
-    gap: 28px;
+    gap: 22px;
     padding: 0 20px;
+    scroll-padding-inline: 20px;
+    scrollbar-width: none;
+  }
+
+  .product-tabs-list::-webkit-scrollbar {
+    display: none;
   }
 
   .product-tabs-list button {
-    font-size: 0.98rem;
+    font-size: 0.92rem;
   }
 
   .product-tabs-panel {

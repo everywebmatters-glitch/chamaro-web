@@ -209,7 +209,8 @@ export function toProduct(api: ApiProduct, index = 0): Product {
     category: api.category.slug,
     categoryName: api.category.name,
     price: Number(api.price),
-    compareAtPrice: api.compareAtPrice != null ? Number(api.compareAtPrice) : undefined,
+    /* Admin may keep a compare-at price equal to the price (the API can't clear one); only a higher one is a discount */
+    compareAtPrice: api.compareAtPrice != null && Number(api.compareAtPrice) > Number(api.price) ? Number(api.compareAtPrice) : undefined,
     rating: 0,
     reviewCount: 0,
     availability: availabilityOf(api.inventory),
@@ -224,10 +225,10 @@ export function toProduct(api: ApiProduct, index = 0): Product {
     option: choices.option,
     variants,
     features: api.features ?? [],
-    materials: api.materials ?? [],
     specs: [...(api.sku ? [{ label: "SKU", value: api.sku }] : []), ...(api.specifications ?? [])],
-    returnPolicy: api.returnPolicy ?? undefined,
     warranty: api.warranty ?? undefined,
+    /* Admin's Disclaimer box is stored in the returnPolicy column (per-product return policies are no longer edited) */
+    disclaimer: api.returnPolicy ?? undefined,
     /* Backend lists newest first; keep that order for "Best selling" until sales data exists */
     salesRank: index + 1,
   };

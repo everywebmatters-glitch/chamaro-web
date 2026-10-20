@@ -41,6 +41,14 @@ test("ColorHex and images are data, never shown as options", () => {
   assert.deepEqual(choices.variants[0].imageIds, ["m1", "m2"]);
 });
 
+test("compare-at price and stock are read from options and never shown as options", () => {
+  const choices = variantChoices([v("Beige", { Color: "Beige", compareAtPrice: 9999, stock: 4 }, { price: "7499.00" })]);
+  assert.equal(choices.option, undefined);
+  assert.equal(choices.variants[0].compareAtPrice, 9999);
+  assert.equal(choices.variants[0].stock, 4);
+  assert.equal(variantChoices([v("Black", { Color: "Black" })]).variants[0].stock, undefined);
+});
+
 test("each variant keeps its id, SKU, price and colour", () => {
   const choices = variantChoices([
     v("Beige", { Color: "Beige" }, { price: "7499.00" }),

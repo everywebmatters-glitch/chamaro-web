@@ -4,8 +4,8 @@ import ProductCard, { StarRating } from "./ProductCard";
 import ProductPurchase from "./ProductPurchase";
 import ReloadButton from "./ReloadButton";
 import ProductTabs from "./ProductTabs";
-import { ProductVariantProvider, VariantGallery, VariantPrice } from "./ProductVariantProvider";
-import { availabilityLabels, type Product } from "../lib/products";
+import { ProductVariantProvider, VariantGallery, VariantPrice, VariantStockBadge } from "./ProductVariantProvider";
+import type { Product } from "../lib/products";
 
 /* =========================================================
    PRODUCT DETAIL
@@ -75,9 +75,7 @@ export default function ProductDetail({ result }: { result: ProductResult }) {
               <h1>{product.name}</h1>
 
               <div className="product-summary-meta">
-                <span className={`stock-badge stock-${product.availability}`}>
-                  {availabilityLabels[product.availability]}
-                </span>
+                <VariantStockBadge product={product} />
                 <StarRating rating={product.rating} reviewCount={product.reviewCount} />
               </div>
 
@@ -88,9 +86,9 @@ export default function ProductDetail({ result }: { result: ProductResult }) {
               <ProductPurchase product={product} />
             </div>
           </div>
-        </ProductVariantProvider>
 
-        <ProductTabs product={product} />
+          <ProductTabs product={product} />
+        </ProductVariantProvider>
       </div>
 
       {/* Related */}

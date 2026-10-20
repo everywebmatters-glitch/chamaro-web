@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { discountPercent, formatPrice, priceFor, type Product, type ProductVariant } from "../lib/products";
+import { availabilityLabels, discountPercent, formatPrice, priceFor, type Product, type ProductVariant } from "../lib/products";
 import { FREE_SHIPPING_THRESHOLD } from "../lib/cart";
 import { selectVariant } from "../lib/product-variants";
 import ProductGallery from "./ProductGallery";
@@ -58,6 +58,13 @@ export function VariantGallery({ product }: { product: Product }) {
       badge={price >= FREE_SHIPPING_THRESHOLD ? "Free Delivery" : undefined}
     />
   );
+}
+
+/* "Out of stock" once the chosen colour (or the whole product) has no units left */
+export function VariantStockBadge({ product }: { product: Product }) {
+  const { variant } = useVariantSelection();
+  const availability = variant?.stock === 0 ? "out-of-stock" : product.availability;
+  return <span className={`stock-badge stock-${availability}`}>{availabilityLabels[availability]}</span>;
 }
 
 export function VariantPrice() {

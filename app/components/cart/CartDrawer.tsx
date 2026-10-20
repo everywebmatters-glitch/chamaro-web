@@ -12,7 +12,7 @@ import {
   resolveLines,
   variantLabel,
 } from "../../lib/cart";
-import { formatPrice } from "../../lib/products";
+import { formatPrice, unitsLeft } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
 import CartNotices from "./CartNotices";
 import { useStore } from "../store/StoreProvider";
@@ -143,7 +143,7 @@ export default function CartDrawer() {
                         <QuantityStepper
                           value={line.quantity}
                           onChange={(value) => setQuantity(line.key, value)}
-                          max={line.product.stockLeft}
+                          max={unitsLeft(line.product, line.variant)}
                           label={`Quantity for ${line.product.name}`}
                           size="small"
                         />
