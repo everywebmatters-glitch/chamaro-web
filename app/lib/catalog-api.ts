@@ -1,6 +1,7 @@
 import { ApiError, apiBaseUrl, apiRequest } from "./api";
-import type { Availability, Product, ProductOption } from "./products";
+import type { Availability, Product } from "./products";
 import { toHeroSlides, type ApiBannerRow, type HeroBannerSlide } from "./hero-banners";
+import { variantChoices } from "./product-variants";
 
 /* =========================================================
    CATALOG API
@@ -173,18 +174,6 @@ function availabilityOf(inventory: ApiInventory | null): Availability {
   return inventory.quantity - inventory.reservedQuantity > 0 ? "in-stock" : "out-of-stock";
 }
 
-/* Active variants become the purchase box's option pills. The public API returns every
-   variant; only ACTIVE ones are offered. Variant prices aren't shown (the purchase box
-   prices by product). */
-function optionOf(variants: ApiProductVariant[]): ProductOption | undefined {
-  const active = variants.filter((variant) => variant.status === "ACTIVE");
-  if (!active.length) return undefined;
-  return {
-    name: "Variant",
-    values: active.map((variant) => ({ label: variant.name, available: true })),
-  };
-}
-
 function firstSentence(text: string) {
   const match = text.match(/^.*?[.!?](\s|$)/);
   return (match ? match[0] : text).trim();
@@ -198,6 +187,9 @@ export function toProduct(api: ApiProduct, index = 0): Product {
     .filter((image): image is ApiProductImage & { url: string } => Boolean(image.url))
     .map((image) => ({ ...image, url: image.url.startsWith("/") ? new URL(image.url, apiBaseUrl()).href : image.url }))
     .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.position - b.position);
+  /* Active variants become colour swatches and option pills. Variant prices aren't shown
+     (the purchase box prices by product). */
+  const choices = variantChoices(api.variants);
 
   return {
     slug: api.slug,
@@ -215,8 +207,9 @@ export function toProduct(api: ApiProduct, index = 0): Product {
     images: images.length
       ? images.map((image) => ({ src: image.url, alt: image.altText ?? api.name }))
       : [{ src: PRODUCT_IMAGE_PLACEHOLDER, alt: api.name }],
-    colors: [],
-    option: optionOf(api.variants),
+    colors: choices.colors,
+    colorLabel: choices.colorLabel,
+    option: choices.option,
     features: api.features ?? [],
     materials: api.materials ?? [],
     specs: [...(api.sku ? [{ label: "SKU", value: api.sku }] : []), ...(api.specifications ?? [])],

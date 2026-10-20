@@ -34,6 +34,8 @@ export type Product = {
   description: string;
   images: { src: string; alt: string }[];
   colors: ProductColor[];
+  /* Name of the colour option as written in Admin ("Color"/"Colour") */
+  colorLabel?: string;
   option?: ProductOption;
   features: string[];
   materials: string[];

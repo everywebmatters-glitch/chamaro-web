@@ -85,9 +85,9 @@ export default function ProductCardActions({ product }: { product: Product }) {
             {color && (
               <>
                 <p className="option-label">
-                  Colour: <strong>{color.name}</strong>
+                  {product.colorLabel ?? "Colour"}: <strong>{color.name}</strong>
                 </p>
-                <div className="swatch-row">
+                <div className="swatch-row" role="group" aria-label={product.colorLabel ?? "Colour"}>
                   {product.colors.map((option) => (
                     <button
                       key={option.name}
