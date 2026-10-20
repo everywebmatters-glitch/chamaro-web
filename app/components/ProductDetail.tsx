@@ -6,6 +6,7 @@ import ProductPurchase from "./ProductPurchase";
 import ReloadButton from "./ReloadButton";
 import ProductTabs from "./ProductTabs";
 import { availabilityLabels, discountPercent, formatPrice, type Product } from "../lib/products";
+import { FREE_SHIPPING_THRESHOLD } from "../lib/cart";
 
 /* =========================================================
    PRODUCT DETAIL
@@ -68,7 +69,11 @@ export default function ProductDetail({ result }: { result: ProductResult }) {
         {/* Gallery + summary */}
 
         <div className="product-layout">
-          <ProductGallery key={product.slug} images={product.images} />
+          <ProductGallery
+            key={product.slug}
+            images={product.images}
+            badge={product.price >= FREE_SHIPPING_THRESHOLD ? "Free Delivery" : undefined}
+          />
 
           <div className="product-summary">
             <h1>{product.name}</h1>
