@@ -65,15 +65,16 @@ export type Product = {
   salesRank: number;
 };
 
-/* What one unit costs: the variant's own price when it has one, else the product's. A variant
-   with its own price has its own compare-at price (or none); one without keeps the product's.
-   A compare-at price is only shown when it is above the price. */
+/* What one unit costs: the variant's own price when it has one, else the product's. A variant's
+   own compare-at price wins; without one, a variant priced like the product keeps the product's
+   compare-at price (variants saved before they had compare-at prices). A compare-at price is only
+   shown when it is above the price. */
 export function priceFor(
   product: Pick<Product, "price" | "compareAtPrice">,
   variant?: Pick<ProductVariant, "price" | "compareAtPrice">
 ) {
   const price = variant?.price ?? product.price;
-  const compare = variant?.price !== undefined ? variant.compareAtPrice : product.compareAtPrice;
+  const compare = variant?.compareAtPrice ?? (price === product.price ? product.compareAtPrice : undefined);
   return { price, compareAtPrice: compare && compare > price ? compare : undefined };
 }
 
