@@ -13,7 +13,7 @@ export function StarRating({
   return (
     <div className="product-rating" aria-label={`Rated ${rating} out of 5`}>
       {Array.from({ length: 5 }, (_, index) => (
-        <span key={index} className={index < rating ? "" : "star-empty"} aria-hidden="true">
+        <span key={index} className={index < Math.round(rating) ? "" : "star-empty"} aria-hidden="true">
           ★
         </span>
       ))}

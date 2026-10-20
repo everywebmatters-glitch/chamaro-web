@@ -12,7 +12,7 @@ import {
   Truck,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { formatPrice, storePolicies, unitsLeft, type Product } from "../lib/products";
+import { formatPrice, unitsLeft, type Product } from "../lib/products";
 import Modal from "./Modal";
 import QuantityStepper from "./QuantityStepper";
 import PaymentBadges from "./PaymentBadges";
@@ -77,9 +77,6 @@ export default function ProductPurchase({ product }: { product: Product }) {
   };
 
   const variantLabel = [color?.name, option].filter(Boolean).join(" / ");
-
-  /* The product's own return policy from Admin (first line as the summary), else the store-wide one */
-  const returnsText = storePolicies.returns;
 
   return (
     <div className="product-purchase">
@@ -194,14 +191,13 @@ export default function ProductPurchase({ product }: { product: Product }) {
       {/* Delivery + returns */}
 
       <div className="policy-boxes">
-        <div>
-          <Package size={30} strokeWidth={1.4} aria-hidden="true" />
-          <p>{storePolicies.delivery}</p>
-        </div>
-        <div>
-          <RotateCcw size={30} strokeWidth={1.4} aria-hidden="true" />
-          <p>{returnsText}</p>
-        </div>
+        {product.infoBoxes.map((box, index) => (
+          <div key={index}>
+            {index === 0 ? <Package size={24} strokeWidth={1.5} aria-hidden="true" /> : <RotateCcw size={24} strokeWidth={1.5} aria-hidden="true" />}
+            <h3>{box.title}</h3>
+            <p>{box.text}</p>
+          </div>
+        ))}
       </div>
 
       <div className="safe-checkout">
@@ -263,10 +259,12 @@ export default function ProductPurchase({ product }: { product: Product }) {
         title="Delivery and returns"
         className="info-modal"
       >
-        <h2>Delivery</h2>
-        <p>{storePolicies.delivery}</p>
-        <h2>Returns</h2>
-        <p>{returnsText}</p>
+        {product.infoBoxes.map((box, index) => (
+          <div key={index}>
+            <h2>{box.title}</h2>
+            <p>{box.text}</p>
+          </div>
+        ))}
       </Modal>
 
       <Modal

@@ -5,6 +5,7 @@ import ProductDetail, { type ProductResult } from "../../components/ProductDetai
 import SiteFooter from "../../components/SiteFooter";
 import { fetchAllProducts, fetchProduct, toProduct } from "../../lib/catalog-api";
 import { getRelatedProducts } from "../../lib/products";
+import { getReviewSummary } from "../../lib/reviews-api";
 
 /* Rendered fresh on every request: there's no generateStaticParams, so a slug Admin
    created a second ago works immediately, straight from the Fastify API. */
@@ -14,7 +15,8 @@ async function getProductResult(slug: string): Promise<ProductResult> {
   try {
     const api = await fetchProduct(slug);
     if (!api) return { status: "not-found" };
-    const product = toProduct(api);
+    const summary = await getReviewSummary(slug);
+    const product = { ...toProduct(api), rating: summary.average, reviewCount: summary.count };
     const catalog = (await fetchAllProducts()).map(toProduct);
     return { status: "ready", product, related: getRelatedProducts(product, catalog) };
   } catch {

@@ -1,25 +1,19 @@
 "use client";
 
-import { Check, Copy, Droplets, Sun, SprayCan, Weight, Wrench } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useRef, useState } from "react";
-import { chairCare, storePolicies, type Product } from "../lib/products";
+import { storePolicies, type Product } from "../lib/products";
+import ProductReviewsPanel from "./ProductReviews";
 import { useVariantSelection } from "./ProductVariantProvider";
 
-const careIcons = {
-  droplets: Droplets,
-  spray: SprayCan,
-  sun: Sun,
-  wrench: Wrench,
-  weight: Weight,
-};
-
-/* One row of tabs, the same five Admin edits for every product */
+/* One row of tabs: the five Admin edits for every product, then customer reviews */
 const tabs = [
   { id: "description", label: "Description" },
   { id: "features", label: "Features" },
   { id: "additional", label: "Additional Information" },
   { id: "warranty", label: "Warranty" },
   { id: "disclaimer", label: "Disclaimer" },
+  { id: "reviews", label: "Reviews" },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -94,6 +88,7 @@ export default function ProductTabs({ product }: { product: Product }) {
             onKeyDown={(event) => onKeyDown(event, index)}
           >
             {tab.label}
+            {tab.id === "reviews" && product.reviewCount > 0 ? ` (${product.reviewCount})` : ""}
           </button>
         ))}
       </div>
@@ -105,34 +100,8 @@ export default function ProductTabs({ product }: { product: Product }) {
         aria-labelledby={`tab-${active}`}
         tabIndex={0}
       >
-        {active === "description" && (
-          <div className="tab-columns">
-            <div>
-              {product.description ? (
-                <Paragraphs text={product.description} />
-              ) : (
-                <p className="tab-lede">No description for this product yet.</p>
-              )}
-            </div>
-
-            <div>
-              <h3>Care</h3>
-              <ul className="care-list">
-                {chairCare.map((item) => {
-                  const Icon = careIcons[item.icon];
-                  return (
-                    <li key={item.text}>
-                      <span className="care-icon">
-                        <Icon size={18} strokeWidth={1.6} aria-hidden="true" />
-                      </span>
-                      {item.text}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </div>
-        )}
+        {active === "description" &&
+          (product.description ? <Paragraphs text={product.description} /> : <p className="tab-lede">No description for this product yet.</p>)}
 
         {active === "features" &&
           (product.features.length > 0 ? (
@@ -181,6 +150,8 @@ export default function ProductTabs({ product }: { product: Product }) {
         {/* Admin text for this product when set, otherwise the store-wide text */}
         {active === "warranty" &&
           (product.warranty ? <Paragraphs text={product.warranty} /> : <p className="tab-lede">{storePolicies.warranty}</p>)}
+
+        {active === "reviews" && <ProductReviewsPanel slug={product.slug} />}
 
         {active === "disclaimer" &&
           (product.disclaimer ? (

@@ -2,6 +2,7 @@ import { ApiError, apiBaseUrl, apiRequest } from "./api";
 import type { Availability, Product } from "./products";
 import { COLLECTION_PAGE_SLUG, DEFAULT_COLLECTION_FEATURE, toCollectionFeature, type ApiCmsPage, type CollectionFeature } from "./collection-feature";
 import { toHeroSlides, type ApiBannerRow, type HeroBannerSlide } from "./hero-banners";
+import { toInfoBoxes } from "./product-info";
 import { variantChoices, variantImageIds } from "./product-variants";
 
 /* =========================================================
@@ -50,6 +51,9 @@ export type ApiProduct = {
   name: string;
   slug: string;
   description: string | null;
+  /* One line under the price, and the two Delivery & Return boxes (null until set) */
+  shortDescription: string | null;
+  infoBoxes: { title: string; text: string }[] | null;
   /* Product-page tab content managed in Admin (null until set) */
   features: string[] | null;
   materials: string[] | null;
@@ -227,7 +231,8 @@ export function toProduct(api: ApiProduct, index = 0): Product {
     reviewCount: 0,
     availability: availabilityOf(api.inventory),
     stockLeft: api.inventory ? Math.max(0, api.inventory.quantity - api.inventory.reservedQuantity) : undefined,
-    shortDescription: firstSentence(description),
+    shortDescription: api.shortDescription?.trim() || firstSentence(description),
+    infoBoxes: toInfoBoxes(api.infoBoxes),
     description,
     images: images.length
       ? images.map((image) => ({ src: image.url, alt: image.altText ?? api.name }))

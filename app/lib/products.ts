@@ -47,6 +47,8 @@ export type Product = {
   /* Units that can still be bought when the API tracks stock (on hand minus reserved); undefined = not tracked */
   stockLeft?: number;
   shortDescription: string;
+  /* The two Delivery & Return boxes: the admin's wording, or the store's own for a box left empty */
+  infoBoxes: { title: string; text: string }[];
   description: string;
   images: { src: string; alt: string }[];
   colors: ProductColor[];
@@ -102,14 +104,6 @@ export const storePolicies = {
   disclaimer:
     "Product colours may look slightly different from the photos because of lighting and screen settings. Dimensions and weights are approximate. Please follow the assembly instructions and the rated weight capacity for safe use.",
 };
-
-export const chairCare = [
-  { icon: "droplets", text: "Wipe upholstery with a soft, damp cloth." },
-  { icon: "spray", text: "Avoid harsh chemicals, solvents and bleach." },
-  { icon: "sun", text: "Keep away from prolonged direct sunlight." },
-  { icon: "wrench", text: "Re-tighten fittings every 6 months." },
-  { icon: "weight", text: "Do not exceed the rated weight capacity." },
-] as const;
 
 /* =========================================================
    HELPERS
