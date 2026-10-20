@@ -4,13 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { categoryHref, categoryIcon, withIconCategories, type NavCategory } from "../lib/catalog-nav";
+import { categoryHref, categoryIcon, uniqueCategories, type NavCategory } from "../lib/catalog-nav";
 
 /* =========================================================
    CATEGORY SHOWCASE
-   A nav strip of the live categories from the API (nothing is
-   invented here). A category without a dedicated icon in
-   public/icons gets a generic chair icon.
+   A nav strip of the live categories from the API, each once
+   (nothing is invented here). A category without a dedicated icon
+   in public/icons gets a generic chair icon.
    Scrolls by touch swipe / drag / trackpad, by mouse wheel
    (vertical wheel input is redirected to horizontal scroll),
    or via the arrow buttons. Icons beyond the row's edge stay
@@ -18,7 +18,7 @@ import { categoryHref, categoryIcon, withIconCategories, type NavCategory } from
 ========================================================= */
 
 export default function ChairShowcase({ categories: apiCategories }: { categories: NavCategory[] }) {
-  const categories = withIconCategories(apiCategories);
+  const categories = uniqueCategories(apiCategories);
   const trackRef = useRef<HTMLUListElement>(null);
   const [canScroll, setCanScroll] = useState({ left: false, right: false });
 

@@ -1,7 +1,7 @@
 // Pure navigation/search helpers (no framework, no network): run with `npm test`.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { categoryHref, categoryIcon, FALLBACK_CATEGORY_ICON, searchCatalog, withIconCategories } from "../app/lib/catalog-nav.ts";
+import { categoryHref, categoryIcon, FALLBACK_CATEGORY_ICON, searchCatalog, uniqueCategories } from "../app/lib/catalog-nav.ts";
 
 const product = (name: string, extra: Record<string, unknown> = {}) => ({ name, shortDescription: "", categoryName: "Chairs", ...extra });
 const catalog = [
@@ -49,9 +49,14 @@ test("search never returns a product that is not in the catalog it was given, an
   assert.deepEqual(searchCatalog([], "chair"), []);
 });
 
-test("the home strip lists API categories first, then the remaining icon categories once each", () => {
-  const list = withIconCategories([{ slug: "chairs", name: "Chairs" }, { slug: "boss", name: "Boss" }]);
-  assert.deepEqual(list.slice(0, 2).map((c) => c.slug), ["chairs", "boss"]);
-  assert.equal(list.length, 9);
-  assert.equal(new Set(list.map((c) => c.slug)).size, 9);
+test("the home strip lists each live category once and invents none", () => {
+  const list = uniqueCategories([{ slug: "cafe-chair", name: "Cafe Chair" }, { slug: "chairs", name: "Chairs" }, { slug: "Chairs", name: "Chairs again" }]);
+  assert.deepEqual(list.map((c) => c.slug), ["cafe-chair", "chairs"]);
+  assert.deepEqual(uniqueCategories([]), []);
+});
+
+test("a category named like an icon category (cafe-chair, boss-chairs) uses that icon", () => {
+  assert.equal(categoryIcon("cafe-chair"), categoryIcon("cafe"));
+  assert.equal(categoryIcon("boss-chairs"), categoryIcon("boss"));
+  assert.equal(categoryIcon("chairs"), FALLBACK_CATEGORY_ICON);
 });

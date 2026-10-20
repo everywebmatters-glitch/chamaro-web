@@ -22,28 +22,21 @@ const CATEGORY_ICONS: Record<string, string> = {
 /* Shown for a category with no dedicated icon */
 export const FALLBACK_CATEGORY_ICON = "/icons/visitor-chair.svg";
 
+/* A category made in Admin as "cafe-chair" or "boss-chairs" gets the "cafe" / "boss" icon */
 export function categoryIcon(slug: string): string {
-  return CATEGORY_ICONS[slug] ?? FALLBACK_CATEGORY_ICON;
+  const key = slug.toLowerCase();
+  return CATEGORY_ICONS[key] ?? CATEGORY_ICONS[key.replace(/-chairs?$/, "")] ?? FALLBACK_CATEGORY_ICON;
 }
 
-/* Display names for the icon-backed categories, in the order the home strip lists them */
-const ICON_CATEGORY_NAMES: [slug: string, name: string][] = [
-  ["boss", "Boss Chairs"],
-  ["cafe", "Cafe Chairs"],
-  ["executive", "Executive Chairs"],
-  ["premium", "Premium Chairs"],
-  ["bar-stool", "Bar Stools"],
-  ["visitor", "Visitor Chairs"],
-  ["waiting-chairs", "Waiting Chairs"],
-  ["workstation", "Workstation Chairs"],
-];
-
-/* The API's categories first, then every icon-backed category the API didn't return, so the
-   home strip always lists the full icon set. */
-export function withIconCategories(categories: NavCategory[]): NavCategory[] {
-  const known = new Set(categories.map((category) => category.slug));
-  const extra = ICON_CATEGORY_NAMES.filter(([slug]) => !known.has(slug)).map(([slug, name]) => ({ slug, name }));
-  return [...categories, ...extra];
+/* The home strip lists each live category once (by slug), in the order the API returned them */
+export function uniqueCategories(categories: NavCategory[]): NavCategory[] {
+  const seen = new Set<string>();
+  return categories.filter((category) => {
+    const key = category.slug.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function categoryHref(slug: string): string {

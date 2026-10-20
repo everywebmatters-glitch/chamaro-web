@@ -1061,33 +1061,33 @@ button {
   margin-top: 56px;
 }
 
-/* Boxed, centred cards for this section only — the /products catalogue
-   keeps its own left-aligned, borderless card style. */
+/* Boxed, centred cards: Best Sellers, the /products catalogue grid and related products
+   (the one-per-row list view keeps its own horizontal layout). */
 
-.best-sellers .product-card {
+:is(.best-sellers, .catalog-grid:not([data-cols="list"])) .product-card {
   background: #ffffff;
   border: 1px solid #ececea;
   border-radius: 0;
   padding: 22px 18px 26px;
 }
 
-.best-sellers .product-card-media {
+:is(.best-sellers, .catalog-grid:not([data-cols="list"])) .product-card-media {
   background: #ffffff;
   border-radius: 0;
 }
 
-.best-sellers .product-meta {
+:is(.best-sellers, .catalog-grid:not([data-cols="list"])) .product-meta {
   align-items: center;
   padding: 18px 4px 0;
   text-align: center;
 }
 
-.best-sellers .product-rating,
-.best-sellers .product-price-row {
+:is(.best-sellers, .catalog-grid:not([data-cols="list"])) .product-rating,
+:is(.best-sellers, .catalog-grid:not([data-cols="list"])) .product-price-row {
   justify-content: center;
 }
 
-.best-sellers .product-card-colors {
+:is(.best-sellers, .catalog-grid:not([data-cols="list"])) .product-card-colors {
   justify-content: center;
 }
 
