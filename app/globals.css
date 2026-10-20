@@ -2116,28 +2116,28 @@ a.see-more-button {
 .swatch-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 14px;
   /* room for the selected ring and its shadow */
-  padding: 6px;
+  padding: 5px;
 }
 
 .swatch-row .swatch {
   border: 0;
   /* faint inner edge so white and pale swatches stay visible */
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
-  height: 38px;
+  height: 28px;
   transition: box-shadow 0.2s ease;
-  width: 38px;
+  width: 28px;
 }
 
 .swatch-row .swatch:hover {
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 4px #ffffff, 0 0 0 5px #d6d6d3;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 3px #ffffff, 0 0 0 4px #d6d6d3;
 }
 
 /* White gap, thin dark ring and a soft shadow around the chosen colour */
 .swatch-row .swatch.selected {
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 4px #ffffff, 0 0 0 5.5px var(--foreground),
-    0 4px 12px rgba(0, 0, 0, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 3px #ffffff, 0 0 0 4.5px var(--foreground),
+    0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
 .text-link {
