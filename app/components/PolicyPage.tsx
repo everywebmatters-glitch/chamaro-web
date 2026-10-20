@@ -11,9 +11,11 @@ type PolicySection = {
 export default function PolicyPage({
   title,
   sections,
+  closing,
 }: {
   title: string;
   sections: PolicySection[];
+  closing?: string;
 }) {
   return (
     <div className="site-shell">
@@ -36,6 +38,7 @@ export default function PolicyPage({
             )}
           </section>
         ))}
+        {closing && <p>{closing}</p>}
       </main>
 
       <SiteFooter />
