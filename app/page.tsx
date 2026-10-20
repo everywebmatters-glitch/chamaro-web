@@ -1,5 +1,5 @@
 import Header from "./components/Header";
-import { getHeroBanners, getNavCategories } from "./lib/catalog-api";
+import { getCollectionFeature, getHeroBanners, getNavCategories } from "./lib/catalog-api";
 import HeroBanner from "./components/HeroBanner";
 import ChairShowcase from "./components/ChairShowcase";
 import BestSellers from "./components/BestSellers";
@@ -8,7 +8,7 @@ import ServiceHighlights from "./components/ServiceHighlights";
 import SiteFooter from "./components/SiteFooter";
 
 export default async function Home() {
-  const [categories, banners] = await Promise.all([getNavCategories(), getHeroBanners()]);
+  const [categories, banners, collection] = await Promise.all([getNavCategories(), getHeroBanners(), getCollectionFeature()]);
 
   return (
     <div className="site-shell">
@@ -21,7 +21,7 @@ export default async function Home() {
 
         <BestSellers />
 
-        <DesignedToElevate />
+        <DesignedToElevate feature={collection} />
 
         <ServiceHighlights />
       </main>

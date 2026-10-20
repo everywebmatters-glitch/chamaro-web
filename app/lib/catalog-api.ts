@@ -1,5 +1,6 @@
 import { ApiError, apiBaseUrl, apiRequest } from "./api";
 import type { Availability, Product } from "./products";
+import { COLLECTION_PAGE_SLUG, DEFAULT_COLLECTION_FEATURE, toCollectionFeature, type ApiCmsPage, type CollectionFeature } from "./collection-feature";
 import { toHeroSlides, type ApiBannerRow, type HeroBannerSlide } from "./hero-banners";
 import { variantChoices, variantImageIds } from "./product-variants";
 
@@ -152,6 +153,17 @@ export async function getHeroBanners(): Promise<HeroBannerSlide[]> {
     return toHeroSlides(await fetchBanners(briefly), new URL(apiBaseUrl()).origin);
   } catch {
     return [];
+  }
+}
+
+/* The home page's "A Collection Made for Comfort" block, managed in Admin as a published CMS page. Never throws:
+   no page (or an API error) means the built-in content. */
+export async function getCollectionFeature(): Promise<CollectionFeature> {
+  try {
+    const { data } = await apiRequest<ApiCmsPage>(`/cms/pages/${COLLECTION_PAGE_SLUG}`, briefly);
+    return toCollectionFeature(data, new URL(apiBaseUrl()).origin);
+  } catch {
+    return DEFAULT_COLLECTION_FEATURE;
   }
 }
 
