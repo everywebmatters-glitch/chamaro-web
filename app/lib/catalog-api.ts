@@ -134,11 +134,12 @@ export async function fetchCategories(init: RequestInit = fresh) {
   return data;
 }
 
-/* Categories for the header, mobile menu and home page. Never throws: if the API is unreachable the
+/* Categories for the header, mobile menu and home page. Fetched fresh on every request (no cache) so a category
+   added or renamed in Admin shows up at once. Never throws: if the API is unreachable the
    menu simply shows no category links rather than breaking every page. */
 export async function getNavCategories(): Promise<Pick<ApiCategory, "slug" | "name">[]> {
   try {
-    return (await fetchCategories(briefly)).map(({ slug, name }) => ({ slug, name }));
+    return (await fetchCategories(fresh)).map(({ slug, name }) => ({ slug, name }));
   } catch {
     return [];
   }
