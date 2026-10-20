@@ -28,6 +28,7 @@ const footerHrefs: Record<string, string> = {
   "B2B Solutions": "/b2b",
   "Contact Us": "/contact",
   "Shipping Policy": "/shipping-policy",
+  "Returns & Refunds": "/returns-refunds",
 };
 
 /* =========================================================
