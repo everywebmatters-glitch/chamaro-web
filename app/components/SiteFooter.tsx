@@ -30,6 +30,7 @@ const footerHrefs: Record<string, string> = {
   "Shipping Policy": "/shipping-policy",
   "Returns & Refunds": "/returns-refunds",
   "Terms & Conditions": "/terms-and-conditions",
+  "Privacy Policy": "/privacy-policy",
 };
 
 /* =========================================================
