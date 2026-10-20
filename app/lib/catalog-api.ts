@@ -200,6 +200,8 @@ export function toProduct(api: ApiProduct, index = 0): Product {
     .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.position - b.position);
 
   return {
+    id: api.id,
+    variantIds: Object.fromEntries(api.variants.filter((variant) => variant.status === "ACTIVE").map((variant) => [variant.name, variant.id])),
     slug: api.slug,
     name: api.name,
     category: api.category.slug,

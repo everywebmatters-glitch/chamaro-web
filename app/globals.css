@@ -4130,6 +4130,19 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   width: 100%;
 }
 
+/* Shown in place of the form once the server has accepted the payment */
+.checkout-done svg {
+  color: #2f7d4f;
+}
+
+.checkout-done p {
+  max-width: 34rem;
+}
+
+.checkout-done-ref strong {
+  word-break: break-all;
+}
+
 .checkout-notice {
   background: #fff6e5;
   border: 1px solid #f0c36d;

@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Banknote, CircleHelp, CreditCard, Lock, Smartphone } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CircleCheck, CircleHelp, CreditCard, Lock, Smartphone } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ApiError } from "../../lib/api";
 import {
   cartSubtotal,
   discountAmount,
@@ -16,7 +17,27 @@ import {
   variantLabel,
   type ShippingMethodId,
 } from "../../lib/cart";
+import {
+  createAddress,
+  listAddresses,
+  openPayment,
+  placeOrder,
+  replaceServerCart,
+  sendCheckoutCode,
+  verifyCheckoutCode,
+  verifyPayment,
+  type PaymentSession,
+} from "../../lib/checkout-api";
+import {
+  checkoutErrorMessage,
+  checkoutFingerprint,
+  findSameAddress,
+  paymentOutcomeMessage,
+  toAddressInput,
+  toServerCartItems,
+} from "../../lib/checkout-flow";
 import { formatPrice } from "../../lib/products";
+import { payWithRazorpay } from "../../lib/razorpay";
 import { useAuth } from "../auth/AuthProvider";
 import DiscountForm from "../cart/DiscountForm";
 import Modal from "../Modal";
@@ -25,9 +46,17 @@ import { EMAIL_PATTERN, GSTIN_PATTERN, PHONE_PATTERN } from "../../lib/site";
 
 /* =========================================================
    CHECKOUT
-   TODO: connect a payment gateway (e.g. Razorpay) and an
-   orders API. Until then the form validates but does not
-   place orders or take payment.
+   Signed-in customers pay online with Razorpay:
+   1. the browser cart is sent to the server cart, the address
+      is saved, and the order is placed (Idempotency-Key, so a
+      retry never places a second order);
+   2. the server opens payment for the order's own total, after
+      the emailed checkout code when it asks for one;
+   3. Razorpay Checkout takes the payment, and its callback is
+      forwarded to the server, which reads the payment back from
+      Razorpay before confirming the order.
+   No cash on delivery. Prices and totals shown here are a
+   preview; the amount charged is the server's order total.
 ========================================================= */
 
 type Form = {
@@ -47,7 +76,34 @@ type Form = {
   saveInfo: boolean;
 };
 
-type PaymentMethod = "upi" | "card" | "cod";
+/* The order this checkout attempt placed, so pressing Pay again (after closing the payment form, a failed payment
+   or a network error) pays that order instead of placing another. Cleared once paid or no longer payable. */
+type PlacedAttempt = { userId: string; fingerprint: string; idempotencyKey: string; orderId?: string; total?: string };
+const ATTEMPT_KEY = "chamaro-checkout-attempt";
+
+function readAttempt(): PlacedAttempt | null {
+  try {
+    const raw = window.sessionStorage.getItem(ATTEMPT_KEY);
+    return raw ? (JSON.parse(raw) as PlacedAttempt) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeAttempt(attempt: PlacedAttempt | null) {
+  try {
+    if (attempt) window.sessionStorage.setItem(ATTEMPT_KEY, JSON.stringify(attempt));
+    else window.sessionStorage.removeItem(ATTEMPT_KEY);
+  } catch {
+    /* storage unavailable: a retry may place a new order, which the unpaid-order expiry cleans up */
+  }
+}
+
+function newIdempotencyKey() {
+  return `chk_${crypto.randomUUID()}`;
+}
+
+type Phase = "idle" | "working" | "code" | "paying" | "done";
 
 const EMPTY: Form = {
   contact: "",
@@ -68,11 +124,6 @@ const EMPTY: Form = {
 
 const SAVED_KEY = "chamaro-checkout-info";
 
-const PAYMENT_METHODS: { id: PaymentMethod; label: string; icon: typeof CreditCard }[] = [
-  { id: "upi", label: "UPI (GPay, PhonePe, Paytm)", icon: Smartphone },
-  { id: "card", label: "Credit / debit card", icon: CreditCard },
-  { id: "cod", label: "Cash on delivery", icon: Banknote },
-];
 
 function validate(form: Form) {
   const errors: Partial<Record<keyof Form, string>> = {};
@@ -121,15 +172,21 @@ function Field({
 }
 
 export default function CheckoutView() {
-  const { catalog, catalogFailed, findProduct, cart, hydrated, discountCode, orderNote } =
+  const { catalog, catalogFailed, findProduct, cart, hydrated, discountCode, orderNote, clearCart } =
     useStore();
-  const { status: authStatus } = useAuth();
+  const { status: authStatus, user, token } = useAuth();
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
   const [shipping, setShipping] = useState<ShippingMethodId>("standard");
-  const [payment, setPayment] = useState<PaymentMethod>("upi");
   const [notice, setNotice] = useState("");
   const [authGateDismissed, setAuthGateDismissed] = useState(false);
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState("");
+  const [orderTotal, setOrderTotal] = useState<string | null>(null);
+  const [done, setDone] = useState<{ orderId: string; message: string } | null>(null);
+  /* Guards against a double click starting two payment flows */
+  const busy = useRef(false);
 
   /* Restore saved delivery details */
   useEffect(() => {
@@ -152,10 +209,78 @@ export default function CheckoutView() {
   const total = subtotal - discount + (shippingPrice ?? 0);
   const itemCount = lines.reduce((count, line) => count + line.quantity, 0);
   const showAuthGate = authStatus === "unauthenticated" && !authGateDismissed;
+  const working = phase === "working" || phase === "paying";
 
   const update = <K extends keyof Form>(key: K, value: Form[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
     setNotice("");
+  };
+
+  /* The order note, plus the GST invoice details (the API has no separate fields for them yet) */
+  const noteForOrder = () => {
+    const gst = form.needGst ? `GST invoice: ${form.company.trim()}, GSTIN ${form.gstin.trim().toUpperCase()}` : "";
+    return [orderNote.trim(), gst].filter(Boolean).join("\n").slice(0, 500);
+  };
+
+  const fail = (error: unknown) => {
+    const code = error instanceof ApiError ? error.code : "UNKNOWN";
+    /* The order can't be paid any more: the next Pay places a fresh one */
+    if (code === "ORDER_PAYMENT_EXPIRED" || code === "ORDER_NOT_PAYABLE") writeAttempt(null);
+    setNotice(checkoutErrorMessage(code));
+    setPhase("idle");
+  };
+
+  /* Steps 2 and 3: open payment for the placed order (asking for the emailed code if the server wants it), take it with
+     Razorpay, and let the server confirm it. */
+  const pay = async (orderId: string) => {
+    if (!token) return;
+    let session: PaymentSession;
+    try {
+      session = await openPayment(token, orderId);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "CHECKOUT_NOT_VERIFIED") {
+        await sendCheckoutCode(token).catch((sendError) => {
+          /* A code sent a moment ago is still valid: just ask for it */
+          if (!(sendError instanceof ApiError && sendError.code === "OTP_RESEND_COOLDOWN")) throw sendError;
+        });
+        setCode("");
+        setCodeError("");
+        setPhase("code");
+        return;
+      }
+      throw error;
+    }
+
+    setPhase("paying");
+    const result = await payWithRazorpay(session, { name: user?.name, email: user?.email, contact: form.phone.replace(/\s/g, "") });
+    if (result.kind === "closed") {
+      setNotice(
+        result.lastFailure
+          ? "The payment didn't go through and you have not been charged. Press Pay now to try again."
+          : `Payment wasn't completed. Your order ${orderId} is saved for an hour; press Pay now to finish paying.`
+      );
+      setPhase("idle");
+      return;
+    }
+
+    setPhase("working");
+    /* Razorpay has taken the payment. If the server can't be reached to confirm it now, the payment worker and the
+       webhook still will: never tell the shopper they weren't charged, and don't invite a second payment. */
+    let outcome: { done: boolean; message: string };
+    try {
+      outcome = paymentOutcomeMessage((await verifyPayment(token, orderId, result.callback)).outcome);
+    } catch {
+      outcome = paymentOutcomeMessage("pending");
+    }
+    if (!outcome.done) {
+      setNotice(outcome.message);
+      setPhase("idle");
+      return;
+    }
+    writeAttempt(null);
+    clearCart();
+    setDone({ orderId, message: outcome.message });
+    setPhase("done");
   };
 
   const errorFor = (key: keyof Form) => (touched ? errors[key] : undefined);
@@ -170,8 +295,9 @@ export default function CheckoutView() {
     "aria-describedby": errorFor(key) ? `checkout-${key}-error` : undefined,
   });
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (busy.current) return;
     setTouched(true);
 
     if (Object.keys(errors).length > 0) {
@@ -196,12 +322,106 @@ export default function CheckoutView() {
       /* storage unavailable */
     }
 
-    /* TODO: create the order and hand off to the payment gateway here */
-    void orderNote;
-    setNotice(
-      "Your details look good. Online payment isn't connected yet, so this order hasn't been placed — please contact us to complete your purchase."
-    );
+    if (authStatus !== "authenticated" || !token || !user) {
+      setNotice("Please log in or create an account to pay for your order.");
+      setAuthGateDismissed(false);
+      return;
+    }
+
+    const { items, unavailable } = toServerCartItems(lines);
+    if (unavailable.length > 0) {
+      setNotice(`${unavailable.join(", ")} ${unavailable.length === 1 ? "is" : "are"} no longer available as chosen. Please review your cart.`);
+      return;
+    }
+
+    busy.current = true;
+    setPhase("working");
+    setNotice("");
+    try {
+      /* Step 1: place the order, unless this exact checkout already did */
+      const address = toAddressInput(form);
+      const note = noteForOrder();
+      const fingerprint = checkoutFingerprint(items, address, shipping, note);
+      const saved = readAttempt();
+      let attempt: PlacedAttempt =
+        saved && saved.userId === user.id && saved.fingerprint === fingerprint
+          ? saved
+          : { userId: user.id, fingerprint, idempotencyKey: newIdempotencyKey() };
+      writeAttempt(attempt);
+
+      if (!attempt.orderId) {
+        await replaceServerCart(token, items);
+        const addressId = findSameAddress(await listAddresses(token), address)?.id ?? (await createAddress(token, address)).id;
+        const order = await placeOrder(token, attempt.idempotencyKey, { addressId, shippingMethod: shipping, ...(note ? { note } : {}) });
+        attempt = { ...attempt, orderId: order.id, total: order.total };
+        writeAttempt(attempt);
+      }
+      setOrderTotal(attempt.total ?? null);
+      await pay(attempt.orderId!);
+    } catch (error) {
+      fail(error);
+    } finally {
+      busy.current = false;
+    }
   };
+
+  const submitCode = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const attempt = readAttempt();
+    if (!token || !attempt?.orderId || busy.current) return;
+    if (!/^\d{6}$/.test(code)) {
+      setCodeError("Enter the 6-digit code from the email.");
+      return;
+    }
+    busy.current = true;
+    setCodeError("");
+    try {
+      await verifyCheckoutCode(token, code);
+    } catch (error) {
+      setCodeError(checkoutErrorMessage(error instanceof ApiError ? error.code : "UNKNOWN"));
+      busy.current = false;
+      return;
+    }
+    setPhase("working");
+    try {
+      await pay(attempt.orderId);
+    } catch (error) {
+      fail(error);
+    } finally {
+      busy.current = false;
+    }
+  };
+
+  const resendCode = async () => {
+    if (!token) return;
+    try {
+      await sendCheckoutCode(token);
+      setCodeError("We've sent a new code.");
+    } catch (error) {
+      setCodeError(checkoutErrorMessage(error instanceof ApiError ? error.code : "UNKNOWN"));
+    }
+  };
+
+  if (phase === "done" && done) {
+    return (
+      <div className="cart-empty cart-empty-page checkout-done" role="status">
+        <CircleCheck size={40} strokeWidth={1.6} aria-hidden="true" />
+        <h1>Thank you for your order</h1>
+        <p>{done.message}</p>
+        <p className="checkout-done-ref">
+          Order reference: <strong>{done.orderId}</strong>
+        </p>
+        <div className="auth-gate-actions">
+          <Link href="/account" className="add-to-cart">
+            View your account
+          </Link>
+          <Link href="/products" className="outline-button">
+            Continue shopping
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!hydrated || (cart.length > 0 && !catalog && !catalogFailed)) {
     return <div className="cart-page-loading" aria-busy="true" />;
@@ -240,7 +460,7 @@ export default function CheckoutView() {
         className="auth-gate-modal info-modal"
       >
         <h2>Sign in to check out</h2>
-        <p>Log in or create an account to track this order, save your details and check out faster next time.</p>
+        <p>Log in or create an account to pay for your order and track it.</p>
 
         <div className="auth-gate-actions">
           <Link href="/account/login?redirect=/checkout" className="add-to-cart">
@@ -252,8 +472,59 @@ export default function CheckoutView() {
         </div>
 
         <button type="button" className="auth-link-button" onClick={() => setAuthGateDismissed(true)}>
-          Continue as guest
+          Not now
         </button>
+      </Modal>
+
+      <Modal
+        open={phase === "code"}
+        onClose={() => setPhase("idle")}
+        title="Confirm it's you"
+        className="auth-gate-modal info-modal"
+      >
+        <h2>Confirm it&apos;s you</h2>
+        <p>
+          We&apos;ve emailed a 6-digit code to <strong>{user?.email}</strong>. Enter it to continue to payment
+          {orderTotal ? (
+            <>
+              {" "}of <strong>{formatPrice(Number(orderTotal))}</strong>
+            </>
+          ) : null}
+          .
+        </p>
+        {discount > 0 && (
+          <p className="checkout-subtext">Coupon codes can&apos;t be used for online payment yet, so the amount above has no discount.</p>
+        )}
+        <form onSubmit={submitCode} noValidate>
+          <div className={`field${codeError ? " has-error" : ""}`}>
+            <input
+              id="checkout-code"
+              value={code}
+              placeholder=" "
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+              aria-invalid={codeError ? true : undefined}
+              aria-describedby={codeError ? "checkout-code-error" : undefined}
+              autoFocus
+            />
+            <label htmlFor="checkout-code">Verification code</label>
+            {codeError && (
+              <p className="field-error" id="checkout-code-error" role="alert">
+                {codeError}
+              </p>
+            )}
+          </div>
+          <div className="auth-gate-actions">
+            <button type="submit" className="add-to-cart">
+              Continue to payment
+            </button>
+            <button type="button" className="outline-button" onClick={resendCode}>
+              Send a new code
+            </button>
+          </div>
+        </form>
       </Modal>
 
       <div className="checkout-layout">
@@ -431,24 +702,21 @@ export default function CheckoutView() {
           </p>
 
           <div className="option-list">
-            {PAYMENT_METHODS.map(({ id, label, icon: Icon }) => (
-              <label key={id} className={payment === id ? "selected" : ""}>
-                <input
-                  type="radio"
-                  name="payment"
-                  value={id}
-                  checked={payment === id}
-                  onChange={() => setPayment(id)}
-                />
-                <span>{label}</span>
-                <Icon size={20} strokeWidth={1.6} aria-hidden="true" />
-              </label>
-            ))}
+            <label className="selected">
+              <input type="radio" name="payment" value="razorpay" checked readOnly />
+              <span>
+                Pay online with Razorpay
+                <small>UPI, credit/debit cards, net banking and wallets</small>
+              </span>
+              <span aria-hidden="true">
+                <Smartphone size={20} strokeWidth={1.6} /> <CreditCard size={20} strokeWidth={1.6} />
+              </span>
+            </label>
           </div>
         </section>
 
-        <button type="submit" className="add-to-cart checkout-submit">
-          {payment === "cod" ? "Place order" : `Pay now – ${formatPrice(total)}`}
+        <button type="submit" className="add-to-cart checkout-submit" disabled={working} aria-busy={working}>
+          {phase === "paying" ? "Waiting for payment…" : working ? "Please wait…" : `Pay now – ${formatPrice(total)}`}
         </button>
 
         {touched && Object.keys(errors).length > 0 && (
