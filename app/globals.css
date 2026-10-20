@@ -1008,6 +1008,13 @@ button {
   margin-bottom: 14px;
 }
 
+/* Prices and the OFF badge use a plain system font: the struck compare-at price first, then the price to pay */
+.price-current,
+.price-original,
+.price-save {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 .price-current {
   color: #d8462e;
   font-size: 1.05rem;
@@ -2919,23 +2926,27 @@ a.see-more-button {
   margin: 22px 0 20px;
 }
 
+.product-price-large {
+  gap: 6px 12px;
+}
+
 .product-price-large .price-current {
   color: #d8462e;
-  font-size: 2rem;
-  font-weight: 500;
+  font-size: 1.75rem;
+  font-weight: 400;
 }
 
 .product-price-large .price-original {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
 }
 
 .price-save {
   background: #f2542d;
   border-radius: 999px;
   color: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 6px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 12px;
 }
 
 .product-lede {
@@ -3125,11 +3136,13 @@ a.see-more-button {
   padding: 36px 44px 44px;
 }
 
+/* Tab paragraphs run to the end of the panel and are justified so every line ends at the same edge */
 .tab-lede {
   color: var(--text-body);
+  hyphens: auto;
   line-height: 1.8;
   margin: 0 0 20px;
-  max-width: 900px;
+  text-align: justify;
 }
 
 .tab-columns {
@@ -3147,6 +3160,8 @@ a.see-more-button {
 
 .tab-bullets {
   color: var(--text-body);
+  hyphens: auto;
+  text-align: justify;
   display: grid;
   gap: 8px;
   line-height: 1.6;

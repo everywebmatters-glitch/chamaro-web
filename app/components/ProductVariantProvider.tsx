@@ -72,8 +72,8 @@ export function VariantPrice() {
   const discount = discountPercent({ price, compareAtPrice });
   return (
     <div className="product-price-row product-price-large">
-      <span className="price-current">{formatPrice(price)}</span>
       {compareAtPrice && <s className="price-original">{formatPrice(compareAtPrice)}</s>}
+      <span className="price-current">{formatPrice(price)}</span>
       {discount > 0 && <span className="price-save">{discount}% OFF</span>}
     </div>
   );

@@ -85,8 +85,8 @@ export default function ProductCardActions({ product }: { product: Product }) {
             <h2>{product.name}</h2>
 
             <div className="product-price-row">
-              <span className="price-current">{formatPrice(price)}</span>
               {compareAtPrice && <s className="price-original">{formatPrice(compareAtPrice)}</s>}
+              <span className="price-current">{formatPrice(price)}</span>
             </div>
 
             <p className="quick-view-description">{product.shortDescription}</p>

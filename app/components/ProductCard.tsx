@@ -25,11 +25,10 @@ export function StarRating({
 export function PriceRow({ product, className = "" }: { product: Product; className?: string }) {
   return (
     <div className={`product-price-row ${className}`}>
-      <span className="price-current">{formatPrice(product.price)}</span>
-
       {product.compareAtPrice && (
         <s className="price-original">{formatPrice(product.compareAtPrice)}</s>
       )}
+      <span className="price-current">{formatPrice(product.price)}</span>
     </div>
   );
 }
