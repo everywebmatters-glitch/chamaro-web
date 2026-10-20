@@ -109,7 +109,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   /* Categories only feed menus and search shortcuts, so a failure just leaves them empty */
   const loadCategories = useCallback(() => {
     fetchCategories()
-      .then((rows) => setCategories(rows.map(({ slug, name }) => ({ slug, name }))))
+      .then((rows) => setCategories(rows.map(({ slug, name, icon }) => ({ slug, name, icon }))))
       .catch(() => setCategories([]));
   }, []);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -150,7 +150,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCartNotices((current) => [...current, ...notices]);
   }, [catalog, cart, hydrated]);
 
-  const dismissCartNotices = useCallback(() => setCartNotices([]), []);
+  /* Likewise drop wishlist entries for products that are gone, so the counts match what the page lists */
+  useEffect(() => {
+    if (!hydrated || !catalog) return;
+    const onSale = new Set(catalog.map((product) => product.slug));
+    if (wishlist.every((slug) => onSale.has(slug))) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reconcile the saved wishlist with the live catalog
+    setWishlist((current) => current.filter((slug) => onSale.has(slug)));
+  }, [catalog, wishlist, hydrated]);
+
+  const dismissCartNotices =useCallback(() => setCartNotices([]), []);
 
   const showToast = useCallback((message: string) => {
     setToast(message);

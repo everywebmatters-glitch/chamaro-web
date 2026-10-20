@@ -89,7 +89,7 @@ export default function ChairShowcase({ categories: apiCategories }: { categorie
             <li key={category.slug}>
               <Link href={categoryHref(category.slug)} className="category-circle">
                 <span className="category-circle-art">
-                  <Image src={categoryIcon(category.slug)} alt="" width={44} height={44} />
+                  <Image src={category.icon ?? categoryIcon(category.slug)} alt="" width={44} height={44} />
                 </span>
                 <span className="category-circle-name">{category.name}</span>
               </Link>

@@ -83,7 +83,7 @@ export default function SearchOverlay({
                   <li key={category.slug}>
                     <Link href={categoryHref(category.slug)} onClick={close}>
                       <span className="search-quick-link-icon">
-                        <Image src={categoryIcon(category.slug)} alt="" width={20} height={20} />
+                        <Image src={category.icon ?? categoryIcon(category.slug)} alt="" width={20} height={20} />
                       </span>
                       <span className="search-quick-link-name">{category.name}</span>
                       <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />

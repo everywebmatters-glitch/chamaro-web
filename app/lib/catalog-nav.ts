@@ -5,7 +5,8 @@
    file only decides how to link to and look up what the API returned.
 ========================================================= */
 
-export type NavCategory = { slug: string; name: string };
+/* icon: the image Admin uploaded for the category; without one the built-in icon for its slug is used */
+export type NavCategory = { slug: string; name: string; icon?: string };
 
 /* Icons that exist in public/icons, keyed by the category slug they were drawn for */
 const CATEGORY_ICONS: Record<string, string> = {

@@ -1,6 +1,9 @@
 import { ApiError, apiBaseUrl, apiRequest } from "./api";
 import type { Availability, Product } from "./products";
 import { COLLECTION_PAGE_SLUG, DEFAULT_COLLECTION_FEATURE, toCollectionFeature, type ApiCmsPage, type CollectionFeature } from "./collection-feature";
+import type { NavCategory } from "./catalog-nav";
+import { CATEGORY_DISPLAY_PAGE_SLUG, iconFor, orderCategories, toCategoryDisplay, type CategoryDisplayItem } from "./category-display";
+import { BEST_SELLERS_PAGE_SLUG, pickBySlugs, toBestSellerSlugs } from "./best-sellers";
 import { toHeroSlides, type ApiBannerRow, type HeroBannerSlide } from "./hero-banners";
 import { toInfoBoxes } from "./product-info";
 import { variantChoices, variantImageIds } from "./product-variants";
@@ -128,18 +131,30 @@ export async function fetchProduct(slug: string) {
   }
 }
 
-/* GET /api/v1/categories — active categories, sorted by name */
+/* The order and icons Admin chose for the categories (published CMS page "category-display"). Never throws:
+   no page (or an API error) means the API's order and the built-in icons. */
+async function fetchCategoryDisplay(init: RequestInit): Promise<CategoryDisplayItem[]> {
+  try {
+    const { data } = await apiRequest<ApiCmsPage>(`/cms/pages/${CATEGORY_DISPLAY_PAGE_SLUG}`, init);
+    return toCategoryDisplay(data, new URL(apiBaseUrl()).origin);
+  } catch {
+    return [];
+  }
+}
+
+/* GET /api/v1/categories — active categories in the order Admin chose (unlisted ones after, sorted by name),
+   each with the icon Admin uploaded for it, if any */
 export async function fetchCategories(init: RequestInit = fresh) {
-  const { data } = await apiRequest<ApiCategory[]>("/categories", init);
-  return data;
+  const [{ data }, display] = await Promise.all([apiRequest<ApiCategory[]>("/categories", init), fetchCategoryDisplay(init)]);
+  return orderCategories(data, display).map((category) => ({ ...category, icon: iconFor(category.slug, display) }));
 }
 
 /* Categories for the header, mobile menu and home page. Fetched fresh on every request (no cache) so a category
    added or renamed in Admin shows up at once. Never throws: if the API is unreachable the
    menu simply shows no category links rather than breaking every page. */
-export async function getNavCategories(): Promise<Pick<ApiCategory, "slug" | "name">[]> {
+export async function getNavCategories(): Promise<NavCategory[]> {
   try {
-    return (await fetchCategories(fresh)).map(({ slug, name }) => ({ slug, name }));
+    return (await fetchCategories(fresh)).map(({ slug, name, icon }) => ({ slug, name, icon }));
   } catch {
     return [];
   }
@@ -172,12 +187,20 @@ export async function getCollectionFeature(): Promise<CollectionFeature> {
   }
 }
 
-/* The newest active products (the API lists newest first), for the home page's Best Sellers until real
-   sales data exists. Never throws; an empty list hides the section. */
-export async function getNewestProducts(limit = 4): Promise<Product[]> {
+/* The home page's Best Sellers: only the products the admin picked (published CMS page "home-best-sellers"),
+   in the admin's order, skipping any that are no longer on sale. Never throws; an empty list hides the section. */
+export async function getBestSellers(): Promise<Product[]> {
   try {
-    const { data } = await fetchProducts({ limit }, briefly);
-    return data.map(toProduct);
+    const { data: page } = await apiRequest<ApiCmsPage>(`/cms/pages/${BEST_SELLERS_PAGE_SLUG}`, briefly);
+    const slugs = toBestSellerSlugs(page);
+    if (slugs.length === 0) return [];
+    const all: ApiProduct[] = [];
+    for (let pageNumber = 1; ; pageNumber++) {
+      const { data, meta } = await fetchProducts({ page: pageNumber, limit: 100 }, briefly);
+      all.push(...data);
+      if (!meta || pageNumber >= meta.totalPages) break;
+    }
+    return pickBySlugs(all, slugs).map((product) => toProduct(product));
   } catch {
     return [];
   }

@@ -1,13 +1,11 @@
 import Link from "next/link";
-import { getNewestProducts } from "../lib/catalog-api";
+import { getBestSellers } from "../lib/catalog-api";
 import ProductCard from "./ProductCard";
 
-const BEST_SELLER_COUNT = 4;
-
-/* Until there is real sales data, "Best Sellers" are the newest active products in the live catalog.
-   If the catalog is empty or the API can't be reached the section is left out. */
+/* "Best Sellers" are the products the admin picked. With none picked, or if the API can't be reached,
+   the section is left out. */
 export default async function BestSellers() {
-  const bestSellers = await getNewestProducts(BEST_SELLER_COUNT);
+  const bestSellers = await getBestSellers();
   if (bestSellers.length === 0) return null;
 
   return (
