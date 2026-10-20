@@ -3052,6 +3052,13 @@ a.see-more-button {
   flex: none;
   height: 20px;
   width: 20px;
+  /* The text's visual middle sits above its line box's middle: lift the icons to it */
+  transform: translateY(-1.5px);
+}
+
+/* The truck's weight (cab and wheels) is in its lower half, so it needs a little more lift */
+.purchase-links button:nth-child(2) svg {
+  transform: translateY(-2.5px);
 }
 
 .purchase-links button:hover {
