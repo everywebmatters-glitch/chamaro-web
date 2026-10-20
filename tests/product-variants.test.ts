@@ -49,6 +49,18 @@ test("compare-at price and stock are read from options and never shown as option
   assert.equal(variantChoices([v("Black", { Color: "Black" })]).variants[0].stock, undefined);
 });
 
+test("variants and swatches follow the admin's position order", () => {
+  const choices = variantChoices([
+    v("Beige", { Color: "Beige", position: 2 }),
+    v("Black", { Color: "Black", position: 0 }),
+    v("Grey", { Color: "Grey" }),
+    v("Brown", { Color: "Brown", position: 1 }),
+  ]);
+  assert.deepEqual(choices.colors.map((c) => c.name), ["Black", "Brown", "Beige", "Grey"]);
+  assert.deepEqual(choices.variants.map((variant) => variant.name), ["Black", "Brown", "Beige", "Grey"]);
+  assert.equal(choices.option, undefined);
+});
+
 test("each variant keeps its id, SKU, price and colour", () => {
   const choices = variantChoices([
     v("Beige", { Color: "Beige" }, { price: "7499.00" }),

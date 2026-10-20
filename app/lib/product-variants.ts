@@ -12,6 +12,7 @@
      compareAtPrice   optional struck-through price of this variant
      stock            optional units of this variant (the API enforces
                       only the product's total)
+     position         the admin's order (0 = first); the API keeps none
      anything else    the first other option (e.g. Size) becomes pills
    A colour value may also carry its shade inline: "Beige #C8A97E".
 ========================================================= */
@@ -92,8 +93,21 @@ const HEX_KEY = /^colou?r ?hex$/i;
 const IMAGES_KEY = "images";
 const COMPARE_KEY = "compareAtPrice";
 const STOCK_KEY = "stock";
+const POSITION_KEY = "position";
 /* Keys that hold data rather than a customer-facing option */
-const DATA_KEYS = new Set([IMAGES_KEY, COMPARE_KEY, STOCK_KEY]);
+const DATA_KEYS = new Set([IMAGES_KEY, COMPARE_KEY, STOCK_KEY, POSITION_KEY]);
+
+/* The admin's order; variants without a position keep the API's order, after them */
+function byPosition(variants: VariantRow[]) {
+  const rank = (variant: VariantRow) => {
+    const value = variant.options?.[POSITION_KEY];
+    return typeof value === "number" && Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
+  };
+  return variants
+    .map((variant, index) => ({ variant, index }))
+    .sort((a, b) => rank(a.variant) - rank(b.variant) || a.index - b.index)
+    .map(({ variant }) => variant);
+}
 const HEX = /#(?:[0-9a-f]{3}|[0-9a-f]{6})\b/i;
 
 function text(value: unknown) {
@@ -131,7 +145,7 @@ function priceOf(value: VariantRow["price"]) {
 }
 
 export function variantChoices(variants: VariantRow[]): VariantChoices {
-  const active = variants.filter((variant) => variant.status === "ACTIVE");
+  const active = byPosition(variants.filter((variant) => variant.status === "ACTIVE"));
   if (!active.length) return { colors: [], variants: [] };
 
   /* Option names in first-seen order; the shade and photo keys are data, not choices */
