@@ -3042,6 +3042,18 @@ a.see-more-button {
   padding: 0;
 }
 
+/* Same box for every icon, centred on the text's line, so the three sit on one line */
+.purchase-links button {
+  line-height: 1.2;
+}
+
+.purchase-links button svg {
+  display: block;
+  flex: none;
+  height: 20px;
+  width: 20px;
+}
+
 .purchase-links button:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
