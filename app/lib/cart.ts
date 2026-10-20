@@ -28,10 +28,10 @@ export type DiscountCode = {
   percentOff: number;
 };
 
-/* TODO: move to the server before launch — client-side codes are visible to anyone */
-export const DISCOUNT_CODES: DiscountCode[] = [
-  { code: "CHAMARO10", label: "10% off your order", percentOff: 10 },
-];
+/* Coupons are off: the server prices every order and knows no coupon codes, so a code accepted here would show a
+   discount that is never charged. A code saved in a shopper's browser earlier (e.g. CHAMARO10) no longer resolves,
+   so it discounts nothing anywhere. Add codes back only together with server-side validation and pricing. */
+export const DISCOUNT_CODES: DiscountCode[] = [];
 
 export const INDIAN_STATES = [
   "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",

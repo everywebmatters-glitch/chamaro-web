@@ -33,13 +33,13 @@ import {
   checkoutFingerprint,
   findSameAddress,
   paymentOutcomeMessage,
+  razorpayContact,
   toAddressInput,
   toServerCartItems,
 } from "../../lib/checkout-flow";
 import { formatPrice } from "../../lib/products";
 import { payWithRazorpay } from "../../lib/razorpay";
 import { useAuth } from "../auth/AuthProvider";
-import DiscountForm from "../cart/DiscountForm";
 import Modal from "../Modal";
 import { useStore } from "../store/StoreProvider";
 import { EMAIL_PATTERN, GSTIN_PATTERN, PHONE_PATTERN } from "../../lib/site";
@@ -252,7 +252,7 @@ export default function CheckoutView() {
     }
 
     setPhase("paying");
-    const result = await payWithRazorpay(session, { name: user?.name, email: user?.email, contact: form.phone.replace(/\s/g, "") });
+    const result = await payWithRazorpay(session, { name: user?.name, email: user?.email, contact: razorpayContact(form.phone) });
     if (result.kind === "closed") {
       setNotice(
         result.lastFailure
@@ -492,9 +492,6 @@ export default function CheckoutView() {
           ) : null}
           .
         </p>
-        {discount > 0 && (
-          <p className="checkout-subtext">Coupon codes can&apos;t be used for online payment yet, so the amount above has no discount.</p>
-        )}
         <form onSubmit={submitCode} noValidate>
           <div className={`field${codeError ? " has-error" : ""}`}>
             <input
@@ -760,12 +757,6 @@ export default function CheckoutView() {
               </li>
             ))}
           </ul>
-
-          <div className="cart-coupon checkout-coupon">
-            <h3>Have a coupon?</h3>
-            <p>Add your code for an instant discount</p>
-            <DiscountForm idPrefix="checkout-discount" />
-          </div>
 
           <dl className="checkout-totals">
             <div>

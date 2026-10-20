@@ -18,7 +18,8 @@ import type { AddressInput, ServerCartItem } from "./checkout-flow";
 
 export type SavedAddress = AddressInput & { id: string; addressLine2?: string | null };
 export type PlacedOrder = { id: string; total: string; status: string; paymentStatus: string };
-export type PaymentSession = { orderId: string; keyId: string; mode: "test" | "live"; razorpayOrderId: string; amount: number; currency: string };
+/* timeoutSeconds: how long is left to pay (set by the server from when the order was placed); Checkout closes then */
+export type PaymentSession = { orderId: string; keyId: string; mode: "test" | "live"; razorpayOrderId: string; amount: number; currency: string; timeoutSeconds: number };
 export type CheckoutCallback = { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string };
 export type PaymentResult = { outcome: string; order: PlacedOrder };
 

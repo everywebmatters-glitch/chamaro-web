@@ -53,6 +53,7 @@ export async function payWithRazorpay(session: PaymentSession, prefill: { name?:
       order_id: session.razorpayOrderId,
       amount: session.amount,
       currency: session.currency,
+      timeout: session.timeoutSeconds,
       name: "Chamaro",
       description: `Order ${session.orderId}`,
       prefill,

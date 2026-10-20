@@ -3658,6 +3658,11 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   margin-top: 40px;
 }
 
+/* The summary keeps the right-hand column now that the coupon box beside it is gone */
+.cart-page-layout > .cart-summary {
+  grid-column: 2;
+}
+
 .cart-table {
   border-collapse: collapse;
   width: 100%;
@@ -5769,6 +5774,10 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .cart-page-layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cart-page-layout > .cart-summary {
+    grid-column: auto;
   }
 
   .cart-summary {

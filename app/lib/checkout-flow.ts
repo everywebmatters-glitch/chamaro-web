@@ -97,6 +97,13 @@ export function checkoutFingerprint(items: ServerCartItem[], address: AddressInp
   return JSON.stringify({ cart, address, shippingMethod, note: note.trim() });
 }
 
+/* A delivery phone in the "+91XXXXXXXXXX" form Razorpay Checkout's prefill expects; undefined if it isn't an Indian
+   mobile number (Checkout then asks for it). */
+export function razorpayContact(phone: string): string | undefined {
+  const digits = phone.replace(/\D/g, "").replace(/^(91|0)(?=\d{10}$)/, "");
+  return /^[6-9]\d{9}$/.test(digits) ? `+91${digits}` : undefined;
+}
+
 /* What to tell the shopper for an API error code. Anything unexpected gets the generic message. */
 export function checkoutErrorMessage(code: string): string {
   switch (code) {

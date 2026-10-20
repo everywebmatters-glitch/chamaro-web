@@ -5,6 +5,7 @@ import {
   checkoutFingerprint,
   findSameAddress,
   paymentOutcomeMessage,
+  razorpayContact,
   toAddressInput,
   toServerCartItems,
 } from "../app/lib/checkout-flow.ts";
@@ -85,4 +86,9 @@ test("payment outcomes: paid and pending end checkout; failed lets the shopper r
   assert.match(paymentOutcomeMessage("review").message, /don't pay again/);
   assert.equal(paymentOutcomeMessage("ignored").done, false);
   assert.doesNotMatch(paymentOutcomeMessage("ignored").message, /not been charged/);
+});
+
+test("the delivery phone is prefilled in Razorpay's +91 format, or left for Checkout to ask", () => {
+  for (const phone of ["9876543210", "98765 43210", "+91 98765 43210", "09876543210", "919876543210"]) assert.equal(razorpayContact(phone), "+919876543210", phone);
+  for (const phone of ["12345", "1876543210", ""]) assert.equal(razorpayContact(phone), undefined, phone);
 });
