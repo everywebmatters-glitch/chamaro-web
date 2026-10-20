@@ -2424,6 +2424,13 @@ a.see-more-button {
   margin: 0;
 }
 
+/* The quick view sits inside a product card, so undo the card grid's centred rows here (three classes to out-rank them) */
+.quick-view .quick-view-info .product-price-row,
+.quick-view .quick-view-info .product-rating,
+.quick-view .quick-view-info .product-card-colors {
+  justify-content: flex-start;
+}
+
 .quick-view-description {
   color: var(--text-body);
   line-height: 1.7;
