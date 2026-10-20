@@ -479,7 +479,7 @@ export default function CheckoutView() {
             {lines.map((line) => (
               <li key={line.key}>
                 <span className="checkout-thumb">
-                  <Image src={line.product.images[0].src} alt="" fill sizes="64px" />
+                  <Image src={(line.variant?.images[0] ?? line.product.images[0]).src} alt="" fill sizes="64px" />
                   <span className="checkout-qty" aria-label={`Quantity ${line.quantity}`}>
                     {line.quantity}
                   </span>

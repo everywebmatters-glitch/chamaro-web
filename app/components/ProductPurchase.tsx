@@ -17,6 +17,7 @@ import Modal from "./Modal";
 import QuantityStepper from "./QuantityStepper";
 import PaymentBadges from "./PaymentBadges";
 import { useStore } from "./store/StoreProvider";
+import { useVariantSelection } from "./ProductVariantProvider";
 import { contact } from "../lib/site";
 
 /* Show "Only N left" at or below this many units */
@@ -27,11 +28,8 @@ const LOW_STOCK_NOTE = 5;
 export default function ProductPurchase({ product }: { product: Product }) {
   const { addToCart, toggleWishlist, isWishlisted, notify } = useStore();
 
-  /* API products may have no colours yet */
-  const [color, setColor] = useState(product.colors.at(0));
-  const [option, setOption] = useState(
-    product.option?.values.find((value) => value.available)?.label
-  );
+  /* Colour/option are shared with the gallery and price (they swap to the chosen variant's) */
+  const { color, setColor, option, setOption, variant, price } = useVariantSelection();
   const [quantity, setQuantity] = useState(1);
   const [modal, setModal] = useState<"dimensions" | "question" | "delivery" | null>(null);
   const [showSticky, setShowSticky] = useState(false);
@@ -42,7 +40,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
   /* Only worth mentioning when stock is tracked and nearly gone */
   const lowStock = !soldOut && product.stockLeft !== undefined && product.stockLeft <= LOW_STOCK_NOTE;
   const verb = product.availability === "pre-order" ? "Pre-order" : "Add to Bag";
-  const total = formatPrice(product.price * quantity);
+  const total = formatPrice(price * quantity);
 
   /* Show the sticky bar once the main button scrolls above the viewport */
   useEffect(() => {
@@ -56,7 +54,10 @@ export default function ProductPurchase({ product }: { product: Product }) {
   }, []);
 
   const add = () =>
-    addToCart({ slug: product.slug, color: color?.name ?? "", option, quantity }, product.name);
+    addToCart(
+      { slug: product.slug, color: color?.name ?? "", option, ...(variant ? { variantId: variant.id } : {}), quantity },
+      product.name
+    );
 
   const share = async () => {
     const url = window.location.href;
@@ -220,7 +221,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
 
         <div className="sticky-buy-controls">
           <span className="sticky-buy-variant">
-            {variantLabel} – {formatPrice(product.price)}
+            {variantLabel} – {formatPrice(price)}
           </span>
           <QuantityStepper value={quantity} onChange={setQuantity} label="Quantity (sticky bar)" max={product.stockLeft} />
           <button type="button" className="add-to-cart" onClick={add} disabled={soldOut}>

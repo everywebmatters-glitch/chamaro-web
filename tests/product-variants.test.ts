@@ -1,11 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseColour, variantChoices, type VariantRow } from "../app/lib/product-variants.ts";
+import { parseColour, selectVariant, variantChoices, variantImageIds, type VariantRow } from "../app/lib/product-variants.ts";
 
-const v = (name: string, options: Record<string, unknown>, status: VariantRow["status"] = "ACTIVE"): VariantRow => ({
+const v = (name: string, options: Record<string, unknown>, extra: Partial<VariantRow> = {}): VariantRow => ({
+  id: `id-${name}`,
   name,
+  sku: `SKU-${name}`,
+  price: null,
   options,
-  status,
+  status: "ACTIVE",
+  ...extra,
 });
 
 test("colour options become swatches named as in Admin", () => {
@@ -23,10 +27,32 @@ test("colour options become swatches named as in Admin", () => {
   assert.equal(choices.option, undefined);
 });
 
-test("a hex code in the value sets the exact shade", () => {
+test("a hex code in the value or in ColorHex sets the exact shade", () => {
   assert.deepEqual(parseColour("Sand #D2B48C"), { name: "Sand", hex: "#d2b48c" });
   assert.deepEqual(parseColour("Sand (#d2b48c)"), { name: "Sand", hex: "#d2b48c" });
   assert.deepEqual(parseColour("Mystery"), { name: "Mystery", hex: "#cccccc" });
+  const choices = variantChoices([v("Sand", { Color: "Sand", ColorHex: "#AA5500" })]);
+  assert.deepEqual(choices.colors, [{ name: "Sand", hex: "#aa5500" }]);
+});
+
+test("ColorHex and images are data, never shown as options", () => {
+  const choices = variantChoices([v("Beige", { Color: "Beige", ColorHex: "#c8a97e", images: ["m1", "m2"] })]);
+  assert.equal(choices.option, undefined);
+  assert.deepEqual(choices.variants[0].imageIds, ["m1", "m2"]);
+});
+
+test("each variant keeps its id, SKU, price and colour", () => {
+  const choices = variantChoices([
+    v("Beige", { Color: "Beige" }, { price: "7499.00" }),
+    v("Black", { Color: "Black" }),
+  ]);
+  assert.deepEqual(
+    choices.variants.map(({ id, sku, price, color }) => ({ id, sku, price, color })),
+    [
+      { id: "id-Beige", sku: "SKU-Beige", price: 7499, color: "Beige" },
+      { id: "id-Black", sku: "SKU-Black", price: undefined, color: "Black" },
+    ]
+  );
 });
 
 test("colour and another option: swatches plus pills, duplicates merged", () => {
@@ -46,14 +72,33 @@ test("colour and another option: swatches plus pills, duplicates merged", () => 
   });
 });
 
+test("selectVariant matches colour and option, falling back to the colour alone", () => {
+  const { variants } = variantChoices([
+    v("Black / M", { Color: "Black", Size: "M" }),
+    v("Black / L", { Color: "Black", Size: "L" }),
+    v("Beige / M", { Color: "Beige", Size: "M" }),
+  ]);
+  assert.equal(selectVariant(variants, "Black", "L")?.name, "Black / L");
+  assert.equal(selectVariant(variants, "beige", "M")?.name, "Beige / M");
+  assert.equal(selectVariant(variants, "Beige", "L")?.name, "Beige / M");
+  assert.equal(selectVariant(variants, "Red", "M"), undefined);
+});
+
 test("inactive variants are not offered", () => {
-  const choices = variantChoices([v("Beige", { Color: "Beige" }), v("Red", { Color: "Red" }, "DRAFT")]);
+  const choices = variantChoices([v("Beige", { Color: "Beige" }), v("Red", { Color: "Red" }, { status: "DRAFT" })]);
   assert.deepEqual(choices.colors.map((c) => c.name), ["Beige"]);
-  assert.deepEqual(variantChoices([v("Red", { Color: "Red" }, "ARCHIVED")]), { colors: [] });
+  assert.deepEqual(variantChoices([v("Red", { Color: "Red" }, { status: "ARCHIVED" })]), { colors: [], variants: [] });
 });
 
 test("variants without options keep the variant-name pills", () => {
   const choices = variantChoices([v("Standard", {}), v("Premium", {})]);
   assert.deepEqual(choices.colors, []);
   assert.deepEqual(choices.option?.values.map((value) => value.label), ["Standard", "Premium"]);
+  assert.equal(selectVariant(choices.variants, undefined, "Premium")?.name, "Premium");
+});
+
+test("variantImageIds ignores anything that isn't a list of ids", () => {
+  assert.deepEqual(variantImageIds({ images: ["a", 3, "", "b"] }), ["a", "b"]);
+  assert.deepEqual(variantImageIds({ images: "a" }), []);
+  assert.deepEqual(variantImageIds(null), []);
 });

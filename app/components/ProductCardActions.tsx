@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, Heart, ShoppingBag } from "lucide-react";
 import { useState } from "react";
-import { formatPrice, type Product } from "../lib/products";
+import { formatPrice, priceFor, type Product } from "../lib/products";
+import { selectVariant } from "../lib/product-variants";
 import Modal from "./Modal";
 import { useStore } from "./store/StoreProvider";
 
@@ -17,10 +18,20 @@ export default function ProductCardActions({ product }: { product: Product }) {
   const saved = isWishlisted(product.slug);
   const soldOut = product.availability === "out-of-stock";
   const firstOption = product.option?.values.find((value) => value.available)?.label;
+  /* The chosen colour's variant: its own price and first photo */
+  const variant = selectVariant(product.variants, color?.name, firstOption);
+  const { price, compareAtPrice } = priceFor(product, variant);
+  const photo = variant?.images[0] ?? product.images[0];
 
   const quickAdd = () =>
     addToCart(
-      { slug: product.slug, color: color?.name ?? "", option: firstOption, quantity: 1 },
+      {
+        slug: product.slug,
+        color: color?.name ?? "",
+        option: firstOption,
+        ...(variant ? { variantId: variant.id } : {}),
+        quantity: 1,
+      },
       product.name
     );
 
@@ -66,7 +77,7 @@ export default function ProductCardActions({ product }: { product: Product }) {
       >
         <div className="quick-view-layout">
           <div className="quick-view-media">
-            <Image src={product.images[0].src} alt={product.images[0].alt} fill sizes="400px" />
+            <Image src={photo.src} alt={photo.alt} fill sizes="400px" />
           </div>
 
           <div className="quick-view-info">
@@ -74,10 +85,8 @@ export default function ProductCardActions({ product }: { product: Product }) {
             <h2>{product.name}</h2>
 
             <div className="product-price-row">
-              <span className="price-current">{formatPrice(product.price)}</span>
-              {product.compareAtPrice && (
-                <s className="price-original">{formatPrice(product.compareAtPrice)}</s>
-              )}
+              <span className="price-current">{formatPrice(price)}</span>
+              {compareAtPrice && <s className="price-original">{formatPrice(compareAtPrice)}</s>}
             </div>
 
             <p className="quick-view-description">{product.shortDescription}</p>
@@ -112,7 +121,7 @@ export default function ProductCardActions({ product }: { product: Product }) {
               }}
               disabled={soldOut}
             >
-              {soldOut ? "Sold out" : `Add to Bag – ${formatPrice(product.price)}`}
+              {soldOut ? "Sold out" : `Add to Bag – ${formatPrice(price)}`}
             </button>
 
             <Link href={`/products/${product.slug}`} className="text-link">

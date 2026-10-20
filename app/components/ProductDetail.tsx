@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import ProductCard, { StarRating } from "./ProductCard";
-import ProductGallery from "./ProductGallery";
 import ProductPurchase from "./ProductPurchase";
 import ReloadButton from "./ReloadButton";
 import ProductTabs from "./ProductTabs";
-import { availabilityLabels, discountPercent, formatPrice, type Product } from "../lib/products";
-import { FREE_SHIPPING_THRESHOLD } from "../lib/cart";
+import { ProductVariantProvider, VariantGallery, VariantPrice } from "./ProductVariantProvider";
+import { availabilityLabels, type Product } from "../lib/products";
 
 /* =========================================================
    PRODUCT DETAIL
@@ -47,7 +46,6 @@ export default function ProductDetail({ result }: { result: ProductResult }) {
   }
 
   const { product, related } = result;
-  const discount = discountPercent(product);
 
   return (
     <>
@@ -68,39 +66,29 @@ export default function ProductDetail({ result }: { result: ProductResult }) {
 
         {/* Gallery + summary */}
 
-        <div className="product-layout">
-          <ProductGallery
-            key={product.slug}
-            images={product.images}
-            badge={product.price >= FREE_SHIPPING_THRESHOLD ? "Free Delivery" : undefined}
-          />
+        {/* Keyed so the selected colour/option/quantity reset if the product data changes */}
+        <ProductVariantProvider key={`${product.slug}:${product.price}`} product={product}>
+          <div className="product-layout">
+            <VariantGallery product={product} />
 
-          <div className="product-summary">
-            <h1>{product.name}</h1>
+            <div className="product-summary">
+              <h1>{product.name}</h1>
 
-            <div className="product-summary-meta">
-              <span className={`stock-badge stock-${product.availability}`}>
-                {availabilityLabels[product.availability]}
-              </span>
-              <StarRating rating={product.rating} reviewCount={product.reviewCount} />
+              <div className="product-summary-meta">
+                <span className={`stock-badge stock-${product.availability}`}>
+                  {availabilityLabels[product.availability]}
+                </span>
+                <StarRating rating={product.rating} reviewCount={product.reviewCount} />
+              </div>
+
+              <VariantPrice />
+
+              <p className="product-lede">{product.shortDescription}</p>
+
+              <ProductPurchase product={product} />
             </div>
-
-            <div className="product-price-row product-price-large">
-              <span className="price-current">{formatPrice(product.price)}</span>
-
-              {product.compareAtPrice && (
-                <s className="price-original">{formatPrice(product.compareAtPrice)}</s>
-              )}
-
-              {discount > 0 && <span className="price-save">{discount}% OFF</span>}
-            </div>
-
-            <p className="product-lede">{product.shortDescription}</p>
-
-            {/* Keyed so the selected option/quantity reset if the product data changes */}
-            <ProductPurchase key={`${product.slug}:${product.price}`} product={product} />
           </div>
-        </div>
+        </ProductVariantProvider>
 
         <ProductTabs product={product} />
       </div>

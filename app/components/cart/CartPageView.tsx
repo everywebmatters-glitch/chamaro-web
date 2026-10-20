@@ -94,7 +94,7 @@ export default function CartPageView() {
               <td>
                 <div className="cart-table-product">
                   <Link href={`/products/${line.slug}`} className="cart-line-thumb">
-                    <Image src={line.product.images[0].src} alt="" fill sizes="100px" />
+                    <Image src={(line.variant?.images[0] ?? line.product.images[0]).src} alt="" fill sizes="100px" />
                   </Link>
                   <div>
                     <Link href={`/products/${line.slug}`} className="cart-table-name">
@@ -122,10 +122,10 @@ export default function CartPageView() {
               </td>
               <td data-label="Price">
                 <div className="product-price-row">
-                  {line.product.compareAtPrice && (
-                    <s className="price-original">{formatPrice(line.product.compareAtPrice)}</s>
+                  {line.compareAtPrice && (
+                    <s className="price-original">{formatPrice(line.compareAtPrice)}</s>
                   )}
-                  <span className="price-current">{formatPrice(line.product.price)}</span>
+                  <span className="price-current">{formatPrice(line.unitPrice)}</span>
                 </div>
               </td>
               <td data-label="Subtotal" className="cart-table-total">

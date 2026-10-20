@@ -16,6 +16,19 @@ export type ProductOption = {
   values: { label: string; available: boolean }[];
 };
 
+/* A buyable variant (e.g. one colour) with its own SKU, price and photos */
+export type ProductVariant = {
+  id: string;
+  sku: string;
+  name: string;
+  /* undefined = sold at the product price */
+  price?: number;
+  color?: string;
+  option?: string;
+  /* This variant's own photos; empty = show the product's photos */
+  images: { src: string; alt: string }[];
+};
+
 export type Product = {
   slug: string;
   name: string;
@@ -37,6 +50,8 @@ export type Product = {
   /* Name of the colour option as written in Admin ("Color"/"Colour") */
   colorLabel?: string;
   option?: ProductOption;
+  /* Active variants; empty when the product is sold as one item */
+  variants: ProductVariant[];
   features: string[];
   materials: string[];
   specs: { label: string; value: string }[];
@@ -47,6 +62,14 @@ export type Product = {
   /* Lower number = sells more; drives the "Best selling" sort */
   salesRank: number;
 };
+
+/* What one unit costs: the variant's own price when it has one, else the product's. The
+   compare-at price is the product's and is only shown when it is above that price. */
+export function priceFor(product: Pick<Product, "price" | "compareAtPrice">, variant?: Pick<ProductVariant, "price">) {
+  const price = variant?.price ?? product.price;
+  const compareAtPrice = product.compareAtPrice && product.compareAtPrice > price ? product.compareAtPrice : undefined;
+  return { price, compareAtPrice };
+}
 
 export const availabilityLabels: Record<Availability, string> = {
   "in-stock": "In stock",
@@ -85,7 +108,7 @@ export function formatPrice(value: number) {
   return priceFormatter.format(value);
 }
 
-export function discountPercent(product: Product) {
+export function discountPercent(product: Pick<Product, "price" | "compareAtPrice">) {
   if (!product.compareAtPrice || product.compareAtPrice <= product.price) {
     return 0;
   }

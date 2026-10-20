@@ -1,7 +1,7 @@
 import { ApiError, apiBaseUrl, apiRequest } from "./api";
 import type { Availability, Product } from "./products";
 import { toHeroSlides, type ApiBannerRow, type HeroBannerSlide } from "./hero-banners";
-import { variantChoices } from "./product-variants";
+import { variantChoices, variantImageIds } from "./product-variants";
 
 /* =========================================================
    CATALOG API
@@ -183,13 +183,25 @@ function firstSentence(text: string) {
 export function toProduct(api: ApiProduct, index = 0): Product {
   const description = api.description?.trim() ?? "";
   /* Uploaded images are served by the Fastify API, so their paths resolve against its origin */
-  const images = api.images
+  const allImages = api.images
     .filter((image): image is ApiProductImage & { url: string } => Boolean(image.url))
     .map((image) => ({ ...image, url: image.url.startsWith("/") ? new URL(image.url, apiBaseUrl()).href : image.url }))
     .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.position - b.position);
-  /* Active variants become colour swatches and option pills. Variant prices aren't shown
-     (the purchase box prices by product). */
+  /* Active variants become colour swatches and option pills, each with its own SKU, price and photos */
   const choices = variantChoices(api.variants);
+  /* A variant's own photos are product images too (so the API keeps their files) but only show
+     for that variant; the product gallery shows the rest */
+  const variantOwned = new Set(api.variants.flatMap((variant) => variantImageIds(variant.options)));
+  const mainImages = allImages.filter((image) => !image.mediaId || !variantOwned.has(image.mediaId));
+  const images = mainImages.length ? mainImages : allImages;
+  const byMediaId = new Map(allImages.flatMap((image) => (image.mediaId ? [[image.mediaId, image] as const] : [])));
+  const variants = choices.variants.map(({ imageIds, ...variant }) => ({
+    ...variant,
+    images: imageIds.flatMap((id) => {
+      const image = byMediaId.get(id);
+      return image ? [{ src: image.url, alt: image.altText ?? `${api.name} – ${variant.name}` }] : [];
+    }),
+  }));
 
   return {
     slug: api.slug,
@@ -210,6 +222,7 @@ export function toProduct(api: ApiProduct, index = 0): Product {
     colors: choices.colors,
     colorLabel: choices.colorLabel,
     option: choices.option,
+    variants,
     features: api.features ?? [],
     materials: api.materials ?? [],
     specs: [...(api.sku ? [{ label: "SKU", value: api.sku }] : []), ...(api.specifications ?? [])],

@@ -1,4 +1,5 @@
-import type { Product } from "./products";
+import { priceFor, type Product, type ProductVariant } from "./products";
+import { selectVariant } from "./product-variants";
 
 /* =========================================================
    CART PRICING RULES
@@ -52,12 +53,19 @@ export type CartLine = {
   slug: string;
   color: string;
   option?: string;
+  /* The chosen variant (own SKU and price); absent for products sold as one item */
+  variantId?: string;
   quantity: number;
 };
 
 export type ResolvedLine = CartLine & {
   key: string;
   product: Product;
+  variant?: ProductVariant;
+  /* The variant's price when it has one, else the product's */
+  unitPrice: number;
+  /* Shown struck through only when it is above the unit price */
+  compareAtPrice?: number;
   lineTotal: number;
   lineCompareTotal?: number;
 };
@@ -71,7 +79,8 @@ export function variantLabel(line: Pick<CartLine, "color" | "option">) {
 }
 
 /* Attach live product data (from the store's API catalog); drops lines whose product
-   no longer exists or is no longer on sale */
+   no longer exists or is no longer on sale, and lines whose variant has gone. Lines saved
+   before the product had variants are matched to one by their colour/option. */
 export function resolveLines(
   cart: CartLine[],
   findProduct: (slug: string) => Product | undefined
@@ -79,15 +88,21 @@ export function resolveLines(
   return cart.flatMap((line) => {
     const product = findProduct(line.slug);
     if (!product) return [];
+    const variant = line.variantId
+      ? product.variants.find((candidate) => candidate.id === line.variantId)
+      : selectVariant(product.variants, line.color || undefined, line.option);
+    if (line.variantId && !variant) return [];
+    const { price: unitPrice, compareAtPrice } = priceFor(product, variant);
     return [
       {
         ...line,
         key: lineKey(line),
         product,
-        lineTotal: product.price * line.quantity,
-        lineCompareTotal: product.compareAtPrice
-          ? product.compareAtPrice * line.quantity
-          : undefined,
+        variant,
+        unitPrice,
+        compareAtPrice,
+        lineTotal: unitPrice * line.quantity,
+        lineCompareTotal: compareAtPrice ? compareAtPrice * line.quantity : undefined,
       },
     ];
   });

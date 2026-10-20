@@ -121,7 +121,7 @@ export default function CartDrawer() {
                       className="cart-line-thumb"
                       onClick={closeCart}
                     >
-                      <Image src={line.product.images[0].src} alt="" fill sizes="96px" />
+                      <Image src={(line.variant?.images[0] ?? line.product.images[0]).src} alt="" fill sizes="96px" />
                     </Link>
 
                     <div className="cart-line-info">
@@ -131,12 +131,12 @@ export default function CartDrawer() {
                       <small>{variantLabel(line)}</small>
 
                       <div className="product-price-row">
-                        {line.product.compareAtPrice && (
+                        {line.compareAtPrice && (
                           <s className="price-original">
-                            {formatPrice(line.product.compareAtPrice)}
+                            {formatPrice(line.compareAtPrice)}
                           </s>
                         )}
-                        <span className="price-current">{formatPrice(line.product.price)}</span>
+                        <span className="price-current">{formatPrice(line.unitPrice)}</span>
                       </div>
 
                       <div className="cart-line-controls">
