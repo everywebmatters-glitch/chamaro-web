@@ -53,6 +53,27 @@ export default function ProductGallery({
 
         {badge && <span className="product-gallery-badge">{badge}</span>}
 
+        {hasMany && (
+          <>
+            <button
+              type="button"
+              className="product-gallery-arrow product-gallery-prev"
+              onClick={() => go(-1)}
+              aria-label="Previous image"
+            >
+              <ChevronLeft size={20} strokeWidth={1.8} />
+            </button>
+            <button
+              type="button"
+              className="product-gallery-arrow product-gallery-next"
+              onClick={() => go(1)}
+              aria-label="Next image"
+            >
+              <ChevronRight size={20} strokeWidth={1.8} />
+            </button>
+          </>
+        )}
+
         <button
           type="button"
           className="product-gallery-zoom"
