@@ -717,6 +717,9 @@ button {
 }
 
 .hero-slide-banner .hero-copy {
+  /* The artwork scales with the viewport width and its first chair starts
+     at ~38% of it; wrap the copy before that instead of running into it */
+  max-width: calc(37vw - var(--gutter) - 16px);
   z-index: 2;
 }
 
@@ -790,7 +793,7 @@ button {
 .chair-showcase-header {
   align-items: center;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   margin: 0 auto 64px;
   max-width: none;
@@ -1623,7 +1626,7 @@ button {
 
 .catalog-grid[data-cols="list"] {
   gap: 28px;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .catalog-grid[data-cols="2"] {
@@ -2618,7 +2621,7 @@ a.see-more-button {
 }
 
 .product-gallery.has-thumbs {
-  grid-template-columns: 110px 1fr;
+  grid-template-columns: 110px minmax(0, 1fr);
 }
 
 .product-gallery-thumbs {
@@ -4516,7 +4519,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 @media (max-width: 860px) {
   .auth-split {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .auth-split-panel {
@@ -4745,7 +4748,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 @media (max-width: 520px) {
   .auth-form .field-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -5752,7 +5755,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   /* Cart + checkout */
 
   .cart-page-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .cart-summary {
@@ -5761,7 +5764,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .checkout-layout {
     background: #ffffff;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .checkout-summary {
@@ -5772,10 +5775,13 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .checkout-summary-inner,
   .checkout-form {
+    grid-template-columns: minmax(0, 1fr);
     justify-self: center;
     margin: 0 auto;
     max-width: calc(560px + var(--gutter) * 2);
     position: static;
+    /* centred grid items shrink to their content; keep them to the column width */
+    width: 100%;
   }
 
   .checkout-form {
@@ -5813,7 +5819,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   .product-layout,
   .tab-columns,
   .quick-view-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .product-gallery {
@@ -5821,7 +5827,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   }
 
   .search-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .search-grid {
@@ -5873,17 +5879,32 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .hero-slide:not(.hero-slide-banner) {
     align-content: start;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     min-height: 0;
     padding-right: var(--gutter);
     padding-top: 28px;
   }
 
-  /* Banner slide: text and artwork stay side by side, like desktop, just
-     shorter — the artwork bleeds behind the copy instead of stacking under it */
+  /* Banner slide: copy on top, artwork below. The artwork's empty left half
+     (the copy's space on desktop) is cropped away so the chairs fill the width. */
   .hero-slide-banner {
-    min-height: 300px;
+    align-content: start;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding-right: var(--gutter);
     padding-top: 28px;
+  }
+
+  .hero-slide-banner .hero-banner-image {
+    aspect-ratio: 3 / 2;
+    inset: auto;
+    margin-top: 8px;
+    position: relative;
+  }
+
+  .hero-slide-banner .hero-banner-image img {
+    object-fit: cover;
+    object-position: right center;
   }
 
   .hero-title {
@@ -5891,27 +5912,13 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
     margin-bottom: 10px;
   }
 
-  .hero-slide-banner .hero-title {
-    font-size: clamp(1.05rem, 5.4vw, 1.3rem);
-  }
-
   .hero-subtitle {
     font-size: clamp(0.85rem, 3vw, 0.95rem);
     margin-bottom: 20px;
   }
 
-  .hero-slide-banner .hero-subtitle {
-    font-size: clamp(0.7rem, 2.6vw, 0.8rem);
-    margin-bottom: 14px;
-  }
-
   .hero-slide-banner .hero-copy {
     max-width: none;
-  }
-
-  .hero-slide-banner .hero-cta {
-    font-size: 0.75rem;
-    padding: 9px 14px;
   }
 
   .hero-cta {
@@ -6001,7 +6008,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .field-row,
   .field-row-3 {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .checkout-form {
@@ -6062,20 +6069,24 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   }
 
   .product-gallery.has-thumbs {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Thumbnails become a swipeable row */
   .product-gallery-thumbs {
     flex-direction: row;
     order: 2;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
   .product-gallery-thumbs button {
+    flex-shrink: 0;
     width: 72px;
   }
 
   .policy-boxes {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .purchase-links {
@@ -6097,7 +6108,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .spec-list div,
   .spec-table-header {
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 120px minmax(0, 1fr);
   }
 
   .sticky-buy-product {
@@ -6120,7 +6131,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   /* Designed to Elevate */
 
   .elevate-card {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding: 28px 20px 20px;
   }
 
