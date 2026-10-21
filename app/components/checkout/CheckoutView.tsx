@@ -412,8 +412,8 @@ export default function CheckoutView() {
           Order reference: <strong>{done.orderId}</strong>
         </p>
         <div className="auth-gate-actions">
-          <Link href="/account" className="add-to-cart">
-            View your account
+          <Link href={`/account/orders/${encodeURIComponent(done.orderId)}/`} className="add-to-cart">
+            View your order
           </Link>
           <Link href="/products" className="outline-button">
             Continue shopping

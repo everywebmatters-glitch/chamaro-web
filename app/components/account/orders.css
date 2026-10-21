@@ -1,0 +1,494 @@
+/* My Orders and order tracking. Uses the tokens from globals.css (--foreground, --muted, --text-body, --accent). */
+
+.order-list {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.order-card {
+  align-items: center;
+  border: 1px solid #ececea;
+  border-radius: 8px;
+  color: inherit;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  padding: 18px 20px;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.order-card:hover,
+.order-card:focus-visible {
+  background: #f7f6f4;
+  border-color: #dcdcda;
+}
+
+.order-card-main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.order-card-ref {
+  align-items: baseline;
+  color: var(--foreground);
+  display: flex;
+  flex-wrap: wrap;
+  font-weight: 600;
+  gap: 4px 12px;
+}
+
+.order-card-date {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 400;
+}
+
+.order-card-items {
+  color: var(--text-body);
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-card-tracking {
+  align-items: center;
+  color: var(--text-body);
+  display: inline-flex;
+  font-size: 0.88rem;
+  gap: 6px;
+}
+
+.order-card-side {
+  align-items: flex-end;
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.order-card-total {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.order-card-chevron {
+  color: var(--muted);
+}
+
+.order-card-skeleton {
+  grid-template-columns: minmax(0, 1fr) 96px;
+  min-height: 84px;
+}
+
+.order-card-skeleton span,
+.order-detail-skeleton span {
+  animation: orders-pulse 1.4s ease-in-out infinite;
+  background: #efeeeb;
+  border-radius: 4px;
+  display: block;
+  height: 14px;
+}
+
+.order-card-skeleton span:first-child {
+  width: 60%;
+}
+
+@keyframes orders-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .order-card-skeleton span,
+  .order-detail-skeleton span {
+    animation: none;
+  }
+}
+
+.order-pill {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.order-pill-neutral {
+  background: #f1f0ee;
+  color: #4c4c4b;
+}
+
+.order-pill-progress {
+  background: #fbf0e8;
+  color: #8a4a20;
+}
+
+.order-pill-done {
+  background: #e8f3ea;
+  color: #23633a;
+}
+
+.order-pill-problem {
+  background: #fbeaea;
+  color: #9b2c2c;
+}
+
+.orders-error {
+  background: #fdf3f2;
+  border: 1px solid #f0c9c5;
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+  padding: 24px;
+}
+
+.orders-error p {
+  color: #7a2620;
+  margin: 0;
+}
+
+.orders-action {
+  font-size: 0.95rem;
+  padding-inline: 24px;
+  width: auto;
+}
+
+.orders-empty-icon {
+  color: var(--muted);
+}
+
+.orders-footnote {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 16px 0 0;
+}
+
+/* Order detail */
+
+.order-detail {
+  display: grid;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 1040px;
+}
+
+.order-back {
+  align-items: center;
+  color: var(--text-body);
+  display: inline-flex;
+  font-size: 0.92rem;
+  gap: 6px;
+  justify-self: start;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.order-detail-head {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  justify-content: space-between;
+}
+
+.order-detail-head h2 {
+  color: var(--foreground);
+  font-size: clamp(1.4rem, 1.8vw, 1.75rem);
+  font-weight: 500;
+  margin: 0 0 6px;
+}
+
+.order-detail-head p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.order-full-ref {
+  overflow-wrap: anywhere;
+}
+
+.order-detail-grid {
+  align-items: start;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+
+.order-detail-grid > .order-panel:first-child {
+  grid-row: span 2;
+}
+
+.order-panel {
+  border: 1px solid #ececea;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.order-panel h3 {
+  align-items: center;
+  color: var(--foreground);
+  display: flex;
+  font-size: 1.05rem;
+  font-weight: 600;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.order-detail-skeleton {
+  display: grid;
+  gap: 14px;
+}
+
+.order-detail-skeleton span:nth-child(1) {
+  width: 40%;
+}
+
+.order-detail-skeleton span:nth-child(2) {
+  width: 75%;
+}
+
+.tracking-unavailable {
+  background: #f7f6f4;
+  border-radius: 6px;
+  color: var(--text-body);
+  line-height: 1.6;
+  margin: 0;
+  padding: 14px 16px;
+}
+
+.tracking-status {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 0 0 16px;
+}
+
+.tracking-courier-status {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.tracking-facts {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.tracking-facts div {
+  display: grid;
+  gap: 2px;
+}
+
+.tracking-facts dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tracking-facts dd {
+  color: var(--foreground);
+  margin: 0;
+}
+
+.tracking-awb {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tracking-awb > span {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+.tracking-copy {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dcdcda;
+  border-radius: 6px;
+  color: var(--text-body);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.82rem;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 10px;
+}
+
+.tracking-copy:hover {
+  border-color: var(--foreground);
+  color: var(--foreground);
+}
+
+.tracking-link {
+  align-items: center;
+  color: var(--accent);
+  display: inline-flex;
+  font-weight: 600;
+  gap: 6px;
+  margin: 0 0 20px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tracking-timeline {
+  border-top: 1px solid #ececea;
+  list-style: none;
+  margin: 0;
+  padding: 20px 0 0;
+}
+
+.tracking-timeline li {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 14px minmax(0, 1fr);
+  padding-bottom: 20px;
+  position: relative;
+}
+
+.tracking-timeline li:not(:last-child)::before {
+  background: #e3e2df;
+  bottom: 0;
+  content: "";
+  left: 6px;
+  position: absolute;
+  top: 18px;
+  width: 2px;
+}
+
+.timeline-dot {
+  background: #ffffff;
+  border: 2px solid #c9c9c9;
+  border-radius: 50%;
+  height: 14px;
+  margin-top: 3px;
+  width: 14px;
+}
+
+.tracking-timeline li.current .timeline-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.timeline-status {
+  color: var(--foreground);
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+
+.timeline-note {
+  color: var(--text-body);
+  font-size: 0.92rem;
+  margin: 0 0 4px;
+}
+
+.timeline-meta {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.84rem;
+  gap: 4px;
+  margin: 0;
+}
+
+.order-items {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.order-items li {
+  border-bottom: 1px solid #ececea;
+  color: var(--text-body);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.order-item-variant,
+.order-item-qty {
+  color: var(--muted);
+}
+
+.order-totals {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.order-totals div {
+  color: var(--text-body);
+  display: flex;
+  justify-content: space-between;
+}
+
+.order-totals dd {
+  margin: 0;
+}
+
+.order-total-row {
+  border-top: 1px solid #ececea;
+  color: var(--foreground) !important;
+  font-weight: 600;
+  padding-top: 10px;
+}
+
+.order-address {
+  color: var(--text-body);
+  display: grid;
+  font-style: normal;
+  gap: 2px;
+  line-height: 1.6;
+}
+
+@media (max-width: 860px) {
+  .order-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .order-detail-grid > .order-panel:first-child {
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .order-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 16px;
+  }
+
+  .order-card-side {
+    align-items: start;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+  }
+
+  .order-card-chevron {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .order-panel {
+    padding: 18px 16px;
+  }
+}

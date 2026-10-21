@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { useStore } from "../store/StoreProvider";
 import AuthField, { ACCOUNT_SAVE_UNAVAILABLE, EMAIL_PATTERN, MIN_PASSWORD } from "./AuthField";
+import OrdersList from "./OrdersList";
 
 /* Written by checkout when the shopper ticks "Save this information" */
 const SAVED_ADDRESS_KEY = "chamaro-checkout-info";
@@ -58,20 +59,6 @@ function Dashboard({ go }: { go: (id: SectionId) => void }) {
           <Link href="/account/register">create an account</Link> to keep your orders in one place.
         </p>
       )}
-    </div>
-  );
-}
-
-function Orders() {
-  return (
-    <div className="account-content">
-      <h2>Orders</h2>
-      <div className="account-empty">
-        <p>Online ordering isn&apos;t open yet, so there are no orders to show. Your orders will appear here once it is.</p>
-        <Link href="/products" className="wishlist-return">
-          Browse chairs
-        </Link>
-      </div>
     </div>
   );
 }
@@ -251,7 +238,7 @@ export default function AccountView() {
       </nav>
 
       {active === "dashboard" && <Dashboard go={setActive} />}
-      {active === "orders" && <Orders />}
+      {active === "orders" && <OrdersList />}
       {active === "addresses" && <Addresses />}
       {active === "details" && <Details />}
     </div>
