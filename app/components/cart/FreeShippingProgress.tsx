@@ -1,10 +1,10 @@
 import { Truck } from "lucide-react";
-import { amountToFreeShipping, FREE_SHIPPING_THRESHOLD } from "../../lib/cart";
+import { amountToFreeShipping, FREE_SHIPPING_FOR_ALL, FREE_SHIPPING_THRESHOLD } from "../../lib/cart";
 import { formatPrice } from "../../lib/products";
 
 export default function FreeShippingProgress({ subtotal }: { subtotal: number }) {
   const remaining = amountToFreeShipping(subtotal);
-  const percent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const percent = FREE_SHIPPING_FOR_ALL ? 100 : Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
   return (
     <div className="free-shipping">
@@ -14,7 +14,7 @@ export default function FreeShippingProgress({ subtotal }: { subtotal: number })
         aria-label="Progress towards free shipping"
         aria-valuemin={0}
         aria-valuemax={FREE_SHIPPING_THRESHOLD}
-        aria-valuenow={Math.min(subtotal, FREE_SHIPPING_THRESHOLD)}
+        aria-valuenow={FREE_SHIPPING_FOR_ALL ? FREE_SHIPPING_THRESHOLD : Math.min(subtotal, FREE_SHIPPING_THRESHOLD)}
       >
         <span className="free-shipping-fill" style={{ width: `${percent}%` }} />
         <span className="free-shipping-icon" style={{ left: `clamp(16px, ${percent}%, calc(100% - 16px))` }}>

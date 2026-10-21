@@ -10,6 +10,10 @@ import { selectVariant } from "./product-variants";
 /* Prices are GST-inclusive, so no tax line is added */
 export const FREE_SHIPPING_THRESHOLD = 10000;
 
+/* TEMPORARY (launch testing): every shipping method is free on every order. The API charges the same only while its
+   FREE_SHIPPING_FOR_ALL=true setting is on; change both together, or the price shown and the amount charged differ. */
+export const FREE_SHIPPING_FOR_ALL = true;
+
 export type ShippingMethodId = "standard" | "express";
 
 export const SHIPPING_METHODS: {
@@ -113,10 +117,11 @@ export function cartSubtotal(lines: ResolvedLine[]) {
 }
 
 export function amountToFreeShipping(subtotal: number) {
-  return Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  return FREE_SHIPPING_FOR_ALL ? 0 : Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 }
 
 export function shippingCost(method: ShippingMethodId, subtotal: number) {
+  if (FREE_SHIPPING_FOR_ALL) return 0;
   const rule = SHIPPING_METHODS.find((item) => item.id === method)!;
   return rule.freeAboveThreshold && subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : rule.price;
 }

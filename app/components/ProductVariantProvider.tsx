@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { availabilityLabels, discountPercent, formatPrice, priceFor, type Product, type ProductVariant } from "../lib/products";
-import { FREE_SHIPPING_THRESHOLD } from "../lib/cart";
+import { FREE_SHIPPING_FOR_ALL, FREE_SHIPPING_THRESHOLD } from "../lib/cart";
 import { selectVariant } from "../lib/product-variants";
 import ProductGallery from "./ProductGallery";
 
@@ -55,7 +55,7 @@ export function VariantGallery({ product }: { product: Product }) {
       /* A new photo set starts from its first image */
       key={own ? variant!.id : product.slug}
       images={own ? variant!.images : product.images}
-      badge={price >= FREE_SHIPPING_THRESHOLD ? "Free Delivery" : undefined}
+      badge={FREE_SHIPPING_FOR_ALL || price >= FREE_SHIPPING_THRESHOLD ? "Free Delivery" : undefined}
     />
   );
 }
