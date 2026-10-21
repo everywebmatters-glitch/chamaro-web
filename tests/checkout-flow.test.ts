@@ -10,14 +10,14 @@ import {
   toServerCartItems,
 } from "../app/lib/checkout-flow.ts";
 
-const chair = { id: "prod_1", name: "Lounge Chair", variantIds: { Walnut: "var_w", Oak: "var_o" } };
-const stool = { id: "prod_2", name: "Bar Stool", variantIds: {} };
+const chair = { id: "prod_1", name: "Lounge Chair", variants: [{ id: "var_w" }, { id: "var_o" }] };
+const stool = { id: "prod_2", name: "Bar Stool", variants: [] };
 
 test("the cart is sent by product and variant id, merging duplicate lines; no price is sent", () => {
   const { items, unavailable } = toServerCartItems([
-    { product: chair, option: "Walnut", quantity: 1 },
-    { product: chair, option: "Walnut", quantity: 2 },
-    { product: chair, option: "Oak", quantity: 1 },
+    { product: chair, variant: { id: "var_w" }, quantity: 1 },
+    { product: chair, variant: { id: "var_w" }, quantity: 2 },
+    { product: chair, variant: { id: "var_o" }, quantity: 1 },
     { product: stool, quantity: 4 },
   ]);
   assert.deepEqual(unavailable, []);
@@ -29,8 +29,8 @@ test("the cart is sent by product and variant id, merging duplicate lines; no pr
   for (const item of items) for (const key of Object.keys(item)) assert.ok(["productId", "variantId", "quantity"].includes(key), `${key} is never sent`);
 });
 
-test("a line whose variant no longer exists is reported, not sent without its variant", () => {
-  const { items, unavailable } = toServerCartItems([{ product: chair, option: "Teak", quantity: 1 }, { product: stool, quantity: 1 }]);
+test("a line for a product with variants but no matching variant is reported, not sent as the plain product", () => {
+  const { items, unavailable } = toServerCartItems([{ product: chair, quantity: 1 }, { product: stool, quantity: 1 }]);
   assert.deepEqual(unavailable, ["Lounge Chair"]);
   assert.deepEqual(items, [{ productId: "prod_2", quantity: 1 }]);
 });

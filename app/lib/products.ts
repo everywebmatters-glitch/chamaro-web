@@ -35,8 +35,6 @@ export type ProductVariant = {
 export type Product = {
   /* Backend product id: checkout sends the cart to the API by id */
   id: string;
-  /* Backend id of each active variant, by the option label it is shown as */
-  variantIds: Record<string, string>;
   slug: string;
   name: string;
   /* Category slug */

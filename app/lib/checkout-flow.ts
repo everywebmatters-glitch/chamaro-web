@@ -7,22 +7,24 @@
    and that is the amount Razorpay charges.
 ========================================================= */
 
+/* A cart line as resolveLines() returns it: `variant` is the variant the shopper chose (matched by id, or for older
+   saved lines by colour/option), absent for a product sold as one item. */
 type CartLineLike = {
   quantity: number;
-  option?: string;
-  product: { id: string; name: string; variantIds: Record<string, string> };
+  variant?: { id: string };
+  product: { id: string; name: string; variants: { id: string }[] };
 };
 
 export type ServerCartItem = { productId: string; variantId?: string; quantity: number };
 
-/* The browser cart as PUT /api/v1/cart items. A line whose variant no longer exists can't be bought as chosen,
-   so it is reported instead of silently sent without its variant. */
+/* The browser cart as PUT /api/v1/cart items. A line for a product that has variants but no matching one can't be
+   bought as chosen, so it is reported instead of being sent as the plain product. */
 export function toServerCartItems(lines: CartLineLike[]): { items: ServerCartItem[]; unavailable: string[] } {
   const merged = new Map<string, ServerCartItem>();
   const unavailable: string[] = [];
   for (const line of lines) {
-    const variantId = line.option ? line.product.variantIds[line.option] : undefined;
-    if (line.option && !variantId) {
+    const variantId = line.variant?.id;
+    if (!variantId && line.product.variants.length > 0) {
       unavailable.push(line.product.name);
       continue;
     }
