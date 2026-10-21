@@ -3897,6 +3897,11 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   margin-top: 40px;
 }
 
+/* The summary keeps the right-hand column now that the coupon box beside it is gone */
+.cart-page-layout > .cart-summary {
+  grid-column: 2;
+}
+
 .cart-table {
   border-collapse: collapse;
   width: 100%;
@@ -4367,6 +4372,19 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 .checkout-submit {
   font-size: 1.05rem;
   width: 100%;
+}
+
+/* Shown in place of the form once the server has accepted the payment */
+.checkout-done svg {
+  color: #2f7d4f;
+}
+
+.checkout-done p {
+  max-width: 34rem;
+}
+
+.checkout-done-ref strong {
+  word-break: break-all;
 }
 
 .checkout-notice {
@@ -5995,6 +6013,10 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .cart-page-layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cart-page-layout > .cart-summary {
+    grid-column: auto;
   }
 
   .cart-summary {

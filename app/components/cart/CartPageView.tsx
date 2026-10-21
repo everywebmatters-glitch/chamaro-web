@@ -18,7 +18,6 @@ import { formatPrice, unitsLeft } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
 import CartNotices from "./CartNotices";
 import { useStore } from "../store/StoreProvider";
-import DiscountForm from "./DiscountForm";
 import FreeShippingProgress from "./FreeShippingProgress";
 
 export default function CartPageView() {
@@ -137,14 +136,6 @@ export default function CartPageView() {
       </table>
 
       <div className="cart-page-layout">
-        {/* Coupon */}
-
-        <div className="cart-coupon">
-          <h3>Have a coupon?</h3>
-          <p>Add your code for an instant cart discount</p>
-          <DiscountForm idPrefix="cart-discount" />
-        </div>
-
         {/* Summary */}
 
         <aside className="cart-summary" aria-label="Order summary">

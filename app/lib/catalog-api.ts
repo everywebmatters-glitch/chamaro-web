@@ -244,6 +244,8 @@ export function toProduct(api: ApiProduct, index = 0): Product {
   }));
 
   return {
+    id: api.id,
+    variantIds: Object.fromEntries(api.variants.filter((variant) => variant.status === "ACTIVE").map((variant) => [variant.name, variant.id])),
     slug: api.slug,
     name: api.name,
     category: api.category.slug,
