@@ -162,7 +162,11 @@ const googleErrors: Record<string, string> = {
   GOOGLE_AUTH_DENIED: "Google sign-in was cancelled.",
   GOOGLE_EMAIL_UNVERIFIED: "Your Google account's email address isn't verified with Google.",
   GOOGLE_ACCOUNT_NOT_LINKED:
-    "An account with this email already exists. Log in with your email and password instead.",
+    "This account can't be signed in with Google here. Log in with your email and password, or contact us for help.",
+  GOOGLE_EMAIL_NEEDS_VERIFICATION:
+    "For your security, please confirm this email address first: on the log in page choose \"Forgot password\", open the link we email you, then try Google again. Your orders and details stay as they are.",
+  GOOGLE_ACCOUNT_CONFLICT:
+    "This Google account is already linked to a different Chamaro account. Sign in with that account, or contact us for help.",
   ACCOUNT_INACTIVE: "This account is inactive. Please contact us for help.",
   OAUTH_CODE_INVALID: "Your Google sign-in link expired. Please try again.",
   PKCE_VERIFIER_MISSING:
