@@ -163,6 +163,8 @@ const googleErrors: Record<string, string> = {
   GOOGLE_EMAIL_UNVERIFIED: "Your Google account's email address isn't verified with Google.",
   GOOGLE_ACCOUNT_NOT_LINKED:
     "This account can't be signed in with Google here. Log in with your email and password, or contact us for help.",
+  GOOGLE_ACCOUNT_ADMIN:
+    "This email belongs to a Chamaro administrator account, which can't be used to shop. Please sign in with a different Google account, or create a customer account with another email.",
   GOOGLE_EMAIL_NEEDS_VERIFICATION:
     "For your security, please confirm this email address first: on the log in page choose \"Forgot password\", open the link we email you, then try Google again. Your orders and details stay as they are.",
   GOOGLE_ACCOUNT_CONFLICT:
