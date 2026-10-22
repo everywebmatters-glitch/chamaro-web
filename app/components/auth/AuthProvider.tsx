@@ -11,6 +11,7 @@ import {
   refreshSession,
   type AuthUser,
 } from "../../lib/auth-api";
+import { createSessionEpoch } from "../../lib/session-epoch";
 import { clearPersonalData, removeLegacyData } from "../../lib/user-storage";
 
 /* =========================================================
@@ -65,6 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const currentToken = useRef<string | null>(null);
   const currentUserId = useRef<string | null>(null);
   const channel = useRef<BroadcastChannel | null>(null);
+  /* Bumped by every sign-in and log out, so a slower session check can't undo them (see lib/session-epoch) */
+  const epoch = useRef(createSessionEpoch());
 
   const show = useCallback((token: string, user: AuthUser) => {
     currentToken.current = token;
@@ -80,11 +83,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /* Ask the API to renew from the session cookie. Returns whether the shopper is signed in afterwards. */
   const refresh = useCallback(async () => {
+    const started = epoch.current.begin();
     try {
       const { token, user } = await refreshSession();
+      /* The shopper signed in or out while this was on its way: that is newer than this answer */
+      if (epoch.current.isStale(started)) return currentToken.current !== null;
       show(token, toAuthUser(user));
       return true;
     } catch (error) {
+      if (epoch.current.isStale(started)) return currentToken.current !== null;
       if (isRejectedToken(error)) {
         signedOut();
         return false;
@@ -97,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /* Explicit log out: end the session on the server, forget this shopper's saved details, tell the other tabs */
   const logout = useCallback(() => {
+    epoch.current.bump();
     clearPersonalData(currentUserId.current);
     signedOut();
     void endSession().catch(() => undefined);
@@ -124,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const establish = useCallback(
     (token: string, user: AuthUser) => {
+      epoch.current.bump();
       show(token, user);
       channel.current?.postMessage("signed-in");
       void verify(token);

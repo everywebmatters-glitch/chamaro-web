@@ -417,6 +417,22 @@ button {
   text-underline-offset: 3px;
 }
 
+.mobile-menu-greeting {
+  color: var(--foreground);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* The log out control is a button that looks like the links beside it */
+button.mobile-menu-register {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mobile-menu {
     transition: none;

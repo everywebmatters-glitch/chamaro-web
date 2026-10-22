@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Heart, Menu, ShoppingBag, UserRound, X } from "lucide-react";
 import { categoryHref, type NavCategory } from "../lib/catalog-nav";
+import { useAuth } from "./auth/AuthProvider";
 import { useStore } from "./store/StoreProvider";
 
 export default function MobileMenu({ categories }: { categories: NavCategory[] }) {
@@ -14,6 +15,7 @@ export default function MobileMenu({ categories }: { categories: NavCategory[] }
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { wishlist, cartCount, openCart } = useStore();
+  const { status, user, logout } = useAuth();
 
   // eslint-disable-next-line react-hooks/set-state-in-effect -- portal target exists only after mount
   useEffect(() => setMounted(true), []);
@@ -120,13 +122,38 @@ export default function MobileMenu({ categories }: { categories: NavCategory[] }
         </div>
 
         <div className="mobile-menu-footer">
-          <Link href="/account/login" className="add-to-cart">
-            <UserRound size={18} aria-hidden="true" />
-            Log in
-          </Link>
-          <Link href="/account/register" className="mobile-menu-register">
-            Create an account
-          </Link>
+          {status === "authenticated" && user ? (
+            <>
+              <p className="mobile-menu-greeting">Hi, {user.name.trim().split(/\s+/)[0]}</p>
+              <Link href="/account" className="add-to-cart">
+                <UserRound size={18} aria-hidden="true" />
+                My account
+              </Link>
+              <Link href="/account/orders" className="mobile-menu-register">
+                My orders
+              </Link>
+              <button
+                type="button"
+                className="mobile-menu-register"
+                onClick={() => {
+                  setOpen(false);
+                  logout();
+                }}
+              >
+                Log out
+              </button>
+            </>
+          ) : status === "unauthenticated" ? (
+            <>
+              <Link href="/account/login" className="add-to-cart">
+                <UserRound size={18} aria-hidden="true" />
+                Log in
+              </Link>
+              <Link href="/account/register" className="mobile-menu-register">
+                Create an account
+              </Link>
+            </>
+          ) : null /* still checking: no flash of Log in / Create an account for someone who is signed in */}
         </div>
       </aside>
     </>
