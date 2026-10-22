@@ -158,12 +158,7 @@ export default function LoginView() {
           </p>
 
           {mode === "login" && (
-            <SocialSignIn
-              action="Log in"
-              include={["google", "apple"]}
-              compact
-              dividerLabel="or continue with"
-            />
+            <SocialSignIn action="Log in" redirect={redirect} dividerLabel="or" />
           )}
         </form>
       </section>

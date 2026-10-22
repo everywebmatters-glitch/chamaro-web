@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { googleErrorMessage } from "../../lib/auth-api";
-import { takeGoogleVerifier } from "../../lib/google-auth";
+import { takeGoogleReturn, takeGoogleVerifier } from "../../lib/google-auth";
 import { useAuth } from "../auth/AuthProvider";
 
 /* Finishes the backend Google flow: #code=... or #error=... in the URL fragment */
@@ -25,6 +25,7 @@ export default function GoogleCallbackView() {
 
     const code = params.get("code");
     const verifier = takeGoogleVerifier();
+    const returnTo = takeGoogleReturn();
 
     const fail = (reason: unknown) => setError(googleErrorMessage(reason));
 
@@ -37,7 +38,7 @@ export default function GoogleCallbackView() {
       return;
     }
 
-    completeGoogleSignIn(code, verifier).then(() => router.replace("/account"), fail);
+    completeGoogleSignIn(code, verifier).then(() => router.replace(returnTo), fail);
   }, [completeGoogleSignIn, router]);
 
   return (

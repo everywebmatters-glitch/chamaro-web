@@ -1,4 +1,5 @@
 import { apiBaseUrl } from "./api";
+import { safeReturnPath } from "./return-path";
 
 /* =========================================================
    GOOGLE SIGN-IN (PKCE)
@@ -13,6 +14,10 @@ import { apiBaseUrl } from "./api";
 ========================================================= */
 
 const VERIFIER_KEY = "chamaro-google-pkce";
+const RETURN_KEY = "chamaro-google-return";
+
+export { safeReturnPath };
+
 
 function base64url(bytes: Uint8Array) {
   let binary = "";
@@ -27,15 +32,28 @@ export async function createPkcePair() {
   return { verifier, challenge: base64url(new Uint8Array(digest)) };
 }
 
-export async function startGoogleSignIn() {
+/* returnTo: the page the shopper was on or headed for (checkout, cart ...); they land back there after Google */
+export async function startGoogleSignIn(returnTo?: string | null) {
   const { verifier, challenge } = await createPkcePair();
   window.sessionStorage.setItem(VERIFIER_KEY, verifier);
+  window.sessionStorage.setItem(RETURN_KEY, safeReturnPath(returnTo));
   // Full-page navigation to the backend API origin (not an internal page): it sets the OAuth
   // state cookie and redirects to Google, which fetch() or the Next router can't do.
   // eslint-disable-next-line @next/next/no-location-assign-relative-destination
   window.location.assign(
     `${apiBaseUrl()}/auth/google?code_challenge=${encodeURIComponent(challenge)}`
   );
+}
+
+/* Where to go after Google sign-in; read once. Falls back to the account page if the tab lost it. */
+export function takeGoogleReturn() {
+  try {
+    const value = window.sessionStorage.getItem(RETURN_KEY);
+    window.sessionStorage.removeItem(RETURN_KEY);
+    return safeReturnPath(value);
+  } catch {
+    return "/account";
+  }
 }
 
 /* Read and remove the verifier in one step so it can only be used once */

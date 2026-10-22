@@ -288,7 +288,7 @@ export default function RegisterView() {
               <span>Or</span>
             </p>
 
-            <SocialSignIn action="Sign up" include={["google", "apple"]} showDivider={false} />
+            <SocialSignIn action="Sign up" redirect={redirect} showDivider={false} />
           </form>
         </section>
       )}

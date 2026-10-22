@@ -49,10 +49,13 @@ export default function SocialSignIn({
   showDivider = true,
   dividerLabel,
   compact = false,
+  redirect,
 }: {
   action: "Log in" | "Sign up";
-  /** Which providers to show — defaults to all three. */
+  /** Which providers to show. Only Google has a working sign-in, so only it is shown unless asked otherwise. */
   include?: ProviderId[];
+  /** Where to send the shopper after signing in (a path on this site) */
+  redirect?: string;
   /** The "or sign up with email" divider only makes sense when the buttons sit above the form. */
   showDivider?: boolean;
   /** Overrides the default "or log in/sign up with email" divider text. */
@@ -61,7 +64,7 @@ export default function SocialSignIn({
   compact?: boolean;
 }) {
   const [notice, setNotice] = useState("");
-  const shownProviders = include ? providers.filter((provider) => include.includes(provider.id)) : providers;
+  const shownProviders = providers.filter((provider) => (include ?? ["google"]).includes(provider.id));
 
   return (
     <div className="social-sign-in">
@@ -81,7 +84,7 @@ export default function SocialSignIn({
             onClick={() => {
               if (provider.id === "google") {
                 setNotice("");
-                startGoogleSignIn().catch(() =>
+                startGoogleSignIn(redirect).catch(() =>
                   setNotice("Google sign-in couldn't start in this browser. Please log in with your email.")
                 );
                 return;
