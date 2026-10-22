@@ -13,14 +13,17 @@ import { findDiscount, lineKey, type CartLine } from "../../lib/cart";
 import { fetchAllProducts, fetchCategories, toProduct } from "../../lib/catalog-api";
 import type { NavCategory } from "../../lib/catalog-nav";
 import { reconcileCart } from "../../lib/cart-reconcile";
+import { STORE_KEY, userKey } from "../../lib/user-storage";
+import { useAuth } from "../auth/AuthProvider";
 import type { Product } from "../../lib/products";
 
 export type { CartLine } from "../../lib/cart";
 
 /* =========================================================
    CART + WISHLIST STORE
-   Client-only, persisted to localStorage. Only slugs are saved;
-   names, prices and images come from the live API catalog.
+   Client-only, persisted to localStorage under a key that carries the signed-in user's id ("guest" before sign-in), so
+   one person's cart and wishlist are never shown to the next person on the same browser. A cart built as a guest is
+   merged into the account's cart at sign-in. Only slugs are saved; names, prices and images come from the live API.
    TODO: sync with a server cart once checkout exists
 ========================================================= */
 
@@ -58,7 +61,8 @@ type StoreContextValue = {
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
-const STORAGE_KEY = "chamaro-store-v1";
+/* owner: a user id, or null for a guest */
+type Owner = string | null;
 
 type Saved = {
   cart: CartLine[];
@@ -67,10 +71,10 @@ type Saved = {
   discountCode: string;
 };
 
-function readStorage(): Saved {
+function readStorage(owner: Owner): Saved {
   const empty: Saved = { cart: [], wishlist: [], orderNote: "", discountCode: "" };
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(userKey(STORE_KEY, owner));
     if (!raw) return empty;
     const parsed = JSON.parse(raw);
     return {
@@ -84,12 +88,29 @@ function readStorage(): Saved {
   }
 }
 
+/* A guest's lines join the account's cart; a line both have keeps the larger quantity */
+function mergeCarts(account: CartLine[], guest: CartLine[]): CartLine[] {
+  const merged = new Map(account.map((line) => [lineKey(line), line]));
+  for (const line of guest) {
+    const existing = merged.get(lineKey(line));
+    if (!existing) merged.set(lineKey(line), line);
+    else if (line.quantity > existing.quantity) merged.set(lineKey(line), { ...existing, quantity: line.quantity });
+  }
+  return [...merged.values()];
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const { status, user } = useAuth();
+  /* undefined while the sign-in state is still being worked out */
+  const owner: Owner | undefined = status === "loading" ? undefined : (user?.id ?? null);
+  const previousOwner = useRef<Owner | undefined>(undefined);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [orderNote, setOrderNote] = useState("");
   const [discountCode, setDiscountCode] = useState("");
-  const [hydrated, setHydrated] = useState(false);
+  /* Whose saved data the state below currently holds */
+  const [loadedOwner, setLoadedOwner] = useState<Owner | undefined>(undefined);
+  const hydrated = owner !== undefined && loadedOwner === owner;
   const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [catalog, setCatalog] = useState<Product[] | null>(null);
@@ -114,30 +135,46 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  /* Load saved state after mount so server and client HTML match */
   useEffect(() => {
-    const saved = readStorage();
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage
-    setCart(saved.cart);
-    setWishlist(saved.wishlist);
-    setOrderNote(saved.orderNote);
-    setDiscountCode(saved.discountCode);
-    setHydrated(true);
     loadCatalog();
     loadCategories();
   }, [loadCatalog, loadCategories]);
 
+  /* Load the saved state of whoever is signed in (or the guest) after mount, so server and client HTML match. When the
+     signed-in user changes (sign-in, log out) the previous person's data is replaced, never carried over. */
   useEffect(() => {
-    if (!hydrated) return;
+    if (owner === undefined) return;
+    const before = previousOwner.current;
+    previousOwner.current = owner;
+    let saved = readStorage(owner);
+    if (owner !== null && before === null) {
+      const guest = readStorage(null);
+      if (guest.cart.length > 0) saved = { ...saved, cart: mergeCarts(saved.cart, guest.cart) };
+      try {
+        window.localStorage.removeItem(userKey(STORE_KEY, null));
+      } catch {
+        /* storage unavailable */
+      }
+    }
+    setCart(saved.cart);
+    setWishlist(saved.wishlist);
+    setOrderNote(saved.orderNote);
+    setDiscountCode(saved.discountCode);
+    setLoadedOwner(owner);
+  }, [owner]);
+
+  /* Save only once the state holds this owner's data, and only under this owner's key */
+  useEffect(() => {
+    if (!hydrated || owner === undefined) return;
     try {
       window.localStorage.setItem(
-        STORAGE_KEY,
+        userKey(STORE_KEY, owner),
         JSON.stringify({ cart, wishlist, orderNote, discountCode })
       );
     } catch {
       /* storage unavailable (private mode) — keep in memory only */
     }
-  }, [cart, wishlist, orderNote, discountCode, hydrated]);
+  }, [cart, wishlist, orderNote, discountCode, hydrated, owner]);
 
   /* Once the live catalog is known, drop cart lines whose product is gone or out of stock and trim
      quantities to the units left, telling the shopper instead of failing at checkout */

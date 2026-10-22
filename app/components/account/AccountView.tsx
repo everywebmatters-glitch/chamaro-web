@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
+import { SAVED_INFO_KEY, userKey } from "../../lib/user-storage";
 import { useStore } from "../store/StoreProvider";
 import AuthField, { ACCOUNT_SAVE_UNAVAILABLE, EMAIL_PATTERN, MIN_PASSWORD } from "./AuthField";
 import OrdersList from "./OrdersList";
 
 /* Written by checkout when the shopper ticks "Save this information" */
-const SAVED_ADDRESS_KEY = "chamaro-checkout-info";
+/* Saved delivery details are kept per signed-in user (see lib/user-storage) */
 
 type SavedAddress = {
   firstName?: string;
@@ -67,20 +68,23 @@ function Addresses() {
   const [saved, setSaved] = useState<SavedAddress | null>(null);
   const [loaded, setLoaded] = useState(false);
 
+  const { user } = useAuth();
+  const savedKey = user ? userKey(SAVED_INFO_KEY, user.id) : null;
+
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(SAVED_ADDRESS_KEY);
+      const raw = savedKey ? window.localStorage.getItem(savedKey) : null;
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from localStorage
       if (raw) setSaved(JSON.parse(raw));
     } catch {
       /* storage unavailable */
     }
     setLoaded(true);
-  }, []);
+  }, [savedKey]);
 
   const remove = () => {
     try {
-      window.localStorage.removeItem(SAVED_ADDRESS_KEY);
+      if (savedKey) window.localStorage.removeItem(savedKey);
     } catch {
       /* storage unavailable */
     }

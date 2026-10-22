@@ -4,10 +4,10 @@ import { ApiError, apiRequest } from "./api";
    CUSTOMER AUTH API
    Contract from backend src/modules/auth (auth.schema.ts):
    - register returns the new user only (no token)
-   - login and the Google exchange return a Bearer JWT
-     (8h, no refresh) + the user
+   - login and the Google exchange return a 30-minute Bearer JWT
+     + the user, and set an HttpOnly session cookie
+   - /auth/refresh renews the JWT from that cookie; /auth/logout ends it
    - /auth/me verifies a token for an active CUSTOMER
-   - there is no logout endpoint
 ========================================================= */
 
 export type AuthUser = {
@@ -33,12 +33,26 @@ export type GoogleExchangeResult = {
   user: Omit<AuthUser, "role"> & { role: "CUSTOMER" | "ADMIN" };
 };
 
+/* credentials: "include" lets the browser store and send the HttpOnly session cookie the API sets at sign-in */
 function postJson<T>(path: string, body: unknown) {
   return apiRequest<T>(path, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+}
+
+/* POST /api/v1/auth/refresh — no body; the persistent session cookie is the credential. Returns a fresh
+   30-minute access token and the user, or 401 SESSION_INVALID when there is no live session. */
+export async function refreshSession() {
+  const { data } = await apiRequest<LoginResult>("/auth/refresh", { method: "POST", credentials: "include" });
+  return data;
+}
+
+/* POST /api/v1/auth/logout — ends the session on the server and clears its cookie */
+export async function endSession() {
+  await apiRequest<{ loggedOut: boolean }>("/auth/logout", { method: "POST", credentials: "include" });
 }
 
 /* POST /api/v1/auth/register/send-otp — { email }. Emails a 6-digit sign-up code. Same answer whether or

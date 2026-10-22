@@ -39,6 +39,7 @@ import {
 } from "../../lib/checkout-flow";
 import { formatPrice } from "../../lib/products";
 import { payWithRazorpay } from "../../lib/razorpay";
+import { SAVED_INFO_KEY, userKey } from "../../lib/user-storage";
 import { useAuth } from "../auth/AuthProvider";
 import Modal from "../Modal";
 import { useStore } from "../store/StoreProvider";
@@ -122,7 +123,7 @@ const EMPTY: Form = {
   saveInfo: false,
 };
 
-const SAVED_KEY = "chamaro-checkout-info";
+/* Saved delivery details are kept per signed-in user (see lib/user-storage) */
 
 
 function validate(form: Form) {
@@ -188,16 +189,18 @@ export default function CheckoutView() {
   /* Guards against a double click starting two payment flows */
   const busy = useRef(false);
 
-  /* Restore saved delivery details */
+  /* Restore this user's saved delivery details (never another person's) */
+  const savedKey = user ? userKey(SAVED_INFO_KEY, user.id) : null;
   useEffect(() => {
+    if (!savedKey) return;
     try {
-      const saved = window.localStorage.getItem(SAVED_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from localStorage
+      const saved = window.localStorage.getItem(savedKey);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore from localStorage once the user is known
       if (saved) setForm({ ...EMPTY, ...JSON.parse(saved), saveInfo: true });
     } catch {
       /* storage unavailable */
     }
-  }, []);
+  }, [savedKey]);
 
   const lines = resolveLines(cart, findProduct);
   const subtotal = cartSubtotal(lines);
@@ -309,14 +312,14 @@ export default function CheckoutView() {
     }
 
     try {
-      if (form.saveInfo) {
+      if (savedKey && form.saveInfo) {
         const { contact, firstName, lastName, address, apartment, city, state, pin, phone } = form;
         window.localStorage.setItem(
-          SAVED_KEY,
+          savedKey,
           JSON.stringify({ contact, firstName, lastName, address, apartment, city, state, pin, phone })
         );
-      } else {
-        window.localStorage.removeItem(SAVED_KEY);
+      } else if (savedKey) {
+        window.localStorage.removeItem(savedKey);
       }
     } catch {
       /* storage unavailable */
