@@ -7,7 +7,7 @@ const MAP_QUERY = "No.8/390 & 8/391, Kaviyarasu Kannadhasan Nagar Kodungaiyur, C
 export const contact = {
   address: [
     "No.8/390 & 8/391, Kaviyarasu",
-    " Kannadhasan Nagar Kodungaiyur,",
+    " Kannadhasan Nagar, Kodungaiyur,",
     "Chennai - 600118, Tamil Nadu.",
   ],
   email: "chamarochairs@gmail.com",

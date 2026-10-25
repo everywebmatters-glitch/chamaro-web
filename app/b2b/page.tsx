@@ -97,8 +97,10 @@ export default async function B2BPage() {
         {/* Quote form and direct contact */}
         <section className="b2b-section b2b-request-section" aria-labelledby="b2b-quote-title">
           <div className="b2b-quote" id="quote">
+            <h2 className="b2b-quote-title" id="b2b-quote-title">
+              Tell Us What Your Business Needs
+            </h2>
             <div className="b2b-quote-form">
-              <h2 id="b2b-quote-title">Tell Us What Your Business Needs</h2>
               <QuoteForm />
             </div>
 
