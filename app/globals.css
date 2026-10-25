@@ -6482,6 +6482,10 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
     padding-top: 32px;
   }
 
+  .checkout-form .checkbox-row {
+    justify-content: center;
+  }
+
   .checkout-summary-inner {
     padding-bottom: 32px;
     padding-top: 32px;
