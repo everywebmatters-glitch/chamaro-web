@@ -2,8 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Banknote, CircleHelp, CreditCard, Lock, Smartphone } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CircleHelp, Lock, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ApiError } from "../../lib/api";
+import {
+  createCheckoutOrder,
+  createCheckoutAddress,
+  getCheckoutOrder,
+  listCheckoutAddresses,
+  openRazorpayPayment,
+  replaceCheckoutCart,
+  requestCheckoutOtp,
+  verifyCheckoutOtp,
+  verifyRazorpayPayment,
+  type CheckoutAddressInput,
+  type RazorpayPaymentCallback,
+} from "../../lib/checkout-api";
 import {
   cartSubtotal,
   isChairProduct,
@@ -22,12 +36,45 @@ import Modal from "../Modal";
 import { useStore } from "../store/StoreProvider";
 import { EMAIL_PATTERN, GSTIN_PATTERN, PHONE_PATTERN } from "../../lib/site";
 
-/* =========================================================
-   CHECKOUT
-   TODO: connect a payment gateway (e.g. Razorpay) and an
-   orders API. Until then the form validates but does not
-   place orders or take payment.
-========================================================= */
+declare global {
+  interface Window {
+    Razorpay?: new (options: RazorpayOptions) => RazorpayInstance;
+  }
+}
+
+type RazorpaySuccess = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayFailure = {
+  error?: {
+    description?: string;
+    reason?: string;
+  };
+};
+
+type RazorpayOptions = {
+  key: string;
+  amount: number;
+  currency: string;
+  timeout: number;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: { name: string; email: string; contact: string };
+  notes: { orderId: string };
+  retry: { enabled: boolean };
+  theme: { color: string };
+  handler: (response: RazorpaySuccess) => void;
+  modal: { ondismiss: () => void; confirm_close: boolean };
+};
+
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: "payment.failed", listener: (response: RazorpayFailure) => void) => void;
+};
 
 type Form = {
   contact: string;
@@ -45,8 +92,6 @@ type Form = {
   gstin: string;
   saveInfo: boolean;
 };
-
-type PaymentMethod = "upi" | "card" | "cod";
 
 const EMPTY: Form = {
   contact: "",
@@ -66,12 +111,160 @@ const EMPTY: Form = {
 };
 
 const SAVED_KEY = "chamaro-checkout-info";
+const ORDER_KEY_PREFIX = "chamaro-checkout-order:";
+const PAID_ORDER_PREFIX = "chamaro-checkout-paid:";
 
-const PAYMENT_METHODS: { id: PaymentMethod; label: string; icon: typeof CreditCard }[] = [
-  { id: "upi", label: "UPI (GPay, PhonePe, Paytm)", icon: Smartphone },
-  { id: "card", label: "Credit / debit card", icon: CreditCard },
-  { id: "cod", label: "Cash on delivery", icon: Banknote },
-];
+type CheckoutAttempt = {
+  userId: string;
+  fingerprint: string;
+  idempotencyKey: string;
+  orderId?: string;
+  total?: string;
+};
+
+type CheckoutConfirmation = { orderId: string; message: string };
+
+let razorpayScript: Promise<void> | undefined;
+
+function loadRazorpay() {
+  if (window.Razorpay) return Promise.resolve();
+  if (razorpayScript) return razorpayScript;
+  razorpayScript = new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.Razorpay) resolve();
+      else {
+        razorpayScript = undefined;
+        reject(new Error("The payment window could not be loaded. Please try again."));
+      }
+    };
+    script.onerror = () => {
+      razorpayScript = undefined;
+      reject(new Error("The payment window could not be loaded. Check your connection and try again."));
+    };
+    document.head.appendChild(script);
+  });
+  return razorpayScript;
+}
+
+function newCheckoutKey() {
+  return typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function readCheckoutAttempt(storageKey: string): CheckoutAttempt | null {
+  try {
+    const value: unknown = JSON.parse(window.sessionStorage.getItem(storageKey) ?? "null");
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      "userId" in value &&
+      "fingerprint" in value &&
+      "idempotencyKey" in value &&
+      typeof value.userId === "string" &&
+      typeof value.fingerprint === "string" &&
+      typeof value.idempotencyKey === "string"
+    ) {
+      return {
+        userId: value.userId,
+        fingerprint: value.fingerprint,
+        idempotencyKey: value.idempotencyKey,
+        ...("orderId" in value && typeof value.orderId === "string" ? { orderId: value.orderId } : {}),
+        ...("total" in value && typeof value.total === "string" ? { total: value.total } : {}),
+      };
+    }
+  } catch {
+    /* storage unavailable or contains an older checkout key */
+  }
+  return null;
+}
+
+function writeCheckoutAttempt(storageKey: string, attempt: CheckoutAttempt | null) {
+  try {
+    if (attempt) window.sessionStorage.setItem(storageKey, JSON.stringify(attempt));
+    else window.sessionStorage.removeItem(storageKey);
+  } catch {
+    /* the in-memory attempt still protects retries in this page */
+  }
+}
+
+function readCheckoutConfirmation(storageKey: string): CheckoutConfirmation | null {
+  try {
+    const saved = window.sessionStorage.getItem(storageKey);
+    if (!saved) return null;
+    let value: unknown;
+    try {
+      value = JSON.parse(saved);
+    } catch {
+      return { orderId: saved, message: "Payment received. Your order is confirmed." };
+    }
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      "orderId" in value &&
+      "message" in value &&
+      typeof value.orderId === "string" &&
+      typeof value.message === "string"
+    ) {
+      return { orderId: value.orderId, message: value.message };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function paymentOutcomeMessage(outcome: string) {
+  switch (outcome) {
+    case "paid":
+    case "already_paid":
+      return { done: true, message: "Payment received. Your order is confirmed, and we've emailed you the details." };
+    case "pending":
+      return { done: true, message: "Your payment is being confirmed. We'll email you as soon as it is; there's no need to pay again." };
+    case "review":
+      return { done: true, message: "We received your payment but need to check it before confirming your order. We'll be in touch; please don't pay again." };
+    case "failed":
+      return { done: false, message: "The payment didn't go through. You can try again." };
+    case "refunded":
+      return { done: true, message: "This payment was refunded. Contact us if you need help with your order." };
+    default:
+      return { done: false, message: "We couldn't confirm the payment yet. Please check your orders before trying again." };
+  }
+}
+
+function checkoutErrorMessage(error: unknown) {
+  if (error instanceof ApiError) {
+    const messages: Record<string, string> = {
+      UNAUTHENTICATED: "Your session has ended. Please sign in again to pay.",
+      INVALID_TOKEN: "Your session has ended. Please sign in again to pay.",
+      CHECKOUT_NOT_VERIFIED: "Verify the code sent to your account email before paying.",
+      OTP_INVALID: "That code isn't right. Check the email and try again.",
+      OTP_EXPIRED: "That code has expired. Send a new one.",
+      OTP_MAX_ATTEMPTS: "Too many incorrect attempts. Send a new code.",
+      OTP_RESEND_COOLDOWN: "Please wait before asking for another code.",
+      CART_EMPTY: "Your cart is empty.",
+      ORDER_PAYMENT_EXPIRED: "The payment window expired. Check your orders before making another payment.",
+      ORDER_NOT_PAYABLE: "This order can no longer be paid. Please check your orders.",
+      PAYMENT_IN_PROGRESS: "A payment for this order is still being confirmed. Please don't try to pay again yet.",
+      PAYMENTS_NOT_CONFIGURED: "Online payment isn't available right now. Please try again later or contact us.",
+      PAYMENTS_LIVE_MODE_BLOCKED: "Online payment isn't available right now. Please contact us.",
+      PAYMENT_PROVIDER_UNAVAILABLE: "The payment service is temporarily unavailable. Please try again.",
+      PAYMENT_PROVIDER_ERROR: "The payment service couldn't start checkout. Please try again.",
+      PAYMENT_GATEWAY_UNAVAILABLE: "The payment service couldn't be reached. Please check your orders before trying again.",
+      PAYMENT_NOT_CAPTURED: "The payment is not complete yet. Please try again.",
+      PAYMENT_SIGNATURE_INVALID: "We couldn't verify this payment. Check your orders before trying again; if money was taken, it will be confirmed or returned automatically.",
+      PAYMENT_PROCESSING: "Your payment is still being confirmed. Refresh this page to check its status before retrying.",
+      INSUFFICIENT_STOCK: "There isn't enough stock to complete this order.",
+      ITEM_UNAVAILABLE: "A product in your cart is no longer available.",
+      COUPON_NOT_APPLICABLE: "The coupon is no longer valid for this cart. Remove it and try again.",
+    };
+    return messages[error.code] ?? error.message.replace(/\s\(\d+ [A-Z_]+\) — .*$/, "");
+  }
+  return error instanceof Error ? error.message : "We couldn't complete checkout. Please try again.";
+}
 
 function validate(form: Form) {
   const errors: Partial<Record<keyof Form, string>> = {};
@@ -120,15 +313,67 @@ function Field({
 }
 
 export default function CheckoutView() {
-  const { catalog, catalogFailed, findProduct, cart, hydrated, discountCustomerId, appliedDiscountTotal, orderNote } =
-    useStore();
-  const { status: authStatus, user } = useAuth();
+  const {
+    catalog,
+    catalogFailed,
+    findProduct,
+    cart,
+    hydrated,
+    discountCode,
+    discountCustomerId,
+    appliedDiscountTotal,
+    orderNote,
+    clearCart,
+  } = useStore();
+  const { status: authStatus, user, token } = useAuth();
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
   const [shipping, setShipping] = useState<ShippingMethodId>("standard");
-  const [payment, setPayment] = useState<PaymentMethod>("upi");
   const [notice, setNotice] = useState("");
   const [authGateDismissed, setAuthGateDismissed] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [startingPayment, setStartingPayment] = useState(false);
+  const [paidOrderId, setPaidOrderId] = useState("");
+  const [paidOrderMessage, setPaidOrderMessage] = useState("");
+  const [serverTotal, setServerTotal] = useState<number | null>(null);
+  const checkoutAttemptRef = useRef<CheckoutAttempt | null>(null);
+  const paymentCallbackStarted = useRef(false);
+  const paymentFailureMessage = useRef("");
+
+  const clearCheckoutAttempt = useCallback((userId: string) => {
+    if (checkoutAttemptRef.current?.userId === userId) checkoutAttemptRef.current = null;
+    writeCheckoutAttempt(`${ORDER_KEY_PREFIX}${userId}`, null);
+  }, []);
+
+  function getCheckoutAttempt(userId: string, fingerprint: string) {
+    const storageKey = `${ORDER_KEY_PREFIX}${userId}`;
+    const existing = checkoutAttemptRef.current ?? readCheckoutAttempt(storageKey);
+    if (existing?.userId === userId && existing.fingerprint === fingerprint) {
+      checkoutAttemptRef.current = existing;
+      return existing;
+    }
+    const attempt: CheckoutAttempt = { userId, fingerprint, idempotencyKey: newCheckoutKey() };
+    checkoutAttemptRef.current = attempt;
+    writeCheckoutAttempt(storageKey, attempt);
+    return attempt;
+  }
+
+  const showPaymentConfirmation = useCallback((orderId: string, message: string, userId: string) => {
+    const confirmation = { orderId, message };
+    clearCart();
+    clearCheckoutAttempt(userId);
+    try {
+      window.sessionStorage.setItem(`${PAID_ORDER_PREFIX}${userId}`, JSON.stringify(confirmation));
+    } catch {
+      /* the confirmation remains visible for this page */
+    }
+    setPaidOrderId(orderId);
+    setPaidOrderMessage(message);
+  }, [clearCart, clearCheckoutAttempt]);
 
   /* Restore saved delivery details */
   useEffect(() => {
@@ -141,6 +386,49 @@ export default function CheckoutView() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!user || !token) return;
+    let cancelled = false;
+    try {
+      const savedOrder = readCheckoutConfirmation(`${PAID_ORDER_PREFIX}${user.id}`);
+      if (savedOrder) {
+        queueMicrotask(() => {
+          if (cancelled) return;
+          clearCart();
+          clearCheckoutAttempt(user.id);
+          setPaidOrderId(savedOrder.orderId);
+          setPaidOrderMessage(savedOrder.message);
+        });
+        void getCheckoutOrder(token, savedOrder.orderId)
+          .then((order) => {
+            if (!cancelled && order.paymentStatus === "PAID") {
+              setPaidOrderMessage("Payment received. Your order is confirmed, and we've emailed you the details.");
+            }
+          })
+          .catch((error: unknown) => {
+            if (!cancelled) setNotice(checkoutErrorMessage(error));
+          });
+        return () => { cancelled = true; };
+      }
+      const attempt = readCheckoutAttempt(`${ORDER_KEY_PREFIX}${user.id}`);
+      if (attempt?.orderId) {
+        void getCheckoutOrder(token, attempt.orderId)
+          .then((order) => {
+            if (cancelled || order.paymentStatus !== "PAID") return;
+            showPaymentConfirmation(order.id, "Payment received. Your order is confirmed, and we've emailed you the details.", user.id);
+          })
+          .catch((error: unknown) => {
+            if (!cancelled) setNotice(checkoutErrorMessage(error));
+          });
+      }
+    } catch {
+      queueMicrotask(() => {
+        if (!cancelled) setNotice("We couldn't restore your payment status. Check your order before trying another payment.");
+      });
+    }
+    return () => { cancelled = true; };
+  }, [user, token, clearCart, clearCheckoutAttempt, showPaymentConfirmation]);
+
   const lines = resolveLines(cart, findProduct);
   const subtotal = cartSubtotal(lines);
   const chairCount = lines.reduce((count, line) => count + (isChairProduct(line.product) ? line.quantity : 0), 0);
@@ -150,11 +438,13 @@ export default function CheckoutView() {
     form.address.trim() && form.city.trim() && form.state && PIN_CODE_PATTERN.test(form.pin);
   const shippingPrice = addressReady ? shippingCost(shipping, chairCount) : undefined;
   const total = subtotal - discount + (shippingPrice ?? 0);
+  const displayTotal = serverTotal ?? total;
   const itemCount = lines.reduce((count, line) => count + line.quantity, 0);
   const showAuthGate = authStatus === "unauthenticated" && !authGateDismissed;
 
   const update = <K extends keyof Form>(key: K, value: Form[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
+    setServerTotal(null);
     setNotice("");
   };
 
@@ -170,15 +460,66 @@ export default function CheckoutView() {
     "aria-describedby": errorFor(key) ? `checkout-${key}-error` : undefined,
   });
 
-  const submit = (event: React.FormEvent) => {
+  async function sendCheckoutCode() {
+    if (!token || !user) {
+      setNotice("Sign in to verify your account before paying.");
+      return;
+    }
+    setSendingOtp(true);
+    setNotice("");
+    setOtpVerified(false);
+    try {
+      await requestCheckoutOtp(token);
+      setOtpSent(true);
+      setOtpCode("");
+      setNotice(`A verification code was sent to ${user.email}.`);
+    } catch (error) {
+      setNotice(checkoutErrorMessage(error));
+    } finally {
+      setSendingOtp(false);
+    }
+  }
+
+  async function verifyCheckoutCode() {
+    if (!token) {
+      setNotice("Sign in to verify your account before paying.");
+      return;
+    }
+    if (!/^\d{6}$/.test(otpCode)) {
+      setNotice("Enter the six-digit code from your email.");
+      return;
+    }
+    setVerifyingOtp(true);
+    setNotice("");
+    try {
+      await verifyCheckoutOtp(token, otpCode);
+      setOtpVerified(true);
+      setNotice("Your email is verified for this payment. Complete checkout before the code expires.");
+    } catch (error) {
+      setOtpVerified(false);
+      setNotice(checkoutErrorMessage(error));
+    } finally {
+      setVerifyingOtp(false);
+    }
+  }
+
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setTouched(true);
 
+    if (authStatus !== "authenticated" || !token || !user) {
+      setNotice("Sign in or create an account to pay securely.");
+      return;
+    }
     if (Object.keys(errors).length > 0) {
       setNotice("");
       /* Move focus to the first invalid field */
       const first = Object.keys(errors)[0];
       document.getElementById(`checkout-${first}`)?.focus();
+      return;
+    }
+    if (!otpVerified) {
+      setNotice(`Verify the code sent to ${user.email} before paying.`);
       return;
     }
 
@@ -196,11 +537,168 @@ export default function CheckoutView() {
       /* storage unavailable */
     }
 
-    /* TODO: create the order and hand off to the payment gateway here */
-    void orderNote;
-    setNotice(
-      "Your details look good. Online payment isn't connected yet, so this order hasn't been placed — please contact us to complete your purchase."
-    );
+    setStartingPayment(true);
+    setNotice("");
+    setOtpVerified(false);
+    paymentCallbackStarted.current = false;
+    paymentFailureMessage.current = "";
+
+    try {
+      const addressInput: CheckoutAddressInput = {
+        name: [form.firstName.trim(), form.lastName.trim()].filter(Boolean).join(" "),
+        phone: form.phone.trim(),
+        addressLine1: form.address.trim(),
+        addressLine2: form.apartment.trim(),
+        city: form.city.trim(),
+        state: form.state,
+        postalCode: form.pin,
+        country: "IN",
+        type: "SHIPPING",
+      };
+      const items = lines.map((line) => {
+        if (!line.product.apiId) throw new Error("A product in your cart is missing its server ID. Refresh the cart and try again.");
+        return {
+          productId: line.product.apiId,
+          ...(line.variant?.id ? { variantId: line.variant.id } : {}),
+          quantity: line.quantity,
+        };
+      });
+      const invoiceNote = form.needGst
+        ? `GST invoice: ${form.company.trim()}, GSTIN ${form.gstin.trim().toUpperCase()}`
+        : "";
+      const note = [orderNote.trim(), invoiceNote].filter(Boolean).join("\n").slice(0, 500);
+      const couponCode = discountCustomerId === user.id ? discountCode : "";
+      const fingerprint = JSON.stringify({ items, address: addressInput, shipping, note, couponCode });
+      let attempt = getCheckoutAttempt(user.id, fingerprint);
+
+      if (!attempt.orderId) {
+        await replaceCheckoutCart(token, items);
+        const addresses = await listCheckoutAddresses(token);
+        const address = addresses.find((saved) =>
+          saved.name === addressInput.name &&
+          saved.phone === addressInput.phone &&
+          saved.addressLine1 === addressInput.addressLine1 &&
+          (saved.addressLine2 ?? "") === (addressInput.addressLine2 ?? "") &&
+          saved.city === addressInput.city &&
+          saved.state === addressInput.state &&
+          saved.postalCode === addressInput.postalCode &&
+          saved.country === addressInput.country &&
+          saved.type === "SHIPPING"
+        ) ?? await createCheckoutAddress(token, addressInput);
+        const order = await createCheckoutOrder(token, attempt.idempotencyKey, {
+          addressId: address.id,
+          shippingMethod: shipping,
+          ...(note ? { note } : {}),
+          ...(couponCode ? { couponCode } : {}),
+        });
+        attempt = { ...attempt, orderId: order.id, total: order.total };
+        checkoutAttemptRef.current = attempt;
+        writeCheckoutAttempt(`${ORDER_KEY_PREFIX}${user.id}`, attempt);
+      }
+
+      if (!attempt.orderId) throw new Error("We couldn't create your order. Please try again.");
+      const orderId = attempt.orderId;
+      setServerTotal(attempt.total ? Number(attempt.total) : null);
+      let paymentSession: Awaited<ReturnType<typeof openRazorpayPayment>>;
+      try {
+        paymentSession = await openRazorpayPayment(token, orderId);
+      } catch (error) {
+        if (error instanceof ApiError && (error.code === "ORDER_PAYMENT_EXPIRED" || error.code === "ORDER_NOT_PAYABLE")) {
+          try {
+            const order = await getCheckoutOrder(token, orderId);
+            if (order.paymentStatus === "PAID") {
+              showPaymentConfirmation(order.id, "Payment received. Your order is confirmed, and we've emailed you the details.", user.id);
+              return;
+            }
+            if (order.status === "CANCELLED") clearCheckoutAttempt(user.id);
+          } catch {
+            /* keep the stored attempt if its payment status couldn't be checked */
+          }
+        }
+        throw error;
+      }
+
+      await loadRazorpay();
+      if (!window.Razorpay) throw new Error("The payment window could not be loaded. Please try again.");
+
+      const instance = new window.Razorpay({
+        key: paymentSession.keyId,
+        amount: paymentSession.amount,
+        currency: paymentSession.currency,
+        timeout: paymentSession.timeoutSeconds,
+        name: "Chamaro",
+        description: `Order ${orderId}`,
+        order_id: paymentSession.razorpayOrderId,
+        prefill: {
+          name: addressInput.name,
+          email: user.email,
+          contact: `+91${form.phone.replace(/\D/g, "").slice(-10)}`,
+        },
+        notes: { orderId },
+        retry: { enabled: true },
+        theme: { color: "#62574c" },
+        handler: (response) => {
+          paymentCallbackStarted.current = true;
+          void (async () => {
+            setStartingPayment(true);
+            try {
+              const callback: RazorpayPaymentCallback = {
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              };
+              const result = await verifyRazorpayPayment(token, orderId, callback);
+              const outcome = paymentOutcomeMessage(result.outcome);
+              if (!outcome.done) {
+                setNotice(outcome.message);
+                return;
+              }
+              showPaymentConfirmation(orderId, outcome.message, user.id);
+              setNotice("");
+            } catch (error) {
+              if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+                showPaymentConfirmation(
+                  orderId,
+                  "Your payment is being confirmed. We'll email you as soon as it is; please don't pay again.",
+                  user.id,
+                );
+                setNotice("");
+              } else {
+                setNotice(checkoutErrorMessage(error));
+              }
+            } finally {
+              setStartingPayment(false);
+              setOtpSent(false);
+              setOtpCode("");
+            }
+          })();
+        },
+        modal: {
+          ondismiss: () => {
+            if (!paymentCallbackStarted.current) {
+              setNotice(paymentFailureMessage.current
+                ? "The payment didn't go through. You can try again."
+                : "Payment window closed. If you completed payment, refresh this page to check its status before trying again.");
+            }
+            setOtpVerified(false);
+            setOtpSent(false);
+            setOtpCode("");
+            setStartingPayment(false);
+          },
+          confirm_close: true,
+        },
+      });
+      instance.on("payment.failed", (response) => {
+        paymentFailureMessage.current = response.error?.description ?? response.error?.reason ?? "payment_failed";
+      });
+      instance.open();
+      setStartingPayment(false);
+    } catch (error) {
+      setNotice(checkoutErrorMessage(error));
+      setStartingPayment(false);
+      setOtpSent(false);
+      setOtpCode("");
+    }
   };
 
   if (!hydrated || (cart.length > 0 && !catalog && !catalogFailed)) {
@@ -215,6 +713,33 @@ export default function CheckoutView() {
         <button type="button" className="add-to-cart" onClick={() => window.location.reload()}>
           Try again
         </button>
+      </div>
+    );
+  }
+
+  if (paidOrderId) {
+    return (
+      <div className="cart-empty cart-empty-page">
+        <h1>Thank you for your order</h1>
+        <p>{paidOrderMessage}</p>
+        <p>Order reference: {paidOrderId}</p>
+        <Link
+          href="/products"
+          className="add-to-cart"
+          onClick={() => {
+            if (user) {
+              try {
+                window.sessionStorage.removeItem(`${PAID_ORDER_PREFIX}${user.id}`);
+              } catch {
+                /* session storage unavailable */
+              }
+            }
+            setPaidOrderId("");
+            setPaidOrderMessage("");
+          }}
+        >
+          Continue shopping
+        </Link>
       </div>
     );
   }
@@ -239,8 +764,8 @@ export default function CheckoutView() {
         title="Sign in to check out"
         className="auth-gate-modal info-modal"
       >
-        <h2>Sign in to check out</h2>
-        <p>Log in or create an account to track this order, save your details and check out faster next time.</p>
+        <h2>Sign in to pay</h2>
+        <p>Secure online checkout requires a Chamaro customer account so your order and payment can be verified.</p>
 
         <div className="auth-gate-actions">
           <Link href="/account/login?redirect=/checkout" className="add-to-cart">
@@ -250,10 +775,6 @@ export default function CheckoutView() {
             Create account
           </Link>
         </div>
-
-        <button type="button" className="auth-link-button" onClick={() => setAuthGateDismissed(true)}>
-          Continue as guest
-        </button>
       </Modal>
 
       <div className="checkout-layout">
@@ -273,7 +794,7 @@ export default function CheckoutView() {
             <input {...inputProps("contact")} autoComplete="email" />
             <span
               className="field-help"
-              title="We'll send your order confirmation and delivery updates here."
+              title="Checkout verification and order updates are sent to your signed-in account email."
             >
               <CircleHelp size={18} aria-hidden="true" />
             </span>
@@ -404,7 +925,10 @@ export default function CheckoutView() {
                       name="shipping"
                       value={method.id}
                       checked={shipping === method.id}
-                      onChange={() => setShipping(method.id)}
+                      onChange={() => {
+                        setShipping(method.id);
+                        setServerTotal(null);
+                      }}
                     />
                     <span>
                       {method.label}
@@ -430,25 +954,51 @@ export default function CheckoutView() {
             <Lock size={14} aria-hidden="true" /> All transactions are secure and encrypted.
           </p>
 
-          <div className="option-list">
-            {PAYMENT_METHODS.map(({ id, label, icon: Icon }) => (
-              <label key={id} className={payment === id ? "selected" : ""}>
+          <p className="checkout-placeholder">
+            Pay securely by UPI, card, net banking or other methods using Razorpay. We&apos;ll send a one-time verification code to your account email before opening payment.
+          </p>
+
+          {!otpVerified && (
+            <button
+              type="button"
+              className="auth-link-button"
+              onClick={() => void sendCheckoutCode()}
+              disabled={sendingOtp || verifyingOtp || authStatus !== "authenticated"}
+            >
+              {sendingOtp ? "Sending code..." : otpSent ? "Send a new code" : "Send verification code"}
+            </button>
+          )}
+
+          {otpSent && !otpVerified && (
+            <div className="field-row">
+              <Field id="checkout-otp" label="Six-digit email code">
                 <input
-                  type="radio"
-                  name="payment"
-                  value={id}
-                  checked={payment === id}
-                  onChange={() => setPayment(id)}
+                  id="checkout-otp"
+                  name="checkout-otp"
+                  value={otpCode}
+                  placeholder=" "
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, ""))}
                 />
-                <span>{label}</span>
-                <Icon size={20} strokeWidth={1.6} aria-hidden="true" />
-              </label>
-            ))}
-          </div>
+              </Field>
+              <button
+                type="button"
+                className="outline-button"
+                onClick={() => void verifyCheckoutCode()}
+                disabled={verifyingOtp || otpCode.length !== 6}
+              >
+                {verifyingOtp ? "Verifying..." : "Verify code"}
+              </button>
+            </div>
+          )}
+
+          {otpVerified && <p className="checkout-placeholder">Email verified. Your code authorizes one payment attempt.</p>}
         </section>
 
-        <button type="submit" className="add-to-cart checkout-submit">
-          {payment === "cod" ? "Place order" : `Pay now – ${formatPrice(total)}`}
+        <button type="submit" className="add-to-cart checkout-submit" disabled={startingPayment || authStatus === "loading"}>
+          {startingPayment ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Opening secure payment...</> : `Pay now – ${formatPrice(displayTotal)}`}
         </button>
 
         {touched && Object.keys(errors).length > 0 && (
@@ -523,7 +1073,7 @@ export default function CheckoutView() {
             <div className="checkout-total">
               <dt>Total</dt>
               <dd>
-                <small>INR</small> {formatPrice(total)}
+                <small>INR</small> {formatPrice(displayTotal)}
               </dd>
             </div>
           </dl>
