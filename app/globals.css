@@ -3703,8 +3703,14 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .cart-drawer-scroll {
   flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
   padding: 0 32px;
+  scrollbar-width: none;
+}
+
+.cart-drawer-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .cart-drawer-lines {
@@ -3829,6 +3835,11 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .cart-suggestion .product-price-row {
   margin: 0;
+}
+
+.cart-suggestion .round-icon-button {
+  height: 36px;
+  width: 36px;
 }
 
 .round-icon-button {

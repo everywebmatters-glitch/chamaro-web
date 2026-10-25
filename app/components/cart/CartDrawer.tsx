@@ -210,7 +210,7 @@ export default function CartDrawer() {
                       onClick={() => goTo(`/products/${current.slug}`)}
                       aria-label={`View ${current.name}`}
                     >
-                      <Eye size={18} />
+                      <Eye size={16} />
                     </button>
                   </div>
                 </section>
