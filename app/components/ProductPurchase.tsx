@@ -9,7 +9,6 @@ import {
   RotateCcw,
   Share2,
   ShieldCheck,
-  Truck,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { formatPrice, unitsLeft, type Product } from "../lib/products";
@@ -32,7 +31,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
   /* Colour/option are shared with the gallery and price (they swap to the chosen variant's) */
   const { color, setColor, option, setOption, variant, price } = useVariantSelection();
   const [quantity, setQuantity] = useState(1);
-  const [modal, setModal] = useState<"dimensions" | "question" | "delivery" | null>(null);
+  const [modal, setModal] = useState<"dimensions" | "question" | null>(null);
   const [showSticky, setShowSticky] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -178,10 +177,6 @@ export default function ProductPurchase({ product }: { product: Product }) {
           <CircleHelp size={19} strokeWidth={1.7} aria-hidden="true" />
           Ask a question
         </button>
-        <button type="button" onClick={() => setModal("delivery")}>
-          <Truck size={19} strokeWidth={1.7} aria-hidden="true" />
-          Delivery &amp; Return
-        </button>
         <button type="button" onClick={share}>
           <Share2 size={19} strokeWidth={1.7} aria-hidden="true" />
           Share
@@ -251,20 +246,6 @@ export default function ProductPurchase({ product }: { product: Product }) {
             </div>
           ))}
         </dl>
-      </Modal>
-
-      <Modal
-        open={modal === "delivery"}
-        onClose={() => setModal(null)}
-        title="Delivery and returns"
-        className="info-modal"
-      >
-        {product.infoBoxes.map((box, index) => (
-          <div key={index}>
-            <h2>{box.title}</h2>
-            <p>{box.text}</p>
-          </div>
-        ))}
       </Modal>
 
       <Modal

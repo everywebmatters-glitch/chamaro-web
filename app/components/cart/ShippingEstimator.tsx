@@ -10,10 +10,10 @@ import {
 import { formatPrice } from "../../lib/products";
 
 export default function ShippingEstimator({
-  subtotal,
+  chairCount = 0,
   idPrefix = "estimate",
 }: {
-  subtotal: number;
+  chairCount?: number;
   idPrefix?: string;
 }) {
   const [state, setState] = useState("");
@@ -69,7 +69,7 @@ export default function ShippingEstimator({
       {ready && (
         <ul className="estimate-results" aria-live="polite">
           {SHIPPING_METHODS.map((method) => {
-            const cost = shippingCost(method.id, subtotal);
+            const cost = shippingCost(method.id, chairCount);
             return (
               <li key={method.id}>
                 <span>

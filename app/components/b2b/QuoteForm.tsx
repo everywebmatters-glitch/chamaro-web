@@ -86,8 +86,7 @@ export default function QuoteForm() {
   };
 
   return (
-    <form className="auth-form quote-form-underline" onSubmit={submit} noValidate>
-      <h3 className="quote-form-title">B2B Enquiry Form</h3>
+    <form className="auth-form b2b-request-form" onSubmit={submit} noValidate>
 
       <div className="field-row">
         <FormField
@@ -179,7 +178,7 @@ export default function QuoteForm() {
       </div>
 
       <button type="submit" className="add-to-cart auth-submit">
-        Submit B2B Enquiry
+        Request a B2B Quote
       </button>
 
       <p className="quote-form-hint">

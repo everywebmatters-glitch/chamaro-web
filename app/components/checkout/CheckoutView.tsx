@@ -6,8 +6,7 @@ import { Banknote, CircleHelp, CreditCard, Lock, Smartphone } from "lucide-react
 import { useEffect, useState } from "react";
 import {
   cartSubtotal,
-  discountAmount,
-  findDiscount,
+  isChairProduct,
   INDIAN_STATES,
   PIN_CODE_PATTERN,
   resolveLines,
@@ -121,9 +120,9 @@ function Field({
 }
 
 export default function CheckoutView() {
-  const { catalog, catalogFailed, findProduct, cart, hydrated, discountCode, orderNote } =
+  const { catalog, catalogFailed, findProduct, cart, hydrated, discountCustomerId, appliedDiscountTotal, orderNote } =
     useStore();
-  const { status: authStatus } = useAuth();
+  const { status: authStatus, user } = useAuth();
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
   const [shipping, setShipping] = useState<ShippingMethodId>("standard");
@@ -144,11 +143,12 @@ export default function CheckoutView() {
 
   const lines = resolveLines(cart, findProduct);
   const subtotal = cartSubtotal(lines);
-  const discount = discountAmount(subtotal, findDiscount(discountCode));
+  const chairCount = lines.reduce((count, line) => count + (isChairProduct(line.product) ? line.quantity : 0), 0);
+  const discount = discountCustomerId === user?.id ? appliedDiscountTotal : 0;
   const errors = validate(form);
   const addressReady =
     form.address.trim() && form.city.trim() && form.state && PIN_CODE_PATTERN.test(form.pin);
-  const shippingPrice = addressReady ? shippingCost(shipping, subtotal) : undefined;
+  const shippingPrice = addressReady ? shippingCost(shipping, chairCount) : undefined;
   const total = subtotal - discount + (shippingPrice ?? 0);
   const itemCount = lines.reduce((count, line) => count + line.quantity, 0);
   const showAuthGate = authStatus === "unauthenticated" && !authGateDismissed;
@@ -396,7 +396,7 @@ export default function CheckoutView() {
           {addressReady ? (
             <div className="option-list">
               {SHIPPING_METHODS.map((method) => {
-                const cost = shippingCost(method.id, subtotal);
+                const cost = shippingCost(method.id, chairCount);
                 return (
                   <label key={method.id} className={shipping === method.id ? "selected" : ""}>
                     <input

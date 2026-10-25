@@ -4,13 +4,16 @@ import Link from "next/link";
 import {
   Armchair,
   ArrowRight,
-  BadgePercent,
-  Headset,
+  Camera,
+  ChartNoAxesCombined,
+  Handshake,
   Mail,
+  MapPin,
+  MessageCircle,
+  Play,
   Phone,
-  ReceiptText,
-  ShieldCheck,
-  Truck,
+  Settings,
+  ThumbsUp,
 } from "lucide-react";
 import Header from "../components/Header";
 import SiteFooter from "../components/SiteFooter";
@@ -23,14 +26,27 @@ export const metadata: Metadata = {
     "Office chairs for teams of every size. Request a bulk quote with volume pricing and GST invoices from Chamaro.",
 };
 
-/* TODO: confirm these commercial terms with the business before launch */
 const benefits = [
-  { icon: BadgePercent, title: "Volume pricing", text: "Better per-chair prices as your order grows." },
-  { icon: ReceiptText, title: "GST invoices", text: "Invoices with your GSTIN so you can claim input tax credit." },
-  { icon: Armchair, title: "Help choosing", text: "Tell us about your space and we'll suggest the right mix of chairs." },
-  { icon: Truck, title: "Planned delivery", text: "One delivery schedule for the whole order, planned around your site." },
-  { icon: ShieldCheck, title: "1-year warranty", text: "Every chair is covered, however many you buy." },
-  { icon: Headset, title: "One point of contact", text: "A single person to talk to, from quote to delivery." },
+  {
+    icon: ChartNoAxesCombined,
+    title: "Grow Your Sales",
+    text: "Expand your product portfolio with our diverse range of office chairs and seating solutions for different business needs.",
+  },
+  {
+    icon: Armchair,
+    title: "Diverse Product Range",
+    text: "From executive chairs to visitor chairs, explore seating solutions for every workspace, customer, and budget.",
+  },
+  {
+    icon: Settings,
+    title: "Reliable Manufacturing",
+    text: "Discover quality-focused manufacturing, functional designs, and dependable products for your business.",
+  },
+  {
+    icon: Handshake,
+    title: "Long-Term Partnership",
+    text: "Build a lasting business relationship with product information, marketing support, and dedicated assistance.",
+  },
 ];
 
 export default function B2BPage() {
@@ -41,6 +57,14 @@ export default function B2BPage() {
       <main>
         {/* Intro */}
         <section className="b2b-hero">
+          <Image
+            className="b2b-hero-background"
+            src="/hero/b2b-business-chair.webp"
+            alt="Ergonomic office chair"
+            fill
+            sizes="100vw"
+            priority
+          />
           <div className="b2b-hero-copy">
             <p className="b2b-eyebrow">Chamaro for Business</p>
             <h1>Seating for teams of every size</h1>
@@ -59,16 +83,12 @@ export default function B2BPage() {
             </div>
           </div>
 
-          <div className="b2b-hero-visual" aria-hidden="true">
-            <span className="b2b-hero-circle" />
-            <Image src="/hero/boss-green.webp" alt="" fill sizes="(max-width: 860px) 80vw, 40vw" priority />
-          </div>
         </section>
 
         {/* Benefits */}
         <section className="b2b-section" aria-labelledby="b2b-why">
           <h2 id="b2b-why" className="b2b-heading">
-            Why businesses choose Chamaro
+            More Value for Your Business
           </h2>
           <ul className="b2b-benefit-grid">
             {benefits.map(({ icon: Icon, title, text }) => (
@@ -81,35 +101,47 @@ export default function B2BPage() {
           </ul>
         </section>
 
-        {/* Quote form */}
-        <section className="b2b-section" aria-labelledby="b2b-quote-title">
+        {/* Quote form and direct contact */}
+        <section className="b2b-section b2b-request-section" aria-labelledby="b2b-quote-title">
           <div className="b2b-quote" id="quote">
-            <div className="b2b-quote-intro">
-              <p className="b2b-eyebrow">B2B Solutions</p>
-              <h2 id="b2b-quote-title">Business Seating, Built for Every Space</h2>
-              <p>
-                At Chamaro, we provide reliable and stylish seating solutions for businesses, institutions, and
-                commercial spaces. From individual requirements to large-scale projects, our B2B solutions are
-                designed to meet your specific needs.
-              </p>
-
-              <Armchair className="b2b-quote-illustration" size={120} strokeWidth={1} aria-hidden="true" />
-
-              <ul className="b2b-direct">
-                <li>
-                  <Phone size={18} aria-hidden="true" />
-                  <a href={primaryPhoneHref}>{contact.phone}</a>
-                </li>
-                <li>
-                  <Mail size={18} aria-hidden="true" />
-                  <a href={`mailto:${contact.email}`}>{contact.email}</a>
-                </li>
-              </ul>
-            </div>
-
             <div className="b2b-quote-form">
+              <h2 id="b2b-quote-title">Tell Us What Your Business Needs</h2>
               <QuoteForm />
             </div>
+
+            <aside className="b2b-contact-card" aria-label="Contact Chamaro">
+              <div className="b2b-contact-details">
+                <div>
+                  <Phone size={18} aria-hidden="true" />
+                  <h3>Phone Number</h3>
+                  <a href={primaryPhoneHref}>{contact.phone}</a>
+                </div>
+                <div>
+                  <Mail size={18} aria-hidden="true" />
+                  <h3>Email</h3>
+                  <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                </div>
+                <div>
+                  <MapPin size={18} aria-hidden="true" />
+                  <h3>Address</h3>
+                  <a href={contact.mapUrl} target="_blank" rel="noreferrer">
+                    {contact.address.map((line) => (
+                      <span key={line}>{line}</span>
+                    ))}
+                  </a>
+                </div>
+              </div>
+
+              <div className="b2b-socials">
+                <p>Stay Connected</p>
+                <div>
+                  <a href="https://www.instagram.com/chamarochair" target="_blank" rel="noreferrer" aria-label="Instagram"><Camera size={20} /></a>
+                  <a href="https://wa.me/919741418807" target="_blank" rel="noreferrer" aria-label="WhatsApp"><MessageCircle size={20} /></a>
+                  <a href="https://www.facebook.com/share/1cf9KjWwgm" target="_blank" rel="noreferrer" aria-label="Facebook"><ThumbsUp size={20} /></a>
+                  <a href="https://youtube.com/@chamarochairs" target="_blank" rel="noreferrer" aria-label="YouTube"><Play size={20} /></a>
+                </div>
+              </div>
+            </aside>
           </div>
         </section>
       </main>

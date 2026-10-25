@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { availabilityLabels, discountPercent, formatPrice, priceFor, type Product, type ProductVariant } from "../lib/products";
-import { FREE_SHIPPING_THRESHOLD } from "../lib/cart";
+import { isChairProduct } from "../lib/cart";
 import { selectVariant } from "../lib/product-variants";
 import ProductGallery from "./ProductGallery";
 
@@ -48,14 +48,14 @@ export function ProductVariantProvider({ product, children }: { product: Product
 
 /* The chosen variant's photos when it has its own, else the product's */
 export function VariantGallery({ product }: { product: Product }) {
-  const { variant, price } = useVariantSelection();
+  const { variant } = useVariantSelection();
   const own = Boolean(variant?.images.length);
   return (
     <ProductGallery
       /* A new photo set starts from its first image */
       key={own ? variant!.id : product.slug}
       images={own ? variant!.images : product.images}
-      badge={price >= FREE_SHIPPING_THRESHOLD ? "Free Delivery" : undefined}
+      badge={isChairProduct(product) ? "Free standard delivery on 2+ chairs" : undefined}
     />
   );
 }

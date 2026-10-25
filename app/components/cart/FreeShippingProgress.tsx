@@ -1,20 +1,19 @@
 import { Truck } from "lucide-react";
-import { amountToFreeShipping, FREE_SHIPPING_THRESHOLD } from "../../lib/cart";
-import { formatPrice } from "../../lib/products";
+import { chairsToFreeShipping, FREE_SHIPPING_CHAIR_COUNT } from "../../lib/cart";
 
-export default function FreeShippingProgress({ subtotal }: { subtotal: number }) {
-  const remaining = amountToFreeShipping(subtotal);
-  const percent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+export default function FreeShippingProgress({ chairCount }: { chairCount: number }) {
+  const remaining = chairsToFreeShipping(chairCount);
+  const percent = Math.min(100, (chairCount / FREE_SHIPPING_CHAIR_COUNT) * 100);
 
   return (
     <div className="free-shipping">
       <div
         className="free-shipping-track"
         role="progressbar"
-        aria-label="Progress towards free shipping"
+        aria-label="Progress towards free standard delivery"
         aria-valuemin={0}
-        aria-valuemax={FREE_SHIPPING_THRESHOLD}
-        aria-valuenow={Math.min(subtotal, FREE_SHIPPING_THRESHOLD)}
+        aria-valuemax={FREE_SHIPPING_CHAIR_COUNT}
+        aria-valuenow={Math.min(chairCount, FREE_SHIPPING_CHAIR_COUNT)}
       >
         <span className="free-shipping-fill" style={{ width: `${percent}%` }} />
         <span className="free-shipping-icon" style={{ left: `clamp(16px, ${percent}%, calc(100% - 16px))` }}>
@@ -25,12 +24,12 @@ export default function FreeShippingProgress({ subtotal }: { subtotal: number })
       <p>
         {remaining > 0 ? (
           <>
-            You&apos;re <strong>{formatPrice(remaining)}</strong> away from{" "}
-            <strong>FREE SHIPPING!</strong>
+            Add <strong>{remaining} more {remaining === 1 ? "chair" : "chairs"}</strong> for{" "}
+            <strong>FREE STANDARD DELIVERY!</strong>
           </>
         ) : (
           <>
-            Congratulations! Your order qualifies for <strong>FREE SHIPPING</strong>.
+            Congratulations! Your order qualifies for <strong>FREE STANDARD DELIVERY</strong>.
           </>
         )}
       </p>

@@ -244,6 +244,7 @@ export function toProduct(api: ApiProduct, index = 0): Product {
   }));
 
   return {
+    apiId: api.id,
     slug: api.slug,
     name: api.name,
     category: api.category.slug,

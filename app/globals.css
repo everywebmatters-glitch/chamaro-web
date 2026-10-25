@@ -278,8 +278,8 @@ button {
   min-width: 22px;
   padding: 0 4px;
   position: absolute;
-  right: -10px;
-  top: -8px;
+  right: -6px;
+  top: -4px;
 }
 
 /* =========================================================
@@ -2410,6 +2410,7 @@ a.see-more-button {
 
 .quick-view-info {
   align-content: start;
+  align-self: center;
   display: grid;
   gap: 14px;
 }
@@ -5319,18 +5320,24 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .b2b-hero {
   align-items: center;
-  background: #f7f6f4;
-  display: grid;
-  gap: 40px;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  background: #faf6f1;
+  display: flex;
   min-height: clamp(460px, 60vh, 640px);
   overflow: hidden;
   padding: 0 var(--gutter);
+  position: relative;
 }
 
 .b2b-hero-copy {
   max-width: 600px;
   padding: 56px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.b2b-hero-background {
+  object-fit: cover;
+  object-position: center;
 }
 
 .b2b-eyebrow {
@@ -5376,28 +5383,6 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   min-height: 56px;
 }
 
-.b2b-hero-visual {
-  align-self: stretch;
-  position: relative;
-}
-
-.b2b-hero-circle {
-  aspect-ratio: 1;
-  background: #ebe7e1;
-  border-radius: 50%;
-  bottom: -18%;
-  left: 50%;
-  position: absolute;
-  transform: translateX(-50%);
-  width: min(36vw, 560px);
-}
-
-.b2b-hero-visual img {
-  object-fit: contain;
-  object-position: bottom center;
-  padding-top: 48px;
-}
-
 .b2b-section {
   padding: var(--section-space) var(--gutter);
 }
@@ -5418,22 +5403,29 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .b2b-benefit-grid {
   display: grid;
-  gap: 20px;
+  gap: 32px clamp(24px, 5vw, 66px);
   grid-template-columns: repeat(2, minmax(0, 1fr));
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
+  max-width: 1040px;
   padding: 0;
 }
 
 .b2b-benefit-card {
-  background: #f5f1ea;
-  border-radius: 12px;
-  padding: clamp(24px, 3vw, 36px);
+  align-items: center;
+  background: #faf7f3;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 145px;
+  padding: 22px 18px;
+  text-align: center;
 }
 
 .b2b-benefit-card svg {
-  color: var(--accent);
-  margin-bottom: 20px;
+  color: #675f53;
+  margin-bottom: 10px;
 }
 
 .b2b-benefit-card h3 {
@@ -5444,6 +5436,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 }
 
 .b2b-benefit-card p {
+  font-size: 0.9rem;
   color: var(--text-body);
   line-height: 1.6;
   margin: 0;
@@ -5550,67 +5543,149 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .b2b-quote {
   align-items: stretch;
-  background: #f3ece1;
-  border-radius: 28px;
+  background: #faf7f3;
+  border-radius: 0;
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(28px, 5vw, 72px);
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.85fr);
   overflow: hidden;
   scroll-margin-top: 80px;
 }
 
-.b2b-quote-intro {
-  display: flex;
-  flex-direction: column;
-  padding: clamp(32px, 4vw, 56px);
-}
-
-.b2b-quote-intro h2 {
+.b2b-quote-form h2 {
   color: var(--foreground);
-  font-size: clamp(1.8rem, 2.6vw, 2.4rem);
+  font-size: clamp(2rem, 3vw, 3rem);
   font-weight: 700;
   line-height: 1.15;
-  margin: 0 0 12px;
-}
-
-.b2b-quote-intro > p {
-  color: var(--text-body);
-  margin: 0;
-}
-
-.b2b-quote-illustration {
-  color: var(--accent);
-  margin: auto 0 28px;
-  opacity: 0.85;
-}
-
-.b2b-direct {
-  display: grid;
-  gap: 14px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.b2b-direct li {
-  align-items: center;
-  display: flex;
-  gap: 12px;
-}
-
-.b2b-direct a {
-  color: var(--foreground);
-  font-weight: 600;
-}
-
-.b2b-direct a:hover {
-  color: var(--accent);
+  margin: 0 0 28px;
 }
 
 .b2b-quote-form {
+  padding: clamp(32px, 5vw, 68px);
+}
+
+.b2b-request-form {
+  gap: 28px;
+}
+
+.b2b-request-form .field-row {
+  gap: 38px 30px;
+}
+
+.b2b-request-form .field {
   background: #ffffff;
-  border-radius: 20px;
-  margin: clamp(16px, 2vw, 24px);
-  padding: clamp(24px, 3.5vw, 40px);
+}
+
+.b2b-request-form .field input,
+.b2b-request-form .field select {
+  border: 0;
+  border-radius: 0;
+  min-height: 42px;
+  text-align: center;
+}
+
+.b2b-request-form .field select option {
+  text-align: left;
+}
+
+.b2b-request-form .field-select::after {
+  right: 30px;
+}
+
+.b2b-request-form .field label {
+  color: var(--text-body);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 28px);
+}
+
+.b2b-request-form .field input:focus ~ label,
+.b2b-request-form .field input:not(:placeholder-shown) ~ label,
+.b2b-request-form .field input:-webkit-autofill ~ label,
+.b2b-request-form .field select:focus ~ label,
+.b2b-request-form .field select[data-empty="false"] ~ label {
+  top: 8px;
+  transform: translateX(-50%);
+}
+
+/* Keep validation feedback visible without changing the height of a form row. */
+.b2b-request-form .field-error {
+  left: 0;
+  margin: 6px 0 0;
+  position: absolute;
+  top: 100%;
+}
+
+.b2b-request-form .auth-submit {
+  background: #675f53;
+  border-radius: 0;
+  margin-top: -4px;
+}
+
+.b2b-contact-card {
+  align-self: center;
+  background: #675f53;
+  color: #ffffff;
+  margin-right: clamp(24px, 4vw, 56px);
+  padding: 16px;
+}
+
+.b2b-contact-details,
+.b2b-socials > div {
+  background: #ffffff;
+  color: var(--foreground);
+}
+
+.b2b-contact-details {
+  display: grid;
+  gap: 22px;
+  padding: 18px 16px;
+}
+
+.b2b-contact-details div {
+  position: relative;
+}
+
+.b2b-contact-details svg {
+  color: #675f53;
+  margin-bottom: 4px;
+}
+
+.b2b-contact-details h3 {
+  font-size: 0.9rem;
+  margin: 0 0 5px;
+}
+
+.b2b-contact-details a {
+  color: var(--text-body);
+  display: grid;
+  font-size: 0.88rem;
+  gap: 2px;
+  line-height: 1.55;
+}
+
+.b2b-socials p {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin: 18px 8px 8px;
+}
+
+.b2b-socials > div {
+  display: flex;
+  gap: 12px;
+  padding: 12px 10px;
+}
+
+.b2b-socials a {
+  align-items: center;
+  border: 1px solid #675f53;
+  border-radius: 50%;
+  color: var(--foreground);
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
 }
 
 .quote-form-title {
@@ -5687,8 +5762,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 @media (max-width: 860px) {
   .contact-layout,
-  .b2b-quote,
-  .b2b-hero {
+  .b2b-quote {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -5696,20 +5770,16 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
     flex-direction: column;
   }
 
-  .b2b-hero {
-    gap: 0;
-  }
-
   .b2b-hero-copy {
     padding: 48px 0 8px;
   }
 
-  .b2b-hero-visual {
-    height: 320px;
+  .b2b-hero-background {
+    object-position: 65% center;
   }
 
-  .b2b-hero-circle {
-    width: 70vw;
+  .b2b-contact-card {
+    margin: 0 clamp(24px, 5vw, 48px) clamp(24px, 5vw, 48px);
   }
 
   .b2b-benefit-grid,
@@ -5717,9 +5787,6 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .b2b-quote-illustration {
-    display: none;
-  }
 }
 
 @media (max-width: 520px) {

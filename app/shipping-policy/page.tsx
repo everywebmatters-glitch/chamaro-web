@@ -22,6 +22,7 @@ export default function ShippingPolicyPage() {
             <>
               Estimated delivery: <strong>8–10 business days</strong>
             </>,
+            "Standard delivery is free when an order contains two or more chairs. Express delivery charges still apply.",
             "Delivery timeline may vary depending on location and courier availability.",
             "Shipping confirmation and tracking details will be shared once your order is dispatched.",
             "Orders are processed only after successful payment confirmation.",

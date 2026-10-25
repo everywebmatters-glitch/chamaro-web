@@ -33,6 +33,8 @@ export type ProductVariant = {
 };
 
 export type Product = {
+  /* Backend id used for authenticated coupon validation and order pricing */
+  apiId?: string;
   slug: string;
   name: string;
   /* Category slug */

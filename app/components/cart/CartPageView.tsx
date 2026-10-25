@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   cartSubtotal,
-  discountAmount,
-  findDiscount,
+  isChairProduct,
   resolveLines,
   SHIPPING_METHODS,
   shippingCost,
@@ -18,6 +17,7 @@ import { formatPrice, unitsLeft } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
 import CartNotices from "./CartNotices";
 import { useStore } from "../store/StoreProvider";
+import { useAuth } from "../auth/AuthProvider";
 import DiscountForm from "./DiscountForm";
 import FreeShippingProgress from "./FreeShippingProgress";
 
@@ -31,14 +31,17 @@ export default function CartPageView() {
     hydrated,
     setQuantity,
     removeLine,
-    discountCode,
+    discountCustomerId,
+    appliedDiscountTotal,
   } = useStore();
+  const { user } = useAuth();
   const [shipping, setShipping] = useState<ShippingMethodId>("standard");
 
   const lines = resolveLines(cart, findProduct);
   const subtotal = cartSubtotal(lines);
-  const discount = discountAmount(subtotal, findDiscount(discountCode));
-  const shippingTotal = shippingCost(shipping, subtotal);
+  const chairCount = lines.reduce((count, line) => count + (isChairProduct(line.product) ? line.quantity : 0), 0);
+  const discount = discountCustomerId === user?.id ? appliedDiscountTotal : 0;
+  const shippingTotal = shippingCost(shipping, chairCount);
   const total = subtotal - discount + shippingTotal;
 
   /* Avoid flashing "empty" before the saved cart loads */
@@ -76,7 +79,7 @@ export default function CartPageView() {
       <CartNotices />
 
       <div className="cart-page-shipping-bar">
-        <FreeShippingProgress subtotal={subtotal} />
+        <FreeShippingProgress chairCount={chairCount} />
       </div>
 
       <table className="cart-table">
@@ -153,7 +156,7 @@ export default function CartPageView() {
 
             <div className="option-list">
               {SHIPPING_METHODS.map((method) => {
-                const cost = shippingCost(method.id, subtotal);
+                const cost = shippingCost(method.id, chairCount);
                 return (
                   <label key={method.id} className={shipping === method.id ? "selected" : ""}>
                     <input

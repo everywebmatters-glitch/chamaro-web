@@ -47,7 +47,9 @@ type StoreContextValue = {
   orderNote: string;
   setOrderNote: (note: string) => void;
   discountCode: string;
-  applyDiscount: (code: string) => boolean;
+  discountCustomerId: string;
+  appliedDiscountTotal: number;
+  applyDiscount: (code: string, customerId: string, discountTotal: string) => boolean;
   removeDiscount: () => void;
   cartOpen: boolean;
   openCart: () => void;
@@ -64,11 +66,10 @@ type Saved = {
   cart: CartLine[];
   wishlist: string[];
   orderNote: string;
-  discountCode: string;
 };
 
 function readStorage(): Saved {
-  const empty: Saved = { cart: [], wishlist: [], orderNote: "", discountCode: "" };
+  const empty: Saved = { cart: [], wishlist: [], orderNote: "" };
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return empty;
@@ -77,7 +78,6 @@ function readStorage(): Saved {
       cart: Array.isArray(parsed.cart) ? parsed.cart : [],
       wishlist: Array.isArray(parsed.wishlist) ? parsed.wishlist : [],
       orderNote: typeof parsed.orderNote === "string" ? parsed.orderNote : "",
-      discountCode: typeof parsed.discountCode === "string" ? parsed.discountCode : "",
     };
   } catch {
     return empty;
@@ -89,6 +89,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [orderNote, setOrderNote] = useState("");
   const [discountCode, setDiscountCode] = useState("");
+  const [discountCustomerId, setDiscountCustomerId] = useState("");
+  const [appliedDiscountTotal, setAppliedDiscountTotal] = useState(0);
   const [hydrated, setHydrated] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -121,7 +123,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCart(saved.cart);
     setWishlist(saved.wishlist);
     setOrderNote(saved.orderNote);
-    setDiscountCode(saved.discountCode);
     setHydrated(true);
     loadCatalog();
     loadCategories();
@@ -132,12 +133,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ cart, wishlist, orderNote, discountCode })
+        JSON.stringify({ cart, wishlist, orderNote })
       );
     } catch {
       /* storage unavailable (private mode) — keep in memory only */
     }
-  }, [cart, wishlist, orderNote, discountCode, hydrated]);
+  }, [cart, wishlist, orderNote, hydrated]);
 
   /* Once the live catalog is known, drop cart lines whose product is gone or out of stock and trim
      quantities to the units left, telling the shopper instead of failing at checkout */
@@ -147,6 +148,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (!notices.length) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reconcile the saved cart with the live catalog
     setCart(next);
+    setDiscountCode("");
+    setDiscountCustomerId("");
+    setAppliedDiscountTotal(0);
     setCartNotices((current) => [...current, ...notices]);
   }, [catalog, cart, hydrated]);
 
@@ -168,6 +172,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addToCart = useCallback((line: CartLine) => {
+    setDiscountCode("");
+    setDiscountCustomerId("");
+    setAppliedDiscountTotal(0);
     setCart((current) => {
       const key = lineKey(line);
       const index = current.findIndex((item) => lineKey(item) === key);
@@ -188,6 +195,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [loadCatalog]);
 
   const setQuantity = useCallback((key: string, quantity: number) => {
+    setDiscountCode("");
+    setDiscountCustomerId("");
+    setAppliedDiscountTotal(0);
     setCart((current) =>
       current.map((line) =>
         lineKey(line) === key
@@ -198,10 +208,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const removeLine = useCallback((key: string) => {
+    setDiscountCode("");
+    setDiscountCustomerId("");
+    setAppliedDiscountTotal(0);
     setCart((current) => current.filter((line) => lineKey(line) !== key));
   }, []);
 
-  const clearCart = useCallback(() => setCart([]), []);
+  const clearCart = useCallback(() => {
+    setCart([]);
+    setDiscountCode("");
+    setDiscountCustomerId("");
+    setAppliedDiscountTotal(0);
+  }, []);
 
   const toggleWishlist = useCallback(
     (slug: string, productName: string) => {
@@ -220,11 +238,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [wishlist, showToast]
   );
 
-  const applyDiscount = useCallback((code: string) => {
+  const applyDiscount = useCallback((code: string, customerId: string, discountTotal: string) => {
     const discount = findDiscount(code);
-    if (!discount) return false;
+    const total = Number(discountTotal);
+    if (!discount || !customerId || !Number.isFinite(total) || total <= 0) return false;
     setDiscountCode(discount.code);
+    setDiscountCustomerId(customerId);
+    setAppliedDiscountTotal(total);
     return true;
+  }, []);
+
+  const removeDiscount = useCallback(() => {
+    setDiscountCode("");
+    setDiscountCustomerId("");
+    setAppliedDiscountTotal(0);
   }, []);
 
   const findProduct = useCallback(
@@ -256,8 +283,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       orderNote,
       setOrderNote,
       discountCode,
+      discountCustomerId,
+      appliedDiscountTotal,
       applyDiscount,
-      removeDiscount: () => setDiscountCode(""),
+      removeDiscount,
       cartOpen,
       openCart: () => {
         setCartOpen(true);
@@ -285,7 +314,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toggleWishlist,
       orderNote,
       discountCode,
+      discountCustomerId,
+      appliedDiscountTotal,
       applyDiscount,
+      removeDiscount,
       cartOpen,
       showToast,
       toast,
