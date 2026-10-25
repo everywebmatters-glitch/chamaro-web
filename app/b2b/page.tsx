@@ -53,14 +53,16 @@ export default async function B2BPage() {
       <main>
         {/* Intro */}
         <section className="b2b-hero hero" style={{ "--hero-bg": "#ffffff" } as React.CSSProperties}>
-          <Image
-            className="b2b-hero-background"
-            src={hero.imageUrl}
-            alt={hero.imageAlt}
-            fill
-            sizes="100vw"
-            priority
-          />
+          <div className="b2b-hero-banner-image">
+            <Image
+              className="b2b-hero-background"
+              src={hero.imageUrl}
+              alt={hero.imageAlt}
+              fill
+              sizes="100vw"
+              priority
+            />
+          </div>
           <div className="b2b-hero-copy">
             <p className="b2b-eyebrow">{hero.eyebrow}</p>
             <h1 className="hero-title">{hero.title}</h1>

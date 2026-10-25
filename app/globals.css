@@ -5428,6 +5428,12 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   position: relative;
 }
 
+.b2b-hero-banner-image {
+  inset: 0;
+  position: absolute;
+  z-index: 0;
+}
+
 .b2b-hero-copy {
   max-width: 600px;
   padding: 56px 0;
@@ -5917,10 +5923,6 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .b2b-hero-copy {
     padding: 24px 0 8px;
-  }
-
-  .b2b-hero-background {
-    object-position: 65% center;
   }
 
   .b2b-contact-card {
@@ -6915,6 +6917,31 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 }
 
 @media (max-width: 760px) {
+  .b2b-hero {
+    align-items: stretch;
+    flex-direction: column;
+    min-height: 0;
+    padding: 96px var(--gutter) 32px;
+  }
+
+  .b2b-hero-copy {
+    order: 1;
+    padding: 0;
+  }
+
+  .b2b-hero-banner-image {
+    aspect-ratio: 3 / 2;
+    margin: 8px calc(var(--gutter) * -1) 0;
+    order: 2;
+    position: relative;
+    width: calc(100% + var(--gutter) * 2);
+  }
+
+  .b2b-hero-background {
+    object-fit: cover;
+    object-position: right center;
+  }
+
   /* Two classes so this beats the phone rule for the other hero slides */
   .hero-slide.hero-slide-api {
     grid-template-columns: minmax(0, 1fr);
