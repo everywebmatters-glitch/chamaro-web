@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   cartSubtotal,
@@ -171,17 +171,22 @@ export default function CartDrawer() {
                   <div className="cart-suggestions-header">
                     <h3 id="cart-suggestions-title">You may also like</h3>
                     {suggestions.length > 1 && (
-                      <div className="carousel-dots">
-                        {suggestions.map((product, index) => (
-                          <button
-                            key={product.slug}
-                            type="button"
-                            className={index === slide ? "selected" : ""}
-                            onClick={() => setSlide(index)}
-                            aria-label={`Show ${product.name}`}
-                            aria-pressed={index === slide}
-                          />
-                        ))}
+                      <div className="carousel-controls" aria-label="Browse product suggestions">
+                        <button
+                          type="button"
+                          onClick={() => setSlide((index) => (index + suggestions.length - 1) % suggestions.length)}
+                          aria-label="Previous product suggestion"
+                        >
+                          <ChevronLeft size={16} aria-hidden="true" />
+                        </button>
+                        <span aria-live="polite">{Math.min(slide, suggestions.length - 1) + 1} / {suggestions.length}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSlide((index) => (index + 1) % suggestions.length)}
+                          aria-label="Next product suggestion"
+                        >
+                          <ChevronRight size={16} aria-hidden="true" />
+                        </button>
                       </div>
                     )}
                   </div>
