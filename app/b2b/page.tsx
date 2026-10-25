@@ -6,9 +6,6 @@ import {
   ArrowRight,
   ChartNoAxesCombined,
   Handshake,
-  Mail,
-  MapPin,
-  Phone,
   Settings,
 } from "lucide-react";
 import Header from "../components/Header";
@@ -106,29 +103,20 @@ export default async function B2BPage() {
             </div>
 
             <aside className="b2b-contact-card" aria-label="Contact Chamaro">
-              <ul className="b2b-contact-details contact-details contact-details-circle">
+              <ul className="b2b-contact-details contact-details">
                 <li>
-                  <span className="contact-icon-circle">
-                    <Phone size={20} strokeWidth={1.8} aria-hidden="true" />
-                  </span>
                   <div>
                     <h3>Phone Number</h3>
                     <p><a href={primaryPhoneHref}>{contact.phone}</a></p>
                   </div>
                 </li>
                 <li>
-                  <span className="contact-icon-circle">
-                    <Mail size={20} strokeWidth={1.8} aria-hidden="true" />
-                  </span>
                   <div>
                     <h3>Email</h3>
                     <p><a href={`mailto:${contact.email}`}>{contact.email}</a></p>
                   </div>
                 </li>
                 <li>
-                  <span className="contact-icon-circle">
-                    <MapPin size={20} strokeWidth={1.8} aria-hidden="true" />
-                  </span>
                   <div>
                     <h3>Address</h3>
                     <p>

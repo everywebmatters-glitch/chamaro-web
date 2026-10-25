@@ -5633,60 +5633,65 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .b2b-contact-card {
   align-self: center;
-  background: #675f53;
+  background: #62574c;
   color: #ffffff;
   margin-right: clamp(24px, 4vw, 56px);
   padding: 16px;
 }
 
-.b2b-contact-details,
-.b2b-socials > div {
-  background: #ffffff;
-  color: var(--foreground);
-}
-
 .b2b-contact-details {
   display: grid;
   gap: 28px;
-  padding: 24px 20px;
+  padding: 8px 10px 24px;
+}
+
+.b2b-contact-details li {
+  display: block;
 }
 
 .b2b-contact-details h3 {
+  color: #ffffff;
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 6px;
 }
 
 .b2b-contact-details p {
-  color: var(--text-body);
+  color: #ffffff;
   margin: 0;
   line-height: 1.55;
 }
 
+.b2b-contact-details a {
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+
 .b2b-contact-details a:hover {
-  color: var(--accent);
+  color: #e6e1db;
 }
 
 .b2b-socials p {
   font-size: 0.88rem;
   font-weight: 600;
-  margin: 18px 10px 10px;
+  margin: 0 10px 10px;
 }
 
 .b2b-socials .footer-social {
-  background: #ffffff;
+  background: transparent;
   margin: 0;
   padding: 12px 10px;
 }
 
 .b2b-socials .footer-social a {
-  color: var(--foreground);
+  border-color: #ffffff;
+  color: #ffffff;
 }
 
 .b2b-socials .footer-social a:hover {
-  background: #675f53;
-  border-color: #675f53;
-  color: #ffffff;
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #62574c;
 }
 
 .quote-form-title {
