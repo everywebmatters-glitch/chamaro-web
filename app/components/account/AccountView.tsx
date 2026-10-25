@@ -312,9 +312,20 @@ function Details() {
 
 export default function AccountView() {
   const [active, setActive] = useState<SectionId>("dashboard");
+  const [logoutError, setLogoutError] = useState("");
   const { wishlist } = useStore();
   const { status, logout } = useAuth();
   const router = useRouter();
+
+  const handleLogout = async () => {
+    setLogoutError("");
+    try {
+      await logout();
+      router.push("/account/login");
+    } catch {
+      setLogoutError("We couldn't end your saved session. Please try signing out again.");
+    }
+  };
 
   return (
     <div className="account-layout">
@@ -339,10 +350,7 @@ export default function AccountView() {
             <li>
               <button
                 type="button"
-                onClick={() => {
-                  logout();
-                  router.push("/account/login");
-                }}
+                onClick={() => void handleLogout()}
               >
                 Log out
               </button>
@@ -350,6 +358,12 @@ export default function AccountView() {
           ) : (
             <li>
               <Link href="/account/login">Log in</Link>
+            </li>
+          )}
+          {logoutError && (
+            <li>
+              <p className="checkout-notice account-guest-notice" role="alert">{logoutError}</p>
+              <button type="button" onClick={() => void handleLogout()}>Retry sign out</button>
             </li>
           )}
         </ul>

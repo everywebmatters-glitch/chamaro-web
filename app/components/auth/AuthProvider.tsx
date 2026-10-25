@@ -6,7 +6,9 @@ import {
   exchangeGoogleCode,
   fetchCurrentCustomer,
   isRejectedToken,
+  logoutCustomerSession,
   loginCustomer,
+  refreshCustomerSession,
   type AuthUser,
 } from "../../lib/auth-api";
 
@@ -27,7 +29,7 @@ type AuthState = { status: AuthStatus; user: AuthUser | null; token: string | nu
 type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<AuthUser>;
   completeGoogleSignIn: (code: string, codeVerifier: string) => Promise<AuthUser>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -76,33 +78,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "loading", user: null, token: null });
   /* Token of the live session; late /me responses for an older token are ignored */
   const currentToken = useRef<string | null>(null);
+  const sessionVersion = useRef(0);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    sessionVersion.current += 1;
     currentToken.current = null;
     writeToken(null);
     setState(SIGNED_OUT);
+    await logoutCustomerSession();
   }, []);
 
-  const verify = useCallback(async (token: string) => {
+  const refresh = useCallback(async (signal?: AbortSignal) => {
+    const version = sessionVersion.current;
+    const { token, user } = await refreshCustomerSession(signal);
+    if (signal?.aborted || version !== sessionVersion.current) return;
+    const authUser = toAuthUser(user);
+    currentToken.current = token;
+    writeToken(token);
+    setState({ status: "authenticated", user: authUser, token });
+  }, []);
+
+  const verify = useCallback(async (token: string, signal?: AbortSignal) => {
     try {
       const profile = await fetchCurrentCustomer(token);
-      if (currentToken.current !== token) return;
+      if (signal?.aborted || currentToken.current !== token) return;
       setState({ status: "authenticated", user: toAuthUser(profile), token });
     } catch (error) {
-      if (currentToken.current !== token) return;
-      if (isRejectedToken(error)) {
-        currentToken.current = null;
-        writeToken(null);
+      if (signal?.aborted || currentToken.current !== token) return;
+      if (!isRejectedToken(error)) {
+        setState(SIGNED_OUT);
+        return;
       }
-      /* Otherwise (network/server error) keep the token so a reload can retry,
-         but don't show the shopper as signed in without the backend's word */
-      setState(SIGNED_OUT);
+      try {
+        await refresh(signal);
+      } catch (refreshError) {
+        if (signal?.aborted || currentToken.current !== token) return;
+        if (isRejectedToken(refreshError)) {
+          currentToken.current = null;
+          writeToken(null);
+        }
+        setState(SIGNED_OUT);
+      }
     }
-  }, []);
+  }, [refresh]);
 
   /* Store a freshly issued token, show its user at once, then confirm via /me */
   const establish = useCallback(
     (token: string, user: AuthUser) => {
+      sessionVersion.current += 1;
       currentToken.current = token;
       writeToken(token);
       setState({ status: "authenticated", user, token });
@@ -114,21 +137,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const token = readToken();
     currentToken.current = token;
+    const controller = new AbortController();
     if (!token) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from sessionStorage
-      setState(SIGNED_OUT);
-      return;
+      void refresh(controller.signal).catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        if (isRejectedToken(error)) {
+          currentToken.current = null;
+          writeToken(null);
+        }
+        setState(SIGNED_OUT);
+      });
+    } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore the persisted customer session
+      void verify(token, controller.signal);
     }
-    void verify(token);
-  }, [verify]);
+    return () => controller.abort();
+  }, [refresh, verify]);
 
-  /* End the session when the token expires */
+  /* Renew the short-lived access token shortly before it expires. */
   useEffect(() => {
     const expiresAt = state.token ? tokenExpiry(state.token) : null;
     if (!expiresAt) return;
-    const timer = window.setTimeout(logout, Math.max(0, expiresAt - Date.now()));
+    const timer = window.setTimeout(() => {
+      const token = state.token;
+      void refresh().catch((error: unknown) => {
+        if (currentToken.current !== token) return;
+        if (isRejectedToken(error)) void logout().catch(() => setState(SIGNED_OUT));
+        else setState(SIGNED_OUT);
+      });
+    }, Math.max(0, expiresAt - Date.now() - 60_000));
     return () => window.clearTimeout(timer);
-  }, [state.token, logout]);
+  }, [state.token, refresh, logout]);
 
   const login = useCallback(
     async (email: string, password: string) => {

@@ -33,11 +33,12 @@ export type GoogleExchangeResult = {
   user: Omit<AuthUser, "role"> & { role: "CUSTOMER" | "ADMIN" };
 };
 
-function postJson<T>(path: string, body: unknown) {
+function postJson<T>(path: string, body: unknown, credentials?: RequestCredentials) {
   return apiRequest<T>(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    credentials,
   });
 }
 
@@ -74,7 +75,7 @@ export function signupCodeErrorMessage(error: unknown) {
 
 /* POST /api/v1/auth/login — { email, password } */
 export async function loginCustomer(input: { email: string; password: string }) {
-  const { data } = await postJson<LoginResult>("/auth/login", input);
+  const { data } = await postJson<LoginResult>("/auth/login", input, "include");
   return data;
 }
 
@@ -88,8 +89,24 @@ export async function fetchCurrentCustomer(token: string) {
 
 /* POST /api/v1/auth/google/exchange — one-time code from the callback + PKCE verifier */
 export async function exchangeGoogleCode(input: { code: string; codeVerifier: string }) {
-  const { data } = await postJson<GoogleExchangeResult>("/auth/google/exchange", input);
+  const { data } = await postJson<GoogleExchangeResult>("/auth/google/exchange", input, "include");
   return data;
+}
+
+export async function refreshCustomerSession(signal?: AbortSignal) {
+  const { data } = await apiRequest<LoginResult>("/auth/refresh", {
+    method: "POST",
+    credentials: "include",
+    signal,
+  });
+  return data;
+}
+
+export async function logoutCustomerSession() {
+  await apiRequest<{ loggedOut: true }>("/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
 }
 
 /* POST /api/v1/auth/forgot-password/request-link — { email }. Always the same generic answer,
