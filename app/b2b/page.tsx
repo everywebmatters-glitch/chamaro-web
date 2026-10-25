@@ -4,20 +4,17 @@ import Link from "next/link";
 import {
   Armchair,
   ArrowRight,
-  Camera,
   ChartNoAxesCombined,
   Handshake,
   Mail,
   MapPin,
-  MessageCircle,
-  Play,
   Phone,
   Settings,
-  ThumbsUp,
 } from "lucide-react";
 import Header from "../components/Header";
-import SiteFooter from "../components/SiteFooter";
+import SiteFooter, { FooterSocialLinks } from "../components/SiteFooter";
 import QuoteForm from "../components/b2b/QuoteForm";
+import { getB2bHero } from "../lib/catalog-api";
 import { contact, primaryPhoneHref } from "../lib/site";
 
 export const metadata: Metadata = {
@@ -49,32 +46,31 @@ const benefits = [
   },
 ];
 
-export default function B2BPage() {
+export default async function B2BPage() {
+  const hero = await getB2bHero();
+
   return (
     <div className="site-shell">
-      <Header />
+      <Header overlay />
 
       <main>
         {/* Intro */}
-        <section className="b2b-hero">
+        <section className="b2b-hero hero" style={{ "--hero-bg": "#ffffff" } as React.CSSProperties}>
           <Image
             className="b2b-hero-background"
-            src="/hero/b2b-business-chair.webp"
-            alt="Ergonomic office chair"
+            src={hero.imageUrl}
+            alt={hero.imageAlt}
             fill
             sizes="100vw"
             priority
           />
           <div className="b2b-hero-copy">
-            <p className="b2b-eyebrow">Chamaro for Business</p>
-            <h1>Seating for teams of every size</h1>
-            <p>
-              Furnishing a new office, a co-working floor or a café? Order in bulk with volume pricing, GST invoices
-              and one team handling everything from quote to delivery.
-            </p>
+            <p className="b2b-eyebrow">{hero.eyebrow}</p>
+            <h1 className="hero-title">{hero.title}</h1>
+            <p className="hero-subtitle">{hero.description}</p>
             <div className="b2b-actions">
-              <a href="#quote" className="add-to-cart">
-                Request a quote
+              <a href={hero.buttonUrl} className="hero-cta">
+                {hero.buttonLabel}
                 <ArrowRight size={18} aria-hidden="true" />
               </a>
               <Link href="/products" className="wishlist-return">
@@ -110,36 +106,48 @@ export default function B2BPage() {
             </div>
 
             <aside className="b2b-contact-card" aria-label="Contact Chamaro">
-              <div className="b2b-contact-details">
-                <div>
-                  <Phone size={18} aria-hidden="true" />
-                  <h3>Phone Number</h3>
-                  <a href={primaryPhoneHref}>{contact.phone}</a>
-                </div>
-                <div>
-                  <Mail size={18} aria-hidden="true" />
-                  <h3>Email</h3>
-                  <a href={`mailto:${contact.email}`}>{contact.email}</a>
-                </div>
-                <div>
-                  <MapPin size={18} aria-hidden="true" />
-                  <h3>Address</h3>
-                  <a href={contact.mapUrl} target="_blank" rel="noreferrer">
-                    {contact.address.map((line) => (
-                      <span key={line}>{line}</span>
-                    ))}
-                  </a>
-                </div>
-              </div>
+              <ul className="b2b-contact-details contact-details contact-details-circle">
+                <li>
+                  <span className="contact-icon-circle">
+                    <Phone size={20} strokeWidth={1.8} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h3>Phone Number</h3>
+                    <p><a href={primaryPhoneHref}>{contact.phone}</a></p>
+                  </div>
+                </li>
+                <li>
+                  <span className="contact-icon-circle">
+                    <Mail size={20} strokeWidth={1.8} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h3>Email</h3>
+                    <p><a href={`mailto:${contact.email}`}>{contact.email}</a></p>
+                  </div>
+                </li>
+                <li>
+                  <span className="contact-icon-circle">
+                    <MapPin size={20} strokeWidth={1.8} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h3>Address</h3>
+                    <p>
+                      <a href={contact.mapUrl} target="_blank" rel="noreferrer">
+                        {contact.address.map((line, index) => (
+                          <span key={line}>
+                            {index > 0 && <br />}
+                            {line}
+                          </span>
+                        ))}
+                      </a>
+                    </p>
+                  </div>
+                </li>
+              </ul>
 
               <div className="b2b-socials">
                 <p>Stay Connected</p>
-                <div>
-                  <a href="https://www.instagram.com/chamarochair" target="_blank" rel="noreferrer" aria-label="Instagram"><Camera size={20} /></a>
-                  <a href="https://wa.me/919741418807" target="_blank" rel="noreferrer" aria-label="WhatsApp"><MessageCircle size={20} /></a>
-                  <a href="https://www.facebook.com/share/1cf9KjWwgm" target="_blank" rel="noreferrer" aria-label="Facebook"><ThumbsUp size={20} /></a>
-                  <a href="https://youtube.com/@chamarochairs" target="_blank" rel="noreferrer" aria-label="YouTube"><Play size={20} /></a>
-                </div>
+                <FooterSocialLinks className="footer-social b2b-footer-social" />
               </div>
             </aside>
           </div>

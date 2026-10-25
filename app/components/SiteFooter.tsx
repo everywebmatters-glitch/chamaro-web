@@ -82,6 +82,22 @@ const socialLinks = [
   },
 ];
 
+export function FooterSocialLinks({ className }: { className: string }) {
+  return (
+    <ul className={className} aria-label="Social media">
+      {socialLinks.map((social) => (
+        <li key={social.label}>
+          <a href={social.href} target="_blank" rel="noreferrer" aria-label={social.label}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              {social.icon}
+            </svg>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /* =========================================================
    COMPONENT
 ========================================================= */
@@ -130,22 +146,7 @@ export default function SiteFooter() {
               <ArrowUpRight size={13} strokeWidth={2} aria-hidden="true" />
             </a>
 
-            <ul className="footer-social" aria-label="Social media">
-              {socialLinks.map((social) => (
-                <li key={social.label}>
-                  <a
-                    href={social.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={social.label}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      {social.icon}
-                    </svg>
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <FooterSocialLinks className="footer-social" />
           </div>
 
           {/* Useful links */}

@@ -1,6 +1,7 @@
 import { ApiError, apiBaseUrl, apiRequest } from "./api";
 import type { Availability, Product } from "./products";
 import { COLLECTION_PAGE_SLUG, DEFAULT_COLLECTION_FEATURE, toCollectionFeature, type ApiCmsPage, type CollectionFeature } from "./collection-feature";
+import { B2B_PAGE_SLUG, DEFAULT_B2B_HERO, toB2bHero, type B2bHero } from "./b2b-hero";
 import type { NavCategory } from "./catalog-nav";
 import { CATEGORY_DISPLAY_PAGE_SLUG, iconFor, orderCategories, toCategoryDisplay, type CategoryDisplayItem } from "./category-display";
 import { BEST_SELLERS_PAGE_SLUG, pickBySlugs, toBestSellerSlugs } from "./best-sellers";
@@ -184,6 +185,16 @@ export async function getCollectionFeature(): Promise<CollectionFeature> {
     return toCollectionFeature(data, new URL(apiBaseUrl()).origin);
   } catch {
     return DEFAULT_COLLECTION_FEATURE;
+  }
+}
+
+/* The B2B hero is managed as the published CMS page "b2b". Missing content or an API error keeps the built-in hero. */
+export async function getB2bHero(): Promise<B2bHero> {
+  try {
+    const { data } = await apiRequest<ApiCmsPage>(`/cms/pages/${B2B_PAGE_SLUG}`, briefly);
+    return toB2bHero(data, new URL(apiBaseUrl()).origin);
+  } catch {
+    return DEFAULT_B2B_HERO;
   }
 }
 
