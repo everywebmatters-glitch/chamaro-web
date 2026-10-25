@@ -3450,11 +3450,16 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 .cart-subtotal {
   align-items: baseline;
   display: flex;
+  flex-direction: row;
   font-size: 1.3rem;
+  gap: 16px;
   justify-content: space-between;
+  width: 100%;
 }
 
 .cart-subtotal strong {
+  margin-left: auto;
+  white-space: nowrap;
   font-weight: 600;
 }
 
