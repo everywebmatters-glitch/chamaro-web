@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { useStore } from "../store/StoreProvider";
+import { ApiError } from "../../lib/api";
+import { listCustomerOrders, type CustomerOrder } from "../../lib/checkout-api";
 import AuthField, { ACCOUNT_SAVE_UNAVAILABLE, EMAIL_PATTERN, MIN_PASSWORD } from "./AuthField";
 
 /* Written by checkout when the shopper ticks "Save this information" */
@@ -62,16 +64,119 @@ function Dashboard({ go }: { go: (id: SectionId) => void }) {
   );
 }
 
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Awaiting payment",
+  CONFIRMED: "Confirmed",
+  PROCESSING: "Preparing",
+  SHIPPED: "Shipped",
+  COMPLETED: "Delivered",
+  CANCELLED: "Cancelled",
+};
+
+const PAYMENT_STATUS_LABELS = {
+  UNPAID: "Payment pending",
+  PAID: "Paid",
+  REFUNDED: "Refunded",
+} as const;
+
+const orderCurrency = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" });
+const orderDate = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
 function Orders() {
+  const { status, token } = useAuth();
+  const [result, setResult] = useState<{ token: string; reload: number; orders?: CustomerOrder[]; error?: string } | null>(null);
+  const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    if (status !== "authenticated" || !token) return;
+    const controller = new AbortController();
+    listCustomerOrders(token, 1, 20)
+      .then(({ orders: result }) => {
+        if (!controller.signal.aborted) setResult({ token, reload, orders: result });
+      })
+      .catch((reason: unknown) => {
+        if (controller.signal.aborted) return;
+        setResult({
+          token,
+          reload,
+          error: reason instanceof ApiError ? reason.message : "Couldn't load your orders. Please try again.",
+        });
+      });
+    return () => controller.abort();
+  }, [status, token, reload]);
+
+  const currentResult = result?.token === token && result.reload === reload ? result : null;
+
+  if (status === "loading" || (status === "authenticated" && !currentResult)) {
+    return (
+      <div className="account-content" aria-busy="true">
+        <h2>Orders</h2>
+        <p role="status">Loading your orders...</p>
+      </div>
+    );
+  }
+
+  if (status !== "authenticated") {
+    return (
+      <div className="account-content">
+        <h2>Orders</h2>
+        <div className="account-empty">
+          <p>Sign in to see orders placed with your account.</p>
+          <Link href="/account/login" className="wishlist-return">Log in</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="account-content">
       <h2>Orders</h2>
-      <div className="account-empty">
-        <p>Online ordering isn&apos;t open yet, so there are no orders to show. Your orders will appear here once it is.</p>
-        <Link href="/products" className="wishlist-return">
-          Browse chairs
-        </Link>
-      </div>
+      {currentResult?.error ? (
+        <div className="account-empty" role="alert">
+          <p>{currentResult.error}</p>
+          <button type="button" className="wishlist-return" onClick={() => setReload((value) => value + 1)}>Try again</button>
+        </div>
+      ) : !currentResult?.orders?.length ? (
+        <div className="account-empty">
+          <p>You haven&apos;t placed any orders yet.</p>
+          <Link href="/products" className="wishlist-return">Browse chairs</Link>
+        </div>
+      ) : (
+        <div className="account-orders">
+          {currentResult.orders.map((order) => (
+            <article className="account-order" key={order.id}>
+              <div className="account-order-heading">
+                <div>
+                  <h3>Order {order.id.slice(-8).toUpperCase()}</h3>
+                  <p>Placed {orderDate.format(new Date(order.createdAt))}</p>
+                </div>
+                <strong>{orderCurrency.format(Number(order.total))}</strong>
+              </div>
+              <div className="account-order-status">
+                <span>{ORDER_STATUS_LABELS[order.status] ?? order.status}</span>
+                <span>{PAYMENT_STATUS_LABELS[order.paymentStatus]}</span>
+              </div>
+              <ul className="account-order-items">
+                {order.items.map((item) => (
+                  <li key={item.id}>
+                    <span>{item.productName ?? "Chair"}{item.variantName ? ` — ${item.variantName}` : ""} × {item.quantity}</span>
+                    <span>{orderCurrency.format(Number(item.lineTotal))}</span>
+                  </li>
+                ))}
+              </ul>
+              {order.shipment && (
+                <div className="account-order-shipment">
+                  <p>{order.shipment.courier} tracking: {order.shipment.courierStatus ?? order.shipment.status.replaceAll("_", " ")}</p>
+                  <p>{order.shipment.trackingNumber}{order.shipment.courierStatusLocation ? ` · ${order.shipment.courierStatusLocation}` : ""}</p>
+                  {order.shipment.trackingUrl && (
+                    <a href={order.shipment.trackingUrl} target="_blank" rel="noreferrer">Track shipment</a>
+                  )}
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -4961,6 +4961,87 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   margin: 0;
 }
 
+.account-orders {
+  display: grid;
+  gap: 16px;
+}
+
+.account-order {
+  border: 1px solid #ececea;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.account-order-heading,
+.account-order-items li {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.account-order-heading h3,
+.account-order-heading p,
+.account-order-items,
+.account-order-shipment p {
+  margin: 0;
+}
+
+.account-order-heading h3 {
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.account-order-heading p,
+.account-order-items,
+.account-order-shipment {
+  color: var(--text-body);
+  font-size: 0.9rem;
+}
+
+.account-order-heading > strong {
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+.account-order-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.account-order-status span {
+  background: #f7f6f4;
+  border-radius: 999px;
+  color: var(--foreground);
+  font-size: 0.8rem;
+  padding: 5px 10px;
+}
+
+.account-order-items {
+  border-top: 1px solid #ececea;
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin-top: 14px;
+  padding: 14px 0 0;
+}
+
+.account-order-shipment {
+  border-top: 1px solid #ececea;
+  line-height: 1.7;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.account-order-shipment a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .account-address {
   border: 1px solid #ececea;
   border-radius: 8px;

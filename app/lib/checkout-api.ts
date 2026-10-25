@@ -1,4 +1,4 @@
-import { apiRequest } from "./api";
+import { apiRequest, type ApiPageMeta } from "./api";
 
 type AuthHeaders = { Authorization: string };
 
@@ -26,6 +26,27 @@ export type CheckoutOrder = {
   total: string;
   status: string;
   paymentStatus: "UNPAID" | "PAID" | "REFUNDED";
+};
+
+export type CustomerOrder = CheckoutOrder & {
+  createdAt: string;
+  shippingMethod: string | null;
+  shipment: {
+    courier: string;
+    trackingNumber: string;
+    trackingUrl: string | null;
+    status: string;
+    courierStatus: string | null;
+    courierStatusLocation: string | null;
+    courierStatusAt: string | null;
+  } | null;
+  items: {
+    id: string;
+    productName: string | null;
+    variantName: string | null;
+    quantity: number;
+    lineTotal: string;
+  }[];
 };
 
 export type RazorpayPaymentSession = {
@@ -145,4 +166,13 @@ export async function getCheckoutOrder(token: string, orderId: string) {
     cache: "no-store",
   });
   return data;
+}
+
+export async function listCustomerOrders(token: string, page = 1, limit = 10) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const { data, meta } = await apiRequest<CustomerOrder[]>(`/orders?${params}`, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+  return { orders: data, meta: meta as ApiPageMeta | undefined };
 }
