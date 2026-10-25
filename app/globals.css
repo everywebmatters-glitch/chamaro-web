@@ -5472,6 +5472,10 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   min-height: 56px;
 }
 
+.b2b-actions .hero-cta {
+  min-height: 56px;
+}
+
 .b2b-actions .wishlist-return:hover {
   background: var(--foreground);
   border-color: var(--foreground);
@@ -5873,19 +5877,33 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   }
 }
 
-@media (max-width: 860px) {
-  .contact-layout,
-  .b2b-quote {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
+@media (max-width: 1280px) {
   .b2b-quote {
     row-gap: clamp(28px, 5vw, 72px);
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "title"
       "form"
       "contact";
     grid-template-rows: auto auto auto;
+  }
+
+  .b2b-contact-card {
+    inset: auto;
+    margin: 0 clamp(32px, 5vw, 68px);
+    position: static;
+  }
+
+  .b2b-contact-details {
+    gap: 28px;
+    padding: 8px 10px 24px;
+  }
+}
+
+@media (max-width: 860px) {
+  .contact-layout,
+  .b2b-quote {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .b2b-request-form .quote-form-hint {
@@ -5934,6 +5952,12 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .b2b-actions > * {
     flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .b2b-socials .footer-social {
+    flex-wrap: wrap;
   }
 }
 
