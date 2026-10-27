@@ -3448,7 +3448,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 }
 
 .cart-subtotal {
-  align-items: baseline;
+  align-items: center;
   display: flex;
   flex-direction: row;
   font-size: 1.3rem;
@@ -4201,7 +4201,9 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 }
 
 .checkout-form .checkbox-row {
+  justify-content: center;
   margin: 0;
+  text-align: center;
 }
 
 /* Floating-label fields */
@@ -6481,10 +6483,6 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   .checkout-form {
     gap: 30px;
     padding-top: 32px;
-  }
-
-  .checkout-form .checkbox-row {
-    justify-content: center;
   }
 
   .checkout-summary-inner {
