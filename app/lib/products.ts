@@ -94,14 +94,14 @@ export const availabilityLabels: Record<Availability, string> = {
   "out-of-stock": "Out of stock",
 };
 
-/* TODO: confirm delivery, returns and warranty terms */
+/* Store-wide policy text shown when a product has no per-product override */
 export const storePolicies = {
   delivery:
     "Estimated delivery: 3–7 days (metro cities), 7–12 days (rest of India).",
   returns:
     "Return within 7 days of delivery in original packaging. Assembly and shipping charges are non-refundable.",
   warranty:
-    "Every Chamaro chair carries a 1-year warranty against manufacturing defects in the frame, mechanism and gas lift. Wear and tear, misuse and upholstery damage from sharp objects are not covered.",
+    "Chamaro products are covered by a 1-year standard warranty against manufacturing defects under normal use. Coverage includes the hydraulic gas lift, tilt mechanism, wheelbase, and handles. Manufacturing defects found within 10 days of delivery may be eligible for replacement or return, subject to inspection and approval. See Warranty Information for full coverage and exclusions.",
   /* TODO: confirm the standard disclaimer wording with the business */
   disclaimer:
     "Product colours may look slightly different from the photos because of lighting and screen settings. Dimensions and weights are approximate. Please follow the assembly instructions and the rated weight capacity for safe use.",
