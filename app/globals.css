@@ -6369,6 +6369,22 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 }
 
+/* Tablet-only home-page refinements. Keep the phone and desktop layouts as-is. */
+@media (min-width: 761px) and (max-width: 1000px) {
+  /* A viewport-height hero left excessive blank space below the artwork on
+     portrait tablets. Limit it while still allowing compact tablet heights. */
+  .hero-slide {
+    min-height: min(720px, calc(100svh - 80px));
+  }
+
+  .category-circle-name {
+    font-size: 0.78rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+}
+
 /* =========================================================
    MOBILE
 ========================================================= */
