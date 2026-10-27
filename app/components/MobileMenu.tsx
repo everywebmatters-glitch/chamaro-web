@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Heart, Menu, ShoppingBag, UserRound, X } from "lucide-react";
+import { ChevronDown, Heart, LogOut, Menu, ShoppingBag, UserRound, X } from "lucide-react";
 import { categoryHref, type NavCategory } from "../lib/catalog-nav";
+import { useAuth } from "./auth/AuthProvider";
 import { useStore } from "./store/StoreProvider";
 
 export default function MobileMenu({ categories }: { categories: NavCategory[] }) {
@@ -14,6 +15,8 @@ export default function MobileMenu({ categories }: { categories: NavCategory[] }
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { wishlist, cartCount, openCart } = useStore();
+  const { status, logout } = useAuth();
+  const [logoutError, setLogoutError] = useState<string | null>(null);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect -- portal target exists only after mount
   useEffect(() => setMounted(true), []);
@@ -39,6 +42,16 @@ export default function MobileMenu({ categories }: { categories: NavCategory[] }
   /* Links to the current page don't change the pathname, so close on any link tap */
   const closeOnLink = (event: React.MouseEvent) => {
     if ((event.target as HTMLElement).closest("a")) setOpen(false);
+  };
+
+  const handleLogout = async () => {
+    setOpen(false);
+    setLogoutError(null);
+    try {
+      await logout();
+    } catch {
+      setLogoutError("You were signed out on this device, but server sign-out could not be confirmed.");
+    }
   };
 
   /* Rendered in <body> so the sticky header's slide transform can't trap the fixed panel */
@@ -120,13 +133,34 @@ export default function MobileMenu({ categories }: { categories: NavCategory[] }
         </div>
 
         <div className="mobile-menu-footer">
-          <Link href="/account/login" className="add-to-cart">
-            <UserRound size={18} aria-hidden="true" />
-            Log in
-          </Link>
-          <Link href="/account/register" className="mobile-menu-register">
-            Create an account
-          </Link>
+          {status === "authenticated" ? (
+            <>
+              <Link href="/account" className="add-to-cart">
+                <UserRound size={18} aria-hidden="true" />
+                Account
+              </Link>
+              <button type="button" className="outline-button" onClick={handleLogout}>
+                <LogOut size={18} aria-hidden="true" />
+                Log out
+              </button>
+            </>
+          ) : status === "unauthenticated" ? (
+            <>
+              <Link href="/account/login" className="add-to-cart">
+                <UserRound size={18} aria-hidden="true" />
+                Log in
+              </Link>
+              <Link href="/account/register" className="mobile-menu-register">
+                Create an account
+              </Link>
+            </>
+          ) : (
+            <Link href="/account" className="add-to-cart">
+              <UserRound size={18} aria-hidden="true" />
+              Account
+            </Link>
+          )}
+          {logoutError && <p className="mobile-menu-logout-error" role="alert">{logoutError}</p>}
         </div>
       </aside>
     </>

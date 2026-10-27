@@ -417,6 +417,12 @@ button {
   text-underline-offset: 3px;
 }
 
+.mobile-menu-logout-error {
+  color: #c0321b;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mobile-menu {
     transition: none;
@@ -1641,6 +1647,10 @@ button {
   max-width: var(--content-max);
 }
 
+.catalog-grid > .product-card {
+  min-width: 0;
+}
+
 .catalog-grid[data-cols="list"] {
   gap: 28px;
   grid-template-columns: minmax(0, 1fr);
@@ -1999,6 +2009,7 @@ button {
   display: grid;
   gap: 8px;
   justify-content: stretch;
+  min-width: 0;
   padding: 0;
 }
 
@@ -2007,6 +2018,7 @@ button {
   font-weight: 400;
   letter-spacing: 0;
   margin: 0;
+  min-width: 0;
 }
 
 .product-card h3 a {
@@ -2024,6 +2036,7 @@ button {
 .product-card .product-price-row {
   flex-wrap: nowrap;
   margin: 0;
+  min-width: 0;
   white-space: nowrap;
 }
 
@@ -6534,6 +6547,19 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
   .product-card h3 {
     font-size: 0.92rem;
+  }
+
+  .product-card .product-price-row {
+    gap: 4px;
+    overflow: hidden;
+  }
+
+  .product-card .price-original {
+    font-size: clamp(0.65rem, 2.9vw, 0.82rem);
+  }
+
+  .product-card .price-current {
+    font-size: clamp(0.7rem, 3.2vw, 0.9rem);
   }
 
   /* Touch screens have no hover: keep actions visible but compact */
