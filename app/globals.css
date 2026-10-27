@@ -808,6 +808,7 @@ button {
   line-height: 1.05;
   margin: 0;
   text-align: center;
+  transform: translateY(8px);
 }
 
 /* Scrolls sideways by touch swipe, trackpad, drag, mouse wheel or the
@@ -850,7 +851,7 @@ button {
   position: absolute;
   /* Centers on the 108px circle art (4px track padding + half its height),
      not the row's full height, which also includes the name label below. */
-  top: calc(4px + 54px);
+  top: calc(4px + 50px);
   transform: translateY(-50%);
   transition: background 0.3s ease, border-color 0.3s ease;
   width: 40px;
@@ -931,7 +932,11 @@ button {
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.14em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* =========================================================
@@ -2004,13 +2009,22 @@ button {
   margin: 0;
 }
 
+.product-card h3 a {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .product-card h3 a:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .product-card .product-price-row {
+  flex-wrap: nowrap;
   margin: 0;
+  white-space: nowrap;
 }
 
 .product-card .price-current {
