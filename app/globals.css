@@ -3431,6 +3431,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   accent-color: var(--foreground);
   flex-shrink: 0;
   height: 18px;
+  margin: 0;
   width: 18px;
 }
 
@@ -4201,9 +4202,9 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 }
 
 .checkout-form .checkbox-row {
-  justify-content: center;
+  justify-content: flex-start;
   margin: 0;
-  text-align: center;
+  text-align: left;
 }
 
 /* Floating-label fields */
