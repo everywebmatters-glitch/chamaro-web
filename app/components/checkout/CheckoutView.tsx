@@ -1038,7 +1038,7 @@ export default function CheckoutView() {
                   {line.product.name}
                   <small>{variantLabel(line)}</small>
                 </span>
-                <span>{formatPrice(line.lineTotal)}</span>
+                <span className="price-numeric">{formatPrice(line.lineTotal)}</span>
               </li>
             ))}
           </ul>
@@ -1052,12 +1052,12 @@ export default function CheckoutView() {
           <dl className="checkout-totals">
             <div>
               <dt>Subtotal · {itemCount} {itemCount === 1 ? "item" : "items"}</dt>
-              <dd>{formatPrice(subtotal)}</dd>
+              <dd className="price-numeric">{formatPrice(subtotal)}</dd>
             </div>
             {discount > 0 && (
               <div>
                 <dt>Discount</dt>
-                <dd>−{formatPrice(discount)}</dd>
+                <dd className="price-numeric">−{formatPrice(discount)}</dd>
               </div>
             )}
             <div>
@@ -1067,13 +1067,13 @@ export default function CheckoutView() {
                   ? "Enter shipping address"
                   : shippingPrice === 0
                     ? "FREE"
-                    : formatPrice(shippingPrice)}
+                    : <span className="price-numeric">{formatPrice(shippingPrice)}</span>}
               </dd>
             </div>
             <div className="checkout-total">
               <dt>Total</dt>
               <dd>
-                <small>INR</small> {formatPrice(displayTotal)}
+                <small>INR</small> <span className="price-numeric">{formatPrice(displayTotal)}</span>
               </dd>
             </div>
           </dl>

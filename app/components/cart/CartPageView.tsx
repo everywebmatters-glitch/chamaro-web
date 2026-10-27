@@ -132,7 +132,7 @@ export default function CartPageView() {
                 </div>
               </td>
               <td data-label="Subtotal" className="cart-table-total">
-                {formatPrice(line.lineTotal)}
+                <span className="price-numeric">{formatPrice(line.lineTotal)}</span>
               </td>
             </tr>
           ))}
@@ -176,18 +176,18 @@ export default function CartPageView() {
             {discount > 0 && (
               <div className="cart-summary-row">
                 <span>Discount</span>
-                <span>−{formatPrice(discount)}</span>
+                <span className="price-numeric">−{formatPrice(discount)}</span>
               </div>
             )}
 
             <div className="cart-summary-row">
               <span>Subtotal</span>
-              <span>{formatPrice(subtotal - discount)}</span>
+              <span className="price-numeric">{formatPrice(subtotal - discount)}</span>
             </div>
 
             <div className="cart-subtotal">
               <span>Total</span>
-              <strong>{formatPrice(total)}</strong>
+              <strong className="price-numeric">{formatPrice(total)}</strong>
             </div>
 
             <button

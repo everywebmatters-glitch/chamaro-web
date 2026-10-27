@@ -223,12 +223,12 @@ export default function CartDrawer() {
               {discount > 0 && (
                 <div className="cart-summary-row cart-discount-row">
                   <span>Discount ({discountCode})</span>
-                  <span>−{formatPrice(discount)}</span>
+                  <span className="price-numeric">−{formatPrice(discount)}</span>
                 </div>
               )}
               <div className="cart-subtotal">
                 <span>Subtotal</span>
-                <strong>{formatPrice(subtotal - discount)}</strong>
+                <strong className="price-numeric">{formatPrice(subtotal - discount)}</strong>
               </div>
               <p className="cart-tax-note">
                 Prices include GST. <Link href="/cart" onClick={closeCart}>Shipping</Link>{" "}

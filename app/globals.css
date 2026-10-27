@@ -1011,8 +1011,13 @@ button {
 /* Prices and the OFF badge use a plain system font: the struck compare-at price first, then the price to pay */
 .price-current,
 .price-original,
-.price-save {
+.price-save,
+.price-numeric {
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.price-numeric {
+  font-variant-numeric: tabular-nums;
 }
 
 .price-current {
@@ -3937,7 +3942,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 }
 
 .cart-table th:last-child,
-.cart-table-total {
+.cart-table td.cart-table-total {
   text-align: center;
 }
 
