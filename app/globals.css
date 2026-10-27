@@ -3432,6 +3432,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   flex-shrink: 0;
   height: 18px;
   margin: 0;
+  transform: translateY(-1.5px);
   width: 18px;
 }
 
@@ -3937,7 +3938,7 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .cart-table th:last-child,
 .cart-table-total {
-  text-align: right;
+  text-align: center;
 }
 
 .cart-table td {
