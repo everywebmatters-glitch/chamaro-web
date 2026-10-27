@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { EMAIL_PATTERN, PHONE_PATTERN, contact, mailtoHref } from "../../lib/site";
+import { useRef, useState } from "react";
+import { ApiError } from "../../lib/api";
+import { submitB2BEnquiry } from "../../lib/b2b-enquiries-api";
+import { EMAIL_PATTERN, PHONE_PATTERN, contact } from "../../lib/site";
 import FormField from "../FormField";
 
 const BUSINESS_TYPES = [
@@ -32,6 +34,7 @@ type Form = {
   city: string;
   product: string;
   quantity: string;
+  message: string;
 };
 
 const EMPTY: Form = {
@@ -43,18 +46,26 @@ const EMPTY: Form = {
   city: "",
   product: "",
   quantity: "",
+  message: "",
 };
 
 function validate(form: Form) {
   const errors: Partial<Record<keyof Form, string>> = {};
   if (!form.company.trim()) errors.company = "Enter your company name.";
+  else if (form.company.trim().length > 191) errors.company = "Company name must be 191 characters or fewer.";
   if (!form.name.trim()) errors.name = "Enter your name.";
-  if (!PHONE_PATTERN.test(form.phone.replace(/\s/g, ""))) errors.phone = "Enter a 10-digit mobile number.";
-  if (!EMAIL_PATTERN.test(form.email.trim())) errors.email = "Enter a valid email address.";
+  else if (form.name.trim().length > 191) errors.name = "Name must be 191 characters or fewer.";
+  if (form.phone.trim().length > 16 || !PHONE_PATTERN.test(form.phone.trim().replace(/\s/g, "")))
+    errors.phone = "Enter a valid Indian mobile number.";
+  if (form.email.trim().length > 191 || !EMAIL_PATTERN.test(form.email.trim()))
+    errors.email = "Enter a valid email address (191 characters or fewer).";
   if (!form.businessType) errors.businessType = "Select a business type.";
   if (!form.city.trim()) errors.city = "Enter your city.";
   if (!form.product) errors.product = "Select the products you need.";
-  if (!form.quantity.trim()) errors.quantity = "Enter an approximate quantity.";
+  if (!/^[1-9]\d*$/.test(form.quantity.trim()) || Number(form.quantity) > 1_000_000)
+    errors.quantity = "Enter a whole quantity from 1 to 1,000,000.";
+  if (form.message.trim().length < 10) errors.message = "Add a message of at least 10 characters.";
+  else if (form.message.trim().length > 9_500) errors.message = "Keep your message under 9,500 characters.";
   return errors;
 }
 
@@ -62,27 +73,54 @@ export default function QuoteForm() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [notice, setNotice] = useState("");
+  const submissionInProgress = useRef(false);
 
   const errors = touched ? validate(form) : {};
-  const update = (key: keyof Form) => (value: string) => setForm((current) => ({ ...current, [key]: value }));
+  const update = (key: keyof Form) => (value: string) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setNotice("");
+    setSent(false);
+  };
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setTouched(true);
     if (Object.keys(validate(form)).length > 0) return;
 
-    // TODO: post to a quotes API / CRM once one exists
-    window.location.href = mailtoHref(`B2B enquiry — ${form.company.trim()}`, [
-      ["Company", form.company],
-      ["Contact name", form.name],
-      ["Phone", form.phone],
-      ["Email", form.email],
-      ["Business type", form.businessType],
-      ["City", form.city],
-      ["Products required", form.product],
-      ["Quantity required", form.quantity],
-    ]);
-    setSent(true);
+    if (submissionInProgress.current) return;
+    submissionInProgress.current = true;
+    setSubmitting(true);
+    setNotice("");
+
+    try {
+      await submitB2BEnquiry({
+        name: form.name.trim(),
+        companyName: form.company.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        productType: form.product,
+        quantity: Number(form.quantity),
+        message: `Business type: ${form.businessType}\nCity / location: ${form.city}\n\n${form.message.trim()}`,
+      });
+      setForm(EMPTY);
+      setTouched(false);
+      setSent(true);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 0) {
+        setNotice("We couldn't reach the server. Please check your connection and try again.");
+      } else if (error instanceof ApiError && error.status === 429) {
+        setNotice("Too many requests. Please wait a moment and try again.");
+      } else if (error instanceof ApiError && error.status === 400) {
+        setNotice("Please check the form details and try again.");
+      } else {
+        setNotice(`We couldn't submit your request. Please try again or email ${contact.email}.`);
+      }
+    } finally {
+      submissionInProgress.current = false;
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -177,8 +215,19 @@ export default function QuoteForm() {
         />
       </div>
 
-      <button type="submit" className="add-to-cart auth-submit">
-        Request a B2B Quote
+      <FormField
+        id="quote-message"
+        as="textarea"
+        label="Tell us about your requirement *"
+        value={form.message}
+        onChange={update("message")}
+        error={errors.message}
+        rows={5}
+        className="field-underline"
+      />
+
+      <button type="submit" className="add-to-cart auth-submit" disabled={submitting} aria-busy={submitting || undefined}>
+        {submitting ? "Sending request…" : "Request a B2B Quote"}
       </button>
 
       <p className="quote-form-hint">
@@ -187,8 +236,12 @@ export default function QuoteForm() {
 
       {sent && (
         <p className="checkout-notice auth-notice" role="status">
-          Your email app should now be open with your enquiry filled in. Press send there to reach our team. If
-          nothing opened, email us at <a href={`mailto:${contact.email}`}>{contact.email}</a>.
+          Thanks — your B2B enquiry has been received. Our team will get in touch with you shortly.
+        </p>
+      )}
+      {notice && (
+        <p className="checkout-notice auth-notice" role="alert">
+          {notice}
         </p>
       )}
     </form>
