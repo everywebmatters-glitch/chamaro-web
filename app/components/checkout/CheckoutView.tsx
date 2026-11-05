@@ -265,7 +265,7 @@ function checkoutErrorMessage(error: unknown) {
       ITEM_UNAVAILABLE: "A product in your cart is no longer available.",
       COUPON_NOT_APPLICABLE: "The coupon is no longer valid for this cart. Remove it and try again.",
       DELIVERY_PIN_UNSERVICEABLE: "Delhivery cannot deliver to this PIN code. Check the code or use another address.",
-      SHIPPING_WEIGHT_UNAVAILABLE: "We can't calculate delivery for one or more items yet. Please contact us for help.",
+      SHIPPING_WEIGHT_UNAVAILABLE: "We can't calculate delivery because packed weight or dimensions are missing for one or more items. Please contact us for help.",
       SHIPPING_WEIGHT_INVALID: "We couldn't calculate delivery for this cart. Please contact us for help.",
       SHIPPING_QUOTE_EXPIRED: "Your delivery estimate changed. Wait for the updated charge and try again.",
       SHIPPING_QUOTE_INVALID: "Your delivery estimate is invalid. Refresh it and try again.",
