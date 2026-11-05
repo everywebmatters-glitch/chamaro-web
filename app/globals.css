@@ -3535,50 +3535,6 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
   min-height: 50vh;
 }
 
-/* Free shipping progress */
-
-.free-shipping-track {
-  background: #ececea;
-  border-radius: 999px;
-  height: 6px;
-  margin: 18px 0 16px;
-  position: relative;
-}
-
-.free-shipping-fill {
-  background: #d8462e;
-  border-radius: 999px;
-  display: block;
-  height: 100%;
-  transition: width 0.4s ease;
-}
-
-.free-shipping-icon {
-  align-items: center;
-  background: #ffffff;
-  border: 1.5px solid var(--foreground);
-  border-radius: 50%;
-  display: flex;
-  height: 32px;
-  justify-content: center;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  transition: left 0.4s ease;
-  width: 32px;
-}
-
-.free-shipping p {
-  color: var(--text-body);
-  font-size: 0.95rem;
-  margin: 0;
-}
-
-.free-shipping strong {
-  color: var(--foreground);
-  font-weight: 600;
-}
-
 /* Discount form */
 
 .discount-form form {
@@ -4020,21 +3976,6 @@ body:has(.sticky-buy-bar[data-visible="true"]) .store-toast {
 
 .cart-table-total {
   font-weight: 600;
-}
-
-.cart-page-shipping-bar {
-  margin: 0 auto 48px;
-  max-width: 480px;
-}
-
-.cart-page-shipping-bar .free-shipping {
-  display: flex;
-  flex-direction: column-reverse;
-  text-align: center;
-}
-
-.cart-page-shipping-bar .free-shipping p {
-  margin-bottom: 4px;
 }
 
 .cart-coupon {

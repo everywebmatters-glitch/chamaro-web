@@ -7,7 +7,6 @@ import { ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   cartSubtotal,
-  isChairProduct,
   resolveLines,
   variantLabel,
 } from "../../lib/cart";
@@ -15,7 +14,6 @@ import { formatPrice, unitsLeft } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
 import CartNotices from "./CartNotices";
 import { useStore } from "../store/StoreProvider";
-import FreeShippingProgress from "./FreeShippingProgress";
 import { useAuth } from "../auth/AuthProvider";
 
 export default function CartDrawer() {
@@ -41,7 +39,6 @@ export default function CartDrawer() {
   /* Saved lines exist but live product data hasn't arrived (or couldn't) yet */
   const pending = cart.length > 0 && !catalog;
   const subtotal = cartSubtotal(lines);
-  const chairCount = lines.reduce((count, line) => count + (isChairProduct(line.product) ? line.quantity : 0), 0);
   const discount = discountCustomerId === user?.id ? appliedDiscountTotal : 0;
   const suggestions = (catalog ?? []).filter(
     (product) => !cart.some((line) => line.slug === product.slug)
@@ -108,10 +105,6 @@ export default function CartDrawer() {
           </div>
         ) : (
           <>
-            <div className="cart-drawer-progress">
-              <FreeShippingProgress chairCount={chairCount} />
-            </div>
-
             <div className="cart-drawer-scroll">
               <CartNotices />
 

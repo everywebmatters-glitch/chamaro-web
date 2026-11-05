@@ -1,20 +1,5 @@
 import type { Product } from "./products";
 
-/* Prices are GST-inclusive, so no tax line is added */
-export const FREE_SHIPPING_CHAIR_COUNT = 2;
-
-export type ShippingMethodId = "standard" | "express";
-
-export const SHIPPING_METHODS: {
-  id: ShippingMethodId;
-  label: string;
-  eta: string;
-  price: number;
-}[] = [
-  { id: "standard", label: "Standard delivery", eta: "3–7 business days", price: 499 },
-  { id: "express", label: "Express delivery", eta: "1–3 business days", price: 999 },
-];
-
 export type DiscountCode = {
   code: string;
   label: string;
@@ -35,15 +20,6 @@ export function isChairProduct(product: Pick<Product, "name" | "category" | "cat
 export function isBossChairProduct(product: Pick<Product, "name" | "category" | "categoryName">) {
   const terms = `${product.name} ${product.category} ${product.categoryName ?? ""}`.toLowerCase();
   return /\bboss\b/.test(terms) && isChairProduct(product);
-}
-
-export function chairsToFreeShipping(chairCount: number) {
-  return Math.max(0, FREE_SHIPPING_CHAIR_COUNT - chairCount);
-}
-
-export function shippingCost(method: ShippingMethodId, chairCount: number) {
-  const rule = SHIPPING_METHODS.find((item) => item.id === method)!;
-  return method === "standard" && chairCount >= FREE_SHIPPING_CHAIR_COUNT ? 0 : rule.price;
 }
 
 export function findDiscount(code: string) {

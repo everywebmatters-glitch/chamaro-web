@@ -22,7 +22,8 @@ export default function ShippingPolicyPage() {
             <>
               Estimated delivery: <strong>8–10 business days</strong>
             </>,
-            "Standard delivery is free when an order contains two or more chairs. Express delivery charges still apply.",
+            "One Delhivery Surface delivery option is available. The delivery charge is estimated from your destination PIN code and the packed weight of your cart, and is shown at checkout.",
+            "Delhivery's charge calculator provides an estimate; the courier's final billed amount may vary.",
             "Delivery timeline may vary depending on location and courier availability.",
             "Shipping confirmation and tracking details will be shared once your order is dispatched.",
             "Orders are processed only after successful payment confirmation.",

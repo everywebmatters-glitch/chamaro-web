@@ -3,15 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import {
   cartSubtotal,
-  isChairProduct,
   resolveLines,
-  SHIPPING_METHODS,
-  shippingCost,
   variantLabel,
-  type ShippingMethodId,
 } from "../../lib/cart";
 import { formatPrice, unitsLeft } from "../../lib/products";
 import QuantityStepper from "../QuantityStepper";
@@ -19,7 +14,6 @@ import CartNotices from "./CartNotices";
 import { useStore } from "../store/StoreProvider";
 import { useAuth } from "../auth/AuthProvider";
 import DiscountForm from "./DiscountForm";
-import FreeShippingProgress from "./FreeShippingProgress";
 
 export default function CartPageView() {
   const router = useRouter();
@@ -35,14 +29,11 @@ export default function CartPageView() {
     appliedDiscountTotal,
   } = useStore();
   const { user } = useAuth();
-  const [shipping, setShipping] = useState<ShippingMethodId>("standard");
 
   const lines = resolveLines(cart, findProduct);
   const subtotal = cartSubtotal(lines);
-  const chairCount = lines.reduce((count, line) => count + (isChairProduct(line.product) ? line.quantity : 0), 0);
   const discount = discountCustomerId === user?.id ? appliedDiscountTotal : 0;
-  const shippingTotal = shippingCost(shipping, chairCount);
-  const total = subtotal - discount + shippingTotal;
+  const total = subtotal - discount;
 
   /* Avoid flashing "empty" before the saved cart loads */
   if (!hydrated || (cart.length > 0 && !catalog && !catalogFailed)) {
@@ -77,10 +68,6 @@ export default function CartPageView() {
   return (
     <>
       <CartNotices />
-
-      <div className="cart-page-shipping-bar">
-        <FreeShippingProgress chairCount={chairCount} />
-      </div>
 
       <table className="cart-table">
         <thead>
@@ -153,25 +140,6 @@ export default function CartPageView() {
         <aside className="cart-summary" aria-label="Order summary">
           <div className="cart-summary-panel">
             <h3>Cart summary</h3>
-
-            <div className="option-list">
-              {SHIPPING_METHODS.map((method) => {
-                const cost = shippingCost(method.id, chairCount);
-                return (
-                  <label key={method.id} className={shipping === method.id ? "selected" : ""}>
-                    <input
-                      type="radio"
-                      name="cart-shipping"
-                      value={method.id}
-                      checked={shipping === method.id}
-                      onChange={() => setShipping(method.id)}
-                    />
-                    <span>{method.label}</span>
-                    <strong>{cost === 0 ? formatPrice(0) : `+${formatPrice(cost)}`}</strong>
-                  </label>
-                );
-              })}
-            </div>
 
             {discount > 0 && (
               <div className="cart-summary-row">

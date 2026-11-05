@@ -2,16 +2,11 @@ import { priceFor, type Product, type ProductVariant } from "./products";
 import { selectVariant } from "./product-variants";
 
 export {
-  chairsToFreeShipping,
   discountAmount,
-  FREE_SHIPPING_CHAIR_COUNT,
   findDiscount,
   isBossChairProduct,
   isChairProduct,
-  SHIPPING_METHODS,
-  shippingCost,
   type DiscountCode,
-  type ShippingMethodId,
 } from "./cart-pricing";
 
 /* =========================================================

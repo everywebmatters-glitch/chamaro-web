@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { availabilityLabels, discountPercent, formatPrice, priceFor, type Product, type ProductVariant } from "../lib/products";
-import { isChairProduct } from "../lib/cart";
 import { selectVariant } from "../lib/product-variants";
 import ProductGallery from "./ProductGallery";
 
@@ -55,7 +54,6 @@ export function VariantGallery({ product }: { product: Product }) {
       /* A new photo set starts from its first image */
       key={own ? variant!.id : product.slug}
       images={own ? variant!.images : product.images}
-      badge={isChairProduct(product) ? "Free standard delivery on 2+ chairs" : undefined}
     />
   );
 }

@@ -72,9 +72,16 @@ export type RazorpayPaymentResult = {
 
 export type CheckoutOrderInput = {
   addressId: string;
-  shippingMethod: "standard" | "express";
+  shippingQuoteToken: string;
   note?: string;
   couponCode?: string;
+};
+
+export type DeliveryQuote = {
+  pin: string;
+  shippingCharge: string;
+  currency: "INR";
+  quoteToken: string;
 };
 
 function authHeaders(token: string): AuthHeaders {
@@ -129,6 +136,11 @@ export async function replaceCheckoutCart(token: string, items: CheckoutCartItem
     body: JSON.stringify({ items }),
     cache: "no-store",
   });
+}
+
+export async function quoteCheckoutDelivery(token: string, pin: string) {
+  const { data } = await apiRequest<DeliveryQuote>("/shipping/quote", jsonPost(token, { pin }));
+  return data;
 }
 
 export async function createCheckoutOrder(

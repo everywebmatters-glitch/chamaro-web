@@ -1,12 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  chairsToFreeShipping,
   discountAmount,
   findDiscount,
   isBossChairProduct,
   isChairProduct,
-  shippingCost,
 } from "../app/lib/cart-pricing.ts";
 import type { Product } from "../app/lib/products.ts";
 
@@ -43,15 +41,6 @@ function line(product: Product, quantity: number) {
     lineTotal: 100 * quantity,
   };
 }
-
-test("standard delivery is free only when the cart contains two or more chairs", () => {
-  assert.equal(chairsToFreeShipping(0), 2);
-  assert.equal(chairsToFreeShipping(1), 1);
-  assert.equal(chairsToFreeShipping(2), 0);
-  assert.equal(shippingCost("standard", 1), 499);
-  assert.equal(shippingCost("standard", 2), 0);
-  assert.equal(shippingCost("express", 2), 999);
-});
 
 test("coupon rules apply to chair lines and limit WELCOME10 to Boss chairs", () => {
   const boss = line(chair("Boss Chair"), 2);

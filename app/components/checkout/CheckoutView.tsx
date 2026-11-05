@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CircleHelp, Lock, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "../../lib/api";
 import {
   createCheckoutOrder,
@@ -11,23 +11,21 @@ import {
   getCheckoutOrder,
   listCheckoutAddresses,
   openRazorpayPayment,
+  quoteCheckoutDelivery,
   replaceCheckoutCart,
   requestCheckoutOtp,
   verifyCheckoutOtp,
   verifyRazorpayPayment,
   type CheckoutAddressInput,
+  type DeliveryQuote,
   type RazorpayPaymentCallback,
 } from "../../lib/checkout-api";
 import {
   cartSubtotal,
-  isChairProduct,
   INDIAN_STATES,
   PIN_CODE_PATTERN,
   resolveLines,
-  SHIPPING_METHODS,
-  shippingCost,
   variantLabel,
-  type ShippingMethodId,
 } from "../../lib/cart";
 import { formatPrice } from "../../lib/products";
 import { useAuth } from "../auth/AuthProvider";
@@ -123,6 +121,12 @@ type CheckoutAttempt = {
 };
 
 type CheckoutConfirmation = { orderId: string; message: string };
+type DeliveryQuoteState = {
+  requestKey: string;
+  status: "loading" | "ready" | "error";
+  quote?: DeliveryQuote;
+  message?: string;
+};
 
 let razorpayScript: Promise<void> | undefined;
 
@@ -260,6 +264,11 @@ function checkoutErrorMessage(error: unknown) {
       INSUFFICIENT_STOCK: "There isn't enough stock to complete this order.",
       ITEM_UNAVAILABLE: "A product in your cart is no longer available.",
       COUPON_NOT_APPLICABLE: "The coupon is no longer valid for this cart. Remove it and try again.",
+      DELIVERY_PIN_UNSERVICEABLE: "Delhivery cannot deliver to this PIN code. Check the code or use another address.",
+      SHIPPING_WEIGHT_UNAVAILABLE: "We can't calculate delivery for one or more items yet. Please contact us for help.",
+      SHIPPING_WEIGHT_INVALID: "We couldn't calculate delivery for this cart. Please contact us for help.",
+      SHIPPING_QUOTE_EXPIRED: "Your delivery estimate changed. Wait for the updated charge and try again.",
+      SHIPPING_QUOTE_INVALID: "Your delivery estimate is invalid. Refresh it and try again.",
     };
     return messages[error.code] ?? error.message.replace(/\s\(\d+ [A-Z_]+\) — .*$/, "");
   }
@@ -328,7 +337,8 @@ export default function CheckoutView() {
   const { status: authStatus, user, token } = useAuth();
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
-  const [shipping, setShipping] = useState<ShippingMethodId>("standard");
+  const [deliveryQuoteState, setDeliveryQuoteState] = useState<DeliveryQuoteState | null>(null);
+  const [quoteRefreshKey, setQuoteRefreshKey] = useState(0);
   const [notice, setNotice] = useState("");
   const [authGateDismissed, setAuthGateDismissed] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -429,18 +439,52 @@ export default function CheckoutView() {
     return () => { cancelled = true; };
   }, [user, token, clearCart, clearCheckoutAttempt, showPaymentConfirmation]);
 
-  const lines = resolveLines(cart, findProduct);
+  const lines = useMemo(() => resolveLines(cart, findProduct), [cart, findProduct]);
   const subtotal = cartSubtotal(lines);
-  const chairCount = lines.reduce((count, line) => count + (isChairProduct(line.product) ? line.quantity : 0), 0);
+  const shippingItems = useMemo(() => lines.map((line) => ({
+    productId: line.product.apiId ?? "",
+    ...(line.variant?.id ? { variantId: line.variant.id } : {}),
+    quantity: line.quantity,
+  })), [lines]);
+  const shippingCartKey = JSON.stringify(shippingItems);
   const discount = discountCustomerId === user?.id ? appliedDiscountTotal : 0;
+  const quoteRequestKey = JSON.stringify({ userId: user?.id ?? "", pin: form.pin, shippingCartKey, quoteRefreshKey });
+  const quoteStateForRequest = deliveryQuoteState?.requestKey === quoteRequestKey ? deliveryQuoteState : null;
+  const currentDeliveryQuote = quoteStateForRequest?.status === "ready" ? quoteStateForRequest.quote ?? null : null;
+  const deliveryQuoteLoading = PIN_CODE_PATTERN.test(form.pin) && lines.length > 0 &&
+    !shippingItems.some((item) => !item.productId) &&
+    (!quoteStateForRequest || quoteStateForRequest.status === "loading");
+  const deliveryQuoteError = shippingItems.some((item) => !item.productId)
+    ? "A product in your cart is missing its server ID. Refresh the cart and try again."
+    : quoteStateForRequest?.status === "error" ? quoteStateForRequest.message ?? "" : "";
+  const shippingPrice = currentDeliveryQuote ? Number(currentDeliveryQuote.shippingCharge) : undefined;
   const errors = validate(form);
-  const addressReady =
-    form.address.trim() && form.city.trim() && form.state && PIN_CODE_PATTERN.test(form.pin);
-  const shippingPrice = addressReady ? shippingCost(shipping, chairCount) : undefined;
   const total = subtotal - discount + (shippingPrice ?? 0);
-  const displayTotal = serverTotal ?? total;
+  const displayTotal = currentDeliveryQuote && serverTotal !== null ? serverTotal : total;
   const itemCount = lines.reduce((count, line) => count + line.quantity, 0);
   const showAuthGate = authStatus === "unauthenticated" && !authGateDismissed;
+
+  useEffect(() => {
+    if (!token || !user?.id || !PIN_CODE_PATTERN.test(form.pin) || shippingItems.length === 0 || shippingItems.some((item) => !item.productId)) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setDeliveryQuoteState({ requestKey: quoteRequestKey, status: "loading" });
+      setServerTotal(null);
+      void (async () => {
+        try {
+          await replaceCheckoutCart(token, shippingItems);
+          const quote = await quoteCheckoutDelivery(token, form.pin);
+          if (!cancelled) setDeliveryQuoteState({ requestKey: quoteRequestKey, status: "ready", quote });
+        } catch (error) {
+          if (!cancelled) setDeliveryQuoteState({ requestKey: quoteRequestKey, status: "error", message: checkoutErrorMessage(error) });
+        }
+      })();
+    }, 350);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [token, user?.id, form.pin, shippingCartKey, shippingItems, quoteRequestKey]);
 
   const update = <K extends keyof Form>(key: K, value: Form[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -518,6 +562,10 @@ export default function CheckoutView() {
       document.getElementById(`checkout-${first}`)?.focus();
       return;
     }
+    if (!currentDeliveryQuote) {
+      setNotice(deliveryQuoteError || "Enter a valid PIN code and wait for the delivery charge before paying.");
+      return;
+    }
     if (!otpVerified) {
       setNotice(`Verify the code sent to ${user.email} before paying.`);
       return;
@@ -568,7 +616,7 @@ export default function CheckoutView() {
         : "";
       const note = [orderNote.trim(), invoiceNote].filter(Boolean).join("\n").slice(0, 500);
       const couponCode = discountCustomerId === user.id ? discountCode : "";
-      const fingerprint = JSON.stringify({ items, address: addressInput, shipping, note, couponCode });
+      const fingerprint = JSON.stringify({ items, address: addressInput, shipping: "surface", note, couponCode });
       let attempt = getCheckoutAttempt(user.id, fingerprint);
 
       if (!attempt.orderId) {
@@ -587,7 +635,7 @@ export default function CheckoutView() {
         ) ?? await createCheckoutAddress(token, addressInput);
         const order = await createCheckoutOrder(token, attempt.idempotencyKey, {
           addressId: address.id,
-          shippingMethod: shipping,
+          shippingQuoteToken: currentDeliveryQuote.quoteToken,
           ...(note ? { note } : {}),
           ...(couponCode ? { couponCode } : {}),
         });
@@ -694,6 +742,9 @@ export default function CheckoutView() {
       instance.open();
       setStartingPayment(false);
     } catch (error) {
+      if (error instanceof ApiError && error.code === "SHIPPING_QUOTE_EXPIRED") {
+        setQuoteRefreshKey((current) => current + 1);
+      }
       setNotice(checkoutErrorMessage(error));
       setStartingPayment(false);
       setOtpSent(false);
@@ -909,41 +960,26 @@ export default function CheckoutView() {
           </label>
         </section>
 
-        {/* Shipping method */}
+        {/* Single Delhivery delivery option */}
 
         <section aria-labelledby="shipping-title">
-          <h3 id="shipping-title">Shipping method</h3>
+          <h3 id="shipping-title">Delivery</h3>
 
-          {addressReady ? (
-            <div className="option-list">
-              {SHIPPING_METHODS.map((method) => {
-                const cost = shippingCost(method.id, chairCount);
-                return (
-                  <label key={method.id} className={shipping === method.id ? "selected" : ""}>
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value={method.id}
-                      checked={shipping === method.id}
-                      onChange={() => {
-                        setShipping(method.id);
-                        setServerTotal(null);
-                      }}
-                    />
-                    <span>
-                      {method.label}
-                      <small>{method.eta}</small>
-                    </span>
-                    <strong>{cost === 0 ? "FREE" : formatPrice(cost)}</strong>
-                  </label>
-                );
-              })}
+          <div className="option-list">
+            <div className="selected">
+              <span>Delhivery Surface delivery</span>
+              <strong>
+                {shippingPrice === undefined
+                  ? deliveryQuoteLoading ? "Calculating..." : "Enter PIN code"
+                  : shippingPrice === 0 ? "FREE" : formatPrice(shippingPrice)}
+              </strong>
             </div>
-          ) : (
-            <p className="checkout-placeholder">
-              Enter your shipping address to view available shipping methods.
-            </p>
-          )}
+          </div>
+          <p className="checkout-placeholder">
+            {currentDeliveryQuote
+              ? `Estimated charge for PIN ${currentDeliveryQuote.pin}. Delhivery's final billed amount may vary.`
+              : deliveryQuoteError || "Enter a valid PIN code to calculate your delivery charge."}
+          </p>
         </section>
 
         {/* Payment */}
@@ -997,7 +1033,7 @@ export default function CheckoutView() {
           {otpVerified && <p className="checkout-placeholder">Email verified. Your code authorizes one payment attempt.</p>}
         </section>
 
-        <button type="submit" className="add-to-cart checkout-submit" disabled={startingPayment || authStatus === "loading"}>
+        <button type="submit" className="add-to-cart checkout-submit" disabled={startingPayment || authStatus === "loading" || !currentDeliveryQuote || deliveryQuoteLoading}>
           {startingPayment ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Opening secure payment...</> : `Pay now – ${formatPrice(displayTotal)}`}
         </button>
 
@@ -1064,7 +1100,7 @@ export default function CheckoutView() {
               <dt>Shipping</dt>
               <dd className={shippingPrice === undefined ? "muted" : ""}>
                 {shippingPrice === undefined
-                  ? "Enter shipping address"
+                  ? deliveryQuoteLoading ? "Calculating..." : "Enter PIN code"
                   : shippingPrice === 0
                     ? "FREE"
                     : <span className="price-numeric">{formatPrice(shippingPrice)}</span>}
